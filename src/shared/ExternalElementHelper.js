@@ -1,3 +1,4 @@
+import React from "react";
 
 export default new class ExternalElementHelper {
 
@@ -36,4 +37,46 @@ export default new class ExternalElementHelper {
         });
     }
 
+    MakeComponent(externalElement) {
+        return class extends React.Component {
+            static MANIFEST = {
+                isExternal: true,
+                name: externalElement.manifest.name,
+                description: externalElement.manifest.description,
+                author: externalElement.manifest.author,
+                width: externalElement.manifest.width,
+                height: externalElement.manifest.height,
+                preserveAspect: externalElement.manifest.preserveAspect,
+                parameters: externalElement.manifest.parameters
+            };
+            
+            _lastSrc;
+    
+            constructor(props) {
+                super(props);
+                this._lastSrc = this.buildIframeSrc(props);
+            }
+    
+            buildIframeSrc(props) {
+               let serializedProps = JSON.stringify(props);
+               return externalElement.url + "?showMode=1#" + serializedProps;
+            }
+    
+            shouldComponentUpdate(nextProps, nextState) {
+                let nextSrc = this.buildIframeSrc(nextProps);
+                if (this._lastSrc == nextSrc) { return false; }
+                this._lastSrc = nextSrc;
+                return true;
+            }
+    
+            render() {
+                return (
+                    <>
+                        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}></div>
+                        <iframe src={this._lastSrc} style={{ "flex": "1 1 auto", "border": "0" }}></iframe>
+                    </>
+                );
+            }
+        }
+    }
 }

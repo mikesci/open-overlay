@@ -4,13 +4,12 @@ import { Alert } from "@blueprintjs/core";
 import ClipboardHelper from "./shared/ClipboardHelper.js";
 import Dispatcher from "./shared/dispatcher.js";
 import UndoManager from "./shared/UndoManager.js";
+import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 
 import LayerList from "./components/LayerList.jsx";
 import StageManager from "./components/StageManager.jsx";
 import LayerRenderer from "./components/LayerRenderer.jsx";
 import { AppToaster } from "./components/AppToaster.jsx";
-import ExternalActionHandler from "./components/ExternalActionHandler.jsx";
-import Elements from "./components/Elements.jsx";
 import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
 
 import "./OverlayEditor.scss";
@@ -207,7 +206,7 @@ export default class OverlayEditor extends React.Component {
 
         // add to local list
         let elements = Object.assign({}, prevState.elements);
-        elements[externalElement.url] = Elements.MakeExternal(externalElement);
+        elements[externalElement.url] = ExternalElementHelper.MakeComponent(externalElement);
 
         return {
           elements: elements
@@ -403,9 +402,10 @@ export default class OverlayEditor extends React.Component {
   onPaste = evt => {
     // pass through input elements
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
-
     evt.preventDefault();
-    ExternalActionHandler.HandleDataTransfer(evt.clipboardData, this._dispatcher, this.props.onUpload);
+    if (this.props.onDataTransfer) {
+      this.props.HandleDataTransfer(evt.clipboardData, this._dispatcher);
+    }
   }
 
   onDragOver = evt => {
@@ -415,7 +415,9 @@ export default class OverlayEditor extends React.Component {
 
   onDrop = evt => {
     evt.preventDefault();
-    ExternalActionHandler.HandleDataTransfer(evt.dataTransfer, this._dispatcher, this.props.onUpload);
+    if (this.props.onDataTransfer) {
+      this.props.HandleDataTransfer(evt.dataTransfer, this._dispatcher);
+    }
   }
 
   render() {
