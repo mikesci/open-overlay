@@ -1,0 +1,30 @@
+/*# sourceURL=FontStyleEditor.css*/
+
+
+.font-style-editor {  }
+.font-style-editor .line-1 { }
+.font-style-editor .line-2 { }
+.font-style-editor .font-family { flex-basis: 65% !important; }
+.font-style-editor .font-size { width: 100px; }
+.font-style-editor .font-color { width: 50px; }
+.font-style-editor .toggle-button { width: 1.5em; font-size: 1.5em; font-family: serif; border-radius: 0.2em; background: rgba(255,255,255,0.2); color: #fff; margin-right: 0.1em; }
+.font-style-editor .toggle-bold { font-weight: bold; }
+.font-style-editor .toggle-italic { font-style: italic; }
+.font-style-editor .toggle-underline { text-decoration: underline; }
+
+.font-style-editor .toggle-align-left,
+.font-style-editor .toggle-align-center,
+.font-style-editor .toggle-align-right { width: 2em; }
+
+.font-style-editor .toggle-align-left::after,
+.font-style-editor .toggle-align-center::after,
+.font-style-editor .toggle-align-right::after { content: ""; top: 0; left: 0; width: 25px; height: 25px; background-repeat: no-repeat; background-position: center center; background-size: 55%; }
+
+.font-style-editor .toggle-align-left::after { background-image: url('data:image/svg+xml;utf8,%3Csvg%20version%3D%221.1%22%20viewBox%3D%220%200%20117.29%2089.955%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%3Cpath%20d%3D%22m0%200v12.851h117.29v-12.851zm0%2025.702v12.851h80.941v-12.851zm0%2025.702v12.851h117.29v-12.851zm0%2025.7v12.851h80.941v-12.851z%22%20fill%3D%22%23fff%22%20style%3D%22paint-order%3Astroke%20fill%20markers%22%2F%3E%0A%3C%2Fsvg%3E%0A');  }
+.font-style-editor .toggle-align-center::after { background-image: url('data:image/svg+xml;utf8,%3Csvg%20version%3D%221.1%22%20viewBox%3D%220%200%20117.29%2089.957%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%3Cpath%20d%3D%22m0%200v12.851h117.29v-12.851zm18.174%2025.702v12.851h80.94v-12.851zm-18.174%2025.702v12.851h117.29v-12.851zm18.174%2025.702v12.851h80.94v-12.851z%22%20fill%3D%22%23fff%22%20style%3D%22paint-order%3Astroke%20fill%20markers%22%2F%3E%0A%3C%2Fsvg%3E%0A'); }
+.font-style-editor .toggle-align-right::after { background-image: url('data:image/svg+xml;utf8,%3Csvg%20version%3D%221.1%22%20viewBox%3D%220%200%20117.29%2089.958%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%3Cpath%20d%3D%22m0%200v12.851h117.29v-12.851zm36.348%2025.702v12.851h80.94v-12.851zm-36.348%2025.702v12.851h117.29v-12.851zm36.348%2025.702v12.851h80.94v-12.851z%22%20fill%3D%22%23fff%22%20style%3D%22paint-order%3Astroke%20fill%20markers%22%2F%3E%0A%3C%2Fsvg%3E%0A'); }
+
+.font-style-editor .border-input { display: flex; flex-direction: row; justify-content: flex-start; align-items: stretch; height: 100%; }
+.font-style-editor .border-input input[type='color'] { width: 2em !important; height: 2em; margin-right: 0.1em; }
+.font-style-editor .border-input select { width: 10em !important; margin-right: 0.1em; }
+.font-style-editor .border-input input[type='text'] { width: 5em !important; margin-right: 0.1em; }

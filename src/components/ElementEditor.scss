@@ -1,0 +1,30 @@
+@import "~@blueprintjs/core/lib/scss/variables";
+
+
+#app { width: 100%; height: 100%; }
+
+.app-container { width: 100%; height: 100%; display: flex; }
+
+.app-wrapper {
+    flex: 0 0 350px;
+    background: $pt-dark-app-background-color;
+    z-index: 2;
+    box-shadow: 0 0 5px #000;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header { flex: 0 0 50px; margin: 10px; padding: 10px; white-space: nowrap; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; }
+.app-header .element-name { font-size: 1.5em; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+.app-header .element-author { font-size: 0.5em; margin: 0 5px; }
+.app-header .element-description { font-style: italic; padding: 5px 0; border-top: 1px solid rgba(255,255,255,0.3); width: 100%; }
+.app-header .element-dimensions { font-size: 0.8em; padding: 3px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.1); }
+
+.element-config-form { padding: 10px; overflow-y: auto; }
+
+.stage-wrapper
+{
+    flex: 1 1 auto;
+    position: relative;
+}

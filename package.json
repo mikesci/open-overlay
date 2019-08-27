@@ -1,0 +1,47 @@
+{
+  "name": "overlay-js",
+  "version": "1.0.0",
+  "description": "A system to build modular overlays.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "webpack --config build.webpack.js",
+    "build-release": "webpack --config build-release.webpack.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MikeSci",
+  "license": "MIT",
+  "dependencies": {
+    "@blueprintjs/core": "^3.18.0",
+    "express-fileupload": "^1.1.5",
+    "react-dnd": "^9.3.4",
+    "react-dnd-html5-backend": "^9.3.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
+    "@babel/plugin-transform-react-jsx": "^7.3.0",
+    "@babel/polyfill": "^7.4.4",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "babel-minify-webpack-plugin": "^0.3.1",
+    "classnames": "^2.2.6",
+    "copy-webpack-plugin": "^5.0.4",
+    "css-loader": "^3.1.0",
+    "express": "^4.17.1",
+    "file-loader": "^4.1.0",
+    "memoize-one": "^5.1.1",
+    "node-sass": "^4.12.0",
+    "react": "^16.8.6",
+    "react-color": "^2.17.3",
+    "react-dom": "^16.8.6",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.1",
+    "ttf-loader": "^1.0.2",
+    "webpack": "^4.38.0",
+    "webpack-cli": "^3.3.6"
+  }
+}
