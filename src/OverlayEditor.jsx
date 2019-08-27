@@ -238,6 +238,11 @@ export default class OverlayEditor extends React.Component {
           };
       });
     });
+
+    this._dispatcher.Register("SHOW_TOAST", (config, key, callback) => {
+      key = AppToaster.show(config, key);
+      if (callback) { callback(key); }
+    });
   }
 
   componentDidMount() {
@@ -404,7 +409,7 @@ export default class OverlayEditor extends React.Component {
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
     evt.preventDefault();
     if (this.props.onDataTransfer) {
-      this.props.HandleDataTransfer(evt.clipboardData, this._dispatcher);
+      this.props.onDataTransfer(evt.clipboardData, this._dispatcher);
     }
   }
 
@@ -416,7 +421,7 @@ export default class OverlayEditor extends React.Component {
   onDrop = evt => {
     evt.preventDefault();
     if (this.props.onDataTransfer) {
-      this.props.HandleDataTransfer(evt.dataTransfer, this._dispatcher);
+      this.props.onDataTransfer(evt.dataTransfer, this._dispatcher);
     }
   }
 
@@ -436,7 +441,7 @@ export default class OverlayEditor extends React.Component {
           </div>
         </div>
         <div className="stage-wrapper">
-          <StageManager stageWidth={1920} stageHeight={1080} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
+          <StageManager stageWidth={this.props.width} stageHeight={this.props.height} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
             <LayerRenderer elements={this.state.elements} layers={this.state.layers} />
           </StageManager>
         </div>

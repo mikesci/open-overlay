@@ -45,7 +45,7 @@ export default class LayerRenderer extends React.Component {
     let style = null;
     let knockouts = Object.values(this.state.knockouts);
     if (knockouts.length > 0) {
-      style = { "clip-path": "url(#knockoutClippath)" };
+      style = { "clipPath": "url(#knockoutClippath)" };
       svg = (
         <svg style={{ position: "absolute", top: "-99999px" }} viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
           <defs>
