@@ -1,17 +1,17 @@
 import React from "react";
 import { Alert } from "@blueprintjs/core";
 
-import ClipboardHelper from "../shared/ClipboardHelper.js";
-import Dispatcher from "../shared/dispatcher.js";
-import UndoManager from "../shared/UndoManager.js";
+import ClipboardHelper from "./shared/ClipboardHelper.js";
+import Dispatcher from "./shared/dispatcher.js";
+import UndoManager from "./shared/UndoManager.js";
 
-import LayerList from "./LayerList.jsx";
-import StageManager from "./StageManager.jsx";
-import LayerRenderer from "./LayerRenderer.jsx";
-import { AppToaster } from "./AppToaster.jsx";
-import ExternalActionHandler from "./ExternalActionHandler.jsx";
-import Elements from "./Elements.jsx";
-import ActiveLayerEditor from "./ActiveLayerEditor.jsx";
+import LayerList from "./components/LayerList.jsx";
+import StageManager from "./components/StageManager.jsx";
+import LayerRenderer from "./components/LayerRenderer.jsx";
+import { AppToaster } from "./components/AppToaster.jsx";
+import ExternalActionHandler from "./components/ExternalActionHandler.jsx";
+import Elements from "./components/Elements.jsx";
+import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
 
 import "./OverlayEditor.scss";
 

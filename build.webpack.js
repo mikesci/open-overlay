@@ -1,34 +1,16 @@
 const path = require('path');
-const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    mode: "production",
-    //entry: ['./src/OverlayEditor-entry.js'],
+    mode: "development",
     entry: {
-        'OverlayEditor': './src/OverlayEditor-entry.js',
-        'OverlayRenderer': './src/OverlayRenderer-entry.js',
-        'ElementEditor': './src/ElementEditor-entry.js',
-        'overlay': './src/overlay.js',
-        'element': './src/element.js',
-        'autobinder': './src/autobinder.js'
+        'OverlayEditor': './src/OverlayEditor.jsx',
+        'ElementEditor': './src/ElementEditor.jsx'
     },
     output: {
         path: path.resolve(__dirname, './build'),
         filename: '[name].js'
     },
     optimization: { minimize: false },
-    externals: {
-        "react": "React",
-        "react-dom": "ReactDOM"
-    },
-    plugins: [
-        new CopyPlugin([
-            { from: 'src/index.html', to: 'index.html' },
-            { from: 'src/LocalStorageDAL.js', to: 'LocalStorageDAL.js' },
-            { from: 'node_modules/react/umd/react.development.js', to: 'react.js' },
-            { from: 'node_modules/react-dom/umd/react-dom.development.js', to: 'react-dom.js' }
-        ])
-    ],
     module: {
         rules: [
             {

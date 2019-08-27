@@ -14,10 +14,7 @@
   "author": "MikeSci",
   "license": "MIT",
   "dependencies": {
-    "@blueprintjs/core": "^3.18.0",
-    "express-fileupload": "^1.1.5",
-    "react-dnd": "^9.3.4",
-    "react-dnd-html5-backend": "^9.3.4"
+    "@blueprintjs/core": "^3.18.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -29,7 +26,6 @@
     "babel-loader": "^8.0.6",
     "babel-minify-webpack-plugin": "^0.3.1",
     "classnames": "^2.2.6",
-    "copy-webpack-plugin": "^5.0.4",
     "css-loader": "^3.1.0",
     "express": "^4.17.1",
     "file-loader": "^4.1.0",

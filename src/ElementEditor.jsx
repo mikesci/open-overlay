@@ -1,7 +1,7 @@
 import React from "react";
-import StageManager from "./StageManager.jsx";
-import Dispatcher from "../shared/dispatcher.js";
-import ConfigurationForm from "./ConfigurationForm.jsx";
+import StageManager from "./components/StageManager.jsx";
+import Dispatcher from "./shared/dispatcher.js";
+import ConfigurationForm from "./components/ConfigurationForm.jsx";
 import "./ElementEditor.scss";
 import { Card } from "@blueprintjs/core";
 
