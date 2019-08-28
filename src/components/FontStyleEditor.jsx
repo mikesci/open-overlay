@@ -140,7 +140,7 @@ export default class FontStyleEditor extends React.Component {
                 <ControlGroup fill={true}>
                     <HTMLSelect value={this.state.value["fontFamily"]} onChange={this.onFontFamilyChanged} options={this._fontOptions} className="font-family" fill={true} />
                     <InputGroup type="text" value={this.state.value["fontSize"]} onChange={this.onFontSizeChanged} onBlur={this.onFontSizeBlurred} onKeyDown={this.onTextKeyDown} className="font-size" />
-                    <Popover>
+                    <Popover boundary="window">
                         <Button className="font-color" style={{ "backgroundColor": this.state.value["color"] }} text="" />
                         <SketchPicker color={this.parseColor(this.state.value["color"])} onChange={this.onFontColorChanged} onChangeComplete={this.onFontColorCommitted} />
                     </Popover>

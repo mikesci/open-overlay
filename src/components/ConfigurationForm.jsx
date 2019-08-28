@@ -6,6 +6,7 @@ import StyleInput from "./StyleInput.jsx";
 import { SketchPicker } from 'react-color'
 import "./ConfigurationForm.css";
 import { CONSOLE } from "@blueprintjs/icons/lib/esm/generated/iconContents";
+import Popper from "popper.js";
 
 
 export default class ConfigurationForm extends React.Component {
@@ -166,7 +167,7 @@ export default class ConfigurationForm extends React.Component {
         return (<FontStyleEditor value={value} onChange={this.onFontChanged} param={parameter} />)
       case "color":
         return (
-          <Popover>
+          <Popover boundary="window">
             <Button style={{ "backgroundColor": value }} text="" />
             <SketchPicker color={value} onChange={color => this.onColorChanged(parameter, color)} onChangeComplete={color => this.onColorCommitted(parameter, color)} />
           </Popover>
