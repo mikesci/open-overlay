@@ -44,7 +44,7 @@ layer = {
 ```
 
 ## Elements
-Elements are react components that control the rendering of each layer.  They must contain a static field named "MANIFEST".  A simple rectangle element is below.  All of the built-in elements are available at https://github.com/mikesci/open-overlay-web/
+Elements are react components that control the rendering of each layer.  They must contain a static field named "MANIFEST".  A simple rectangle element is below.  Many builtin elements are available at https://github.com/mikesci/open-overlay-web/
 
 ```
 class RectangleElement extends React.Component {
