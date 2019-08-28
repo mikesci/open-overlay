@@ -75,7 +75,7 @@ class RectangleElement extends React.Component {
           // "min": 0 // OPTIONAL - the minimum value for the slider.  Defaults to 0.
           // "max": 100 // OPTIONAL - the maximum value for the slider.  Defaults to 100.
           // "labelStepSize": 50 // OPTIONAL - the step size for the labels.  Defaults to "max" divided by 2.
-          "defaultValue": {
+          "defaultValue": { // default configuration values.  these will be applied to the "style" parameter.
             "backgroundColor": "#8247cf",
             "borderRadius": "20px"
           }
