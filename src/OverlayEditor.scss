@@ -21,6 +21,8 @@
     position: relative;
 }
 
-.app-header { flex: 0 0 50px; padding: 10px; font-weight: bold; white-space: nowrap; background: rgba(255,255,255,0.1); }
+.app-header { flex: 0 0 40px; padding: 10px; font-weight: bold; white-space: nowrap; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+.app-header a { color: white; text-decoration: none; margin-left: 0.5em; padding-left: 0.5em; border-left: 1px solid #fff; font-weight: normal; }
+.app-header a:hover { text-decoration: underline; }
 .layer-list-container { flex: 1 1 auto; height: 100%; }
 .active-layer-editor-container { flex: 0 0 auto; }

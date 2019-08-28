@@ -432,7 +432,7 @@ export default class OverlayEditor extends React.Component {
           <p>{this.state.alertText}</p>
         </Alert>
         <div className="app-wrapper">
-          <div className="app-header">OverlayJS</div>
+          <div className="app-header">OPEN OVERLAY <a href="https://github.com/mikesci/open-overlay" target="_blank">GitHub Project Page</a></div>
           <div className="layer-list-container">
             <LayerList layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
