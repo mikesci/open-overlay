@@ -1,4 +1,5 @@
 import React from "react";
+import FontLoader from "../shared/FontLoader.js";
 import "./LayerRenderer.css";
 
 export default class LayerRenderer extends React.Component {
@@ -9,7 +10,8 @@ export default class LayerRenderer extends React.Component {
     super(props);
     // props.layers
     this.state = {
-      knockouts: {}
+      knockouts: {},
+      hiddenLayerIds: []
     };
   }
 
@@ -57,20 +59,41 @@ export default class LayerRenderer extends React.Component {
       );
     }
 
+    
+
     return (
       <div className="knockout-wrapper" ref="knockoutWrapper" style={style}>
         {svg}
         {this.props.layers.map((layer, index) => {
-          let Element = this.props.elements[layer.elementName];
-          if (!Element) { return null; } // should return an unknown element here so at least something gets rendered
+         
           if (layer.hidden) { return null; } // don't render anything if the layer is hidden
+
+          let Element = this.props.elements[layer.elementName];
+          if (!Element) { return null; } // don't render anything if we don't recognize the element
+      
+          // check for fonts that need to be loaded
+          let isLoading = false;
+          for(var parameter of Element.manifest.parameters) {
+            if (parameter.type == "font") {
+              let font = layer.config[parameter.name];
+              if (font && font.fontFamily) {
+                let fontPromise = FontLoader.EnsureFont(font.fontFamily);
+                if (fontPromise) {
+                  isLoading = true;
+                  // when the font is loaded, re-render
+                  fontPromise.then(() => { this.forceUpdate() });
+                }
+              }
+            }
+          }
 
           let style = {
             top: layer.top + "px",
             left: layer.left + "px",
             height: layer.height + "px",
             width: layer.width + "px",
-            zIndex: (10000 - index)
+            zIndex: (10000 - index),
+            visibility: (isLoading ? "hidden" : "visible")
           };
 
           if (layer.rotation) {

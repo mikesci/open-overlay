@@ -1,6 +1,7 @@
 import React from "react";
 import { InputGroup, FormGroup, Button, Classes, Spinner } from "@blueprintjs/core";
 import ExternalElementHelper from "../shared/ExternalElementHelper.js";
+import "./AddExternalElementForm.css";
 
 export default class AddExternalElementForm extends React.Component {
 
@@ -54,11 +55,9 @@ export default class AddExternalElementForm extends React.Component {
 
   render() {
     return (
-      <div style={{ "width": "400px" }}>
-        <p>
-          <InputGroup value={this.state.url} onKeyDown={this.onUrlKeyDown} onChange={this.onUrlChanged} intent={this.state.lastError ? "warning" : "primary"} leftIcon="link" placeholder="URL" fill={true} rightElement={this.state.isWorking ? <Spinner size={Spinner.SIZE_SMALL} intent="primary" /> : null} />
-        </p>
-        {this.state.lastError ? <p className={Classes.INTENT_WARNING}>{this.state.lastError}</p> : null}
+      <div className="external-element-form">
+        <InputGroup className="url-input" value={this.state.url} onKeyDown={this.onUrlKeyDown} onChange={this.onUrlChanged} intent={this.state.lastError ? "warning" : "primary"} leftIcon="link" placeholder="URL" fill={true} rightElement={this.state.isWorking ? <Spinner size={Spinner.SIZE_SMALL} intent="primary" /> : null} />
+        {this.state.lastError ? <p className={Classes.INTENT_WARNING}>{this.state.lastError.toString()}</p> : null}
         <Button onClick={this.onInstallClick}>Install</Button>
       </div>
     );

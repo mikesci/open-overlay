@@ -27,7 +27,7 @@ export default class ActiveLayerEditor extends React.Component {
             let element = props.elements[layer.elementName];
 
             // if we have a visual element...
-            if (!element.MANIFEST.nonVisual) {
+            if (!element.manifest.nonVisual) {
                 let needsUpdate = false;
                 let newState = {};
                 if (state.disabled == true) { newState.disabled = false; needsUpdate = true; }

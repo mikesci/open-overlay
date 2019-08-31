@@ -150,7 +150,7 @@ export default class StageManager extends React.Component {
         if (right == x || bottom == y) {
             // if this is a point select, pick all the layers that contain the point
             let possibleLayers = this.props.layers.filter(layer =>
-                !this.props.elements[layer.elementName].MANIFEST.nonVisual &&
+                !this.props.elements[layer.elementName].manifest.nonVisual &&
                 y > layer.top &&
                 x > layer.left &&
                 y < (layer.top + layer.height) &&
@@ -183,7 +183,7 @@ export default class StageManager extends React.Component {
         } else {
             // if this a box select, pick all the layers that fall inside the box
             let possibleLayers = this.props.layers.filter(layer =>
-                !this.props.elements[layer.elementName].MANIFEST.nonVisual &&
+                !this.props.elements[layer.elementName].manifest.nonVisual &&
                 y < layer.top &&
                 x < layer.left &&
                 bottom > (layer.top + layer.height) &&
@@ -206,8 +206,8 @@ export default class StageManager extends React.Component {
         for(let id of this.props.selectedLayerIds) {
             let layer = this.props.layers.find(r => r.id == id);
             let element = this.props.elements[layer.elementName];
-            if (element.MANIFEST.nonVisual) { continue; } // skip non-visual elements
-            if (!element.MANIFEST.preserveAspect && preserveAspect) { preserveAspect = false; } // preserve aspect only when ALL elements preserve aspect
+            if (element.manifest.nonVisual) { continue; } // skip non-visual elements
+            if (!element.manifest.preserveAspect && preserveAspect) { preserveAspect = false; } // preserve aspect only when ALL elements preserve aspect
             selectedRects.push({
                 id: id,
                 top: layer.top,

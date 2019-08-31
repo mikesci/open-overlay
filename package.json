@@ -12,7 +12,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MikeSci",
-  "license": "MIT",
+  "license": "Apache 2.0",
   "dependencies": {
     "@blueprintjs/core": "^3.18.0"
   },

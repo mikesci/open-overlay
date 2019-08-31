@@ -76,9 +76,9 @@ class Layer extends React.Component {
     </span>;
 
     let configForm = null;
-    if (this.props.element.MANIFEST.parameters != null && this.props.element.MANIFEST.parameters.length > 0) {
+    if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
       configForm = <ConfigurationForm
-      manifest={this.props.element.MANIFEST}
+      manifest={this.props.element.manifest}
       parameterValues={this.props.layer.config}
       onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />;
     }
@@ -122,12 +122,12 @@ class ElementMenuPopover extends React.Component {
   onElementMenuItemContextMenu = (evt, elementName) => {
     evt.preventDefault();
     let element = this.props.elements[elementName];
-    if (!element.MANIFEST.isExternal) { return; }
+    if (!element.isExternal) { return; }
     let contents = (
       <Menu>
-        <MenuItem key="desc" disabled={true} text={element.MANIFEST.description} />
-        <MenuItem key="author" disabled={true} text="Author" label={element.MANIFEST.author} />
-        <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.MANIFEST.width}x${element.MANIFEST.height}px`} />
+        <MenuItem key="desc" disabled={true} text={element.manifest.description} />
+        <MenuItem key="author" disabled={true} text="Author" label={element.manifest.author} />
+        <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.manifest.width}x${element.manifest.height}px`} />
         <MenuDivider />
         <MenuItem icon="delete" text="Remove" intent={Intent.DANGER} onClick={() => this.onRemoveExternalElement(elementName)} />
       </Menu>
@@ -144,7 +144,7 @@ class ElementMenuPopover extends React.Component {
           {Object.entries(this.props.elements).map(pair => (
             <MenuItem
               key={pair[0]}
-              text={pair[1].MANIFEST.name}
+              text={pair[1].manifest.name}
               onContextMenu={evt => this.onElementMenuItemContextMenu(evt, pair[0])}
               onClick={evt => this.onElementMenuItemClick(evt, pair[0])}
             />

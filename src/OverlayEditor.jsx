@@ -85,13 +85,13 @@ export default class OverlayEditor extends React.Component {
         elementConfig = elementConfig || {};
 
         // ensure the element is not unique
-        if (element.MANIFEST.unique && layers.findIndex(r => r.elementName == elementName) > -1) {
+        if (element.manifest.unique && layers.findIndex(r => r.elementName == elementName) > -1) {
           AppToaster.show({ message: "Cannot create more than one layer with the specified element."});
           return null;
         }
 
         // generate a unique label
-        let baseLabel = (elementConfig.label || element.MANIFEST.name);
+        let baseLabel = (elementConfig.label || element.manifest.name);
         // chop off the "#NUMBER" if it's there
         if (baseLabel.match(/\#\d+$/)) { baseLabel = baseLabel.substr(0, baseLabel.lastIndexOf("#") - 1); }
         let label = baseLabel;
@@ -107,15 +107,15 @@ export default class OverlayEditor extends React.Component {
           label: label,
           top: (elementConfig.top || 0),
           left: (elementConfig.left || 0),
-          width: (elementConfig.width || element.MANIFEST.width),
-          height: (elementConfig.height || element.MANIFEST.height)
+          width: (elementConfig.width || element.manifest.width),
+          height: (elementConfig.height || element.manifest.height)
         };
 
         if (elementConfig.config) {
           newLayer.config = elementConfig.config;
         } else {
           let config = {};
-          for(let parameter of element.MANIFEST.parameters) {
+          for(let parameter of element.manifest.parameters) {
             if (parameter.defaultValue) {
               config[parameter.name] = parameter.defaultValue;
             }
@@ -199,18 +199,21 @@ export default class OverlayEditor extends React.Component {
     });
 
     this._dispatcher.Register("ADD_EXTERNAL_ELEMENT", externalElement => {
-      this.setState(prevState => {
+      ExternalElementHelper.MakeComponent(externalElement).then(component => {
 
-        // add to storage
-        this.props.storage.AddExternalElement(externalElement);
+        this.setState(prevState => {
 
-        // add to local list
-        let elements = Object.assign({}, prevState.elements);
-        elements[externalElement.url] = ExternalElementHelper.MakeComponent(externalElement);
-
-        return {
-          elements: elements
-        };
+          // add to storage
+          this.props.storage.AddExternalElement(externalElement);
+  
+          // add to local list
+          let elements = Object.assign({}, prevState.elements);
+          elements[externalElement.url] = component;
+  
+          return {
+            elements: elements
+          };
+        });
       });
     });
 
