@@ -5,7 +5,7 @@ The public implementation of this package is available at https://openoverlay.or
 
 ## What's this then?
 
-This package contains the core designer components used in the system above.  There are two main components:
+This package contains the core designer component used in the system above.
 
 - OverlayEditor.jsx
   - Handles building an entire overlay.  Expects the following props:
@@ -16,14 +16,6 @@ This package contains the core designer components used in the system above.  Th
     - storage - a class containing storage methods (more below)
     - onDataTransfer - a method called whenever a data transfer event happens (more below)
     - onLayersChanged - a method called whenever layer data changes permanently
-
-- ElementEditor.jsx
-  - Handles configuring an element.  This is intended to replace the content on an element webpage.  Expects the following props:
-    - stageRoot - the DOM element that contains the rendering stage
-    - element - an element class returned from ExternalElement.MakeComponent
-    - configValues - an object containing the current configuration values for the specified element
-    - onConfigure - called whenever the editor changes configValues
-    - onConfigValuesChanged - called whenever the editor changes configValues *permanently*  
   
 ## Layers
 An overlay is not much more than a collection of layers.  Each layer references a single element.  More about elements below.
@@ -44,13 +36,13 @@ layer = {
 ```
 
 ## Elements
-Elements are react components that control the rendering of each layer.  They must contain a static field named "MANIFEST".  A simple rectangle element is below.  Many builtin elements are available at https://github.com/mikesci/open-overlay-web/
+Elements are react components that control the rendering of each layer.  They must contain a static field named "manifest".  A simple rectangle element is below.  Many built-in elements are available at https://github.com/mikesci/open-overlay-web/
 
 ```
 class RectangleElement extends React.Component {
-    static MANIFEST = {
-        name: "Rectangle",  // REQUIRED - the display name of the element. required.
-        author: "SCI",      // REQUIRED - the author of the element. required.
+    static manifest = {
+        name: "Rectangle",  // REQUIRED - the display name of the element
+        author: "SCI",      // REQUIRED - the author of the element
         description: "A customizable rectangle.", // REQUIRED - a SHORT description of the element's purpose and capabilities
         width: 400, // REQUIRED - the default width of the element. may be omitted for elements with nonVisual: true.
         height: 400, // REQUIRED - the default height of the element. may be omitted for elements with nonVisual: true.
