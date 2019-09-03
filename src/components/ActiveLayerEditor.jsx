@@ -24,22 +24,26 @@ export default class ActiveLayerEditor extends React.Component {
         if (props.selectedLayerIds.length == 1) {
             let selectedLayerId = props.selectedLayerIds[0];
             let layer = props.layers.find(r => r.id == selectedLayerId);
-            let element = props.elements[layer.elementName];
-
-            // if we have a visual element...
-            if (!element.manifest.nonVisual) {
-                let needsUpdate = false;
-                let newState = {};
-                if (state.disabled == true) { newState.disabled = false; needsUpdate = true; }
-                if (selectedLayerId != state.selectedLayerId) { newState.selectedLayerId = selectedLayerId; needsUpdate = true; }
-                if (layer.top != state.top) { newState.top = layer.top; needsUpdate = true; }
-                if (layer.left != state.left) { newState.left = layer.left; needsUpdate = true; }
-                if (layer.width != state.width) { newState.width = layer.width; needsUpdate = true; }
-                if (layer.height != state.height) { newState.height = layer.height; needsUpdate = true; }
-                if (layer.rotation != state.rotation) { newState.rotation = layer.rotation; needsUpdate = true; }
-        
-                if (!needsUpdate) { return null; }
-                return newState;
+            if (layer)
+            {
+                let element = props.elements[layer.elementName];
+                if (element) {
+                    // if we have a visual element...
+                    if (!element.manifest.nonVisual) {
+                        let needsUpdate = false;
+                        let newState = {};
+                        if (state.disabled == true) { newState.disabled = false; needsUpdate = true; }
+                        if (selectedLayerId != state.selectedLayerId) { newState.selectedLayerId = selectedLayerId; needsUpdate = true; }
+                        if (layer.top != state.top) { newState.top = layer.top; needsUpdate = true; }
+                        if (layer.left != state.left) { newState.left = layer.left; needsUpdate = true; }
+                        if (layer.width != state.width) { newState.width = layer.width; needsUpdate = true; }
+                        if (layer.height != state.height) { newState.height = layer.height; needsUpdate = true; }
+                        if (layer.rotation != state.rotation) { newState.rotation = layer.rotation; needsUpdate = true; }
+                
+                        if (!needsUpdate) { return null; }
+                        return newState;
+                    }
+                }
             }
         }
 

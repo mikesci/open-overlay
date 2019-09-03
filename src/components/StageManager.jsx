@@ -149,12 +149,15 @@ export default class StageManager extends React.Component {
     onSelectAtCoords = (x, y, right, bottom, multiSelect) => {
         if (right == x || bottom == y) {
             // if this is a point select, pick all the layers that contain the point
-            let possibleLayers = this.props.layers.filter(layer =>
-                !this.props.elements[layer.elementName].manifest.nonVisual &&
-                y > layer.top &&
-                x > layer.left &&
-                y < (layer.top + layer.height) &&
-                x < (layer.left + layer.width));
+            let possibleLayers = this.props.layers.filter(layer => {
+                let element = this.props.elements[layer.elementName];
+                return (element &&
+                    !element.manifest.nonVisual &&
+                    y > layer.top &&
+                    x > layer.left &&
+                    y < (layer.top + layer.height) &&
+                    x < (layer.left + layer.width));
+            });
 
             if (possibleLayers.length == 0) {
                 this.props.dispatcher.Dispatch("SELECT_LAYER", null);
@@ -182,12 +185,15 @@ export default class StageManager extends React.Component {
             this.props.dispatcher.Dispatch("SELECT_LAYER", possibleLayers[index].id, multiSelect);
         } else {
             // if this a box select, pick all the layers that fall inside the box
-            let possibleLayers = this.props.layers.filter(layer =>
-                !this.props.elements[layer.elementName].manifest.nonVisual &&
-                y < layer.top &&
-                x < layer.left &&
-                bottom > (layer.top + layer.height) &&
-                right > (layer.left + layer.width));
+            let possibleLayers = this.props.layers.filter(layer => {
+                let element = this.props.elements[layer.elementName];
+                return (element &&
+                    !element.manifest.nonVisual &&
+                    y < layer.top &&
+                    x < layer.left &&
+                    bottom > (layer.top + layer.height) &&
+                    right > (layer.left + layer.width));
+            });
 
             // if not multi-selecting, deselect everything first
             if (!multiSelect)
@@ -205,6 +211,7 @@ export default class StageManager extends React.Component {
         let selectedRects = [];
         for(let id of this.props.selectedLayerIds) {
             let layer = this.props.layers.find(r => r.id == id);
+            if (!layer) { continue; }
             let element = this.props.elements[layer.elementName];
             if (element.manifest.nonVisual) { continue; } // skip non-visual elements
             if (!element.manifest.preserveAspect && preserveAspect) { preserveAspect = false; } // preserve aspect only when ALL elements preserve aspect

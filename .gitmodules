@@ -1,0 +1,3 @@
+[submodule "configuration-form"]
+	path = configuration-form
+	url = https://github.com/mikesci/configuration-form.git

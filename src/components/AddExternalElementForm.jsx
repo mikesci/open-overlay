@@ -1,6 +1,5 @@
 import React from "react";
 import { InputGroup, FormGroup, Button, Classes, Spinner } from "@blueprintjs/core";
-import ExternalElementHelper from "../shared/ExternalElementHelper.js";
 import "./AddExternalElementForm.css";
 
 export default class AddExternalElementForm extends React.Component {
@@ -34,23 +33,23 @@ export default class AddExternalElementForm extends React.Component {
     this.props.onSetLock(true);
     this.setState({ isWorking: true });
 
-    ExternalElementHelper.LoadFromUrl(this.state.url).then(externalElement => {
-      this.props.dispatcher.Dispatch("ADD_EXTERNAL_ELEMENT", externalElement);
-      this.props.onSetLock(false);
-      this.setState({
-        url: "",
-        isWorking: false,
-        lastError: null
+    this.props.dispatcher.Dispatch("ADD_EXTERNAL_ELEMENT",
+      this.state.url,
+      () => { // success
+        this.props.onSetLock(false);
+        this.setState({
+          url: "",
+          isWorking: false,
+          lastError: null
+        });
+      },
+      (errorMessage) => { // error
+        this.props.onSetLock(false);
+        this.setState({
+          isWorking: false,
+          lastError: errorMessage
+        });
       });
-    })
-    .catch(err => {
-      this.props.onSetLock(false);
-      this.setState({
-        isWorking: false,
-        lastError: err
-      });
-    });
-
   }
 
   render() {

@@ -4,7 +4,6 @@ import { Alert } from "@blueprintjs/core";
 import ClipboardHelper from "./shared/ClipboardHelper.js";
 import Dispatcher from "./shared/dispatcher.js";
 import UndoManager from "./shared/UndoManager.js";
-import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 
 import LayerList from "./components/LayerList.jsx";
 import StageManager from "./components/StageManager.jsx";
@@ -198,54 +197,22 @@ export default class OverlayEditor extends React.Component {
       ClipboardHelper.CopyToClipboard(JSON.stringify(copyData));
     });
 
-    this._dispatcher.Register("ADD_EXTERNAL_ELEMENT", externalElement => {
-      ExternalElementHelper.MakeComponent(externalElement).then(component => {
-
-        this.setState(prevState => {
-
-          // add to storage
-          this.props.storage.AddExternalElement(externalElement);
-  
-          // add to local list
-          let elements = Object.assign({}, prevState.elements);
-          elements[externalElement.url] = component;
-  
-          return {
-            elements: elements
-          };
-        });
-      });
-    });
-
-    this._dispatcher.Register("REMOVE_EXTERNAL_ELEMENT", elementName => {
-      this.setState(prevState => {
-
-          // delete from storage
-          this.props.storage.DeleteExternalElement(elementName);
-         
-          // delete from local list
-          let elements = Object.assign({}, prevState.elements);
-          delete elements[elementName];
-          
-          // delete referencing layers
-          let layers = [...prevState.layers];
-          let referencingLayerIndex = layers.findIndex(r => r.elementName == elementName);
-          while (referencingLayerIndex > -1) {
-            layers.splice(referencingLayerIndex, 1);
-            referencingLayerIndex = layers.findIndex(r => r.elementName == elementName);
-          }
-
-          return {
-            elements: elements,
-            layers: layers
-          };
-      });
-    });
-
     this._dispatcher.Register("SHOW_TOAST", (config, key, callback) => {
       key = AppToaster.show(config, key);
       if (callback) { callback(key); }
     });
+
+    if (this.props.onAddExternalElement) {
+      this._dispatcher.Register("ADD_EXTERNAL_ELEMENT", (elementName, onSuccess, onError) => {
+        this.props.onAddExternalElement(elementName).then(onSuccess).catch(onError);
+      });
+    }
+
+    if (this.props.onRemoveExternalElement) {
+      this._dispatcher.Register("REMOVE_EXTERNAL_ELEMENT", elementName => {
+        this.props.onRemoveExternalElement(elementName);
+      });
+    }
   }
 
   componentDidMount() {
@@ -437,7 +404,7 @@ export default class OverlayEditor extends React.Component {
         <div className="app-wrapper">
           <div className="app-header">OPEN OVERLAY <a href="https://github.com/mikesci/open-overlay" target="_blank">GitHub Project Page</a></div>
           <div className="layer-list-container">
-            <LayerList layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
+            <LayerList layers={this.state.layers} elements={this.state.elements} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
           <div className="active-layer-editor-container">
             <ActiveLayerEditor layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />

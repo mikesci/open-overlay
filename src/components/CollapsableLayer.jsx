@@ -1,8 +1,8 @@
 import React from "react";
 import { Collapse, Button } from "@blueprintjs/core";
-import "./CollapsableGroup.css";
+import "./CollapsableLayer.css";
 
-export default class CollapsableGroup extends React.Component {
+export default class CollapsableLayer extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -27,7 +27,7 @@ export default class CollapsableGroup extends React.Component {
         if (this.props.children) {
             collapse = (
                 <Collapse isOpen={collapsed != undefined ? !collapsed : this.state.isOpen}>
-                    <div className="group-inner">
+                    <div className="inner">
                         {this.props.children}
                     </div>
                 </Collapse>
@@ -43,7 +43,7 @@ export default class CollapsableGroup extends React.Component {
         if (disabled) { style.opacity = 0.5; }
 
         return (
-            <div className="group" {...passThroughProps}>
+            <div className="collapsable-layer" {...passThroughProps}>
                 <Button icon={icon} onClick={this.onToggle} alignText="left" style={style} fill={true} intent={intent} active={active} draggable={draggable} onDragStart={onDragStart} onDragEnd={onDragEnd}>{label}</Button>
                 {collapse}
             </div>

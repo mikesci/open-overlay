@@ -1,5 +1,4 @@
-import builtinFonts from "./fonts-builtin.js";
-import { runInThisContext } from "vm";
+import GoogleFonts from "./fonts-google.js";
 
 export default new class {
 
@@ -8,7 +7,7 @@ export default new class {
 
     EnsureFont = name => {
 
-        if (builtinFonts.includes(name)) { return null; }
+        if (!GoogleFonts.includes(name)) { return null; }
         if (this._loadedFonts.includes(name)) { return null; }
         if (this._loadPromises[name]) { return this._loadPromises[name]; }
 

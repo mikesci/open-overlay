@@ -1,11 +1,12 @@
 import React from "react";
 import { Button, Popover, Position, Intent, PopoverInteractionKind, Menu, MenuItem, MenuDivider, ContextMenu, AnchorButton } from "@blueprintjs/core";
-import CollapsableGroup from "./CollapsableGroup.jsx";
-import ConfigurationForm from "./ConfigurationForm.jsx";
+import CollapsableLayer from "./CollapsableLayer.jsx";
+import ConfigurationForm from "../../configuration-form/src/ConfigurationForm.jsx";
 import AddExternalElementForm from "./AddExternalElementForm.jsx";
 import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import "./LayerList.css";
+import GoogleFonts from "../shared/fonts-google.js";
 
 class Layer extends React.Component {
 
@@ -78,14 +79,15 @@ class Layer extends React.Component {
     let configForm = null;
     if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
       configForm = <ConfigurationForm
-      manifest={this.props.element.manifest}
-      parameterValues={this.props.layer.config}
-      onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />;
+        parameters={this.props.element.manifest.parameters}
+        parameterValues={this.props.layer.config}
+        onParameterValuesChanged={this.onConfigFormParameterValuesChanged}
+        additionalFonts={GoogleFonts} />;
     }
 
     return (
       <div className={"layer " + (this.props.isDragging ? "is-dragging" : null)} data-index={this.props.index}>
-        <CollapsableGroup
+        <CollapsableLayer
           label={editableTextLabel}
           onToggle={this.onCollapsableToggled}
           islocked={this.state.isEditingLabel}
@@ -96,7 +98,7 @@ class Layer extends React.Component {
           onDragStart={this.onDragStart}
           collapsed={this.props.collapsed}>
           {configForm}
-        </CollapsableGroup>
+        </CollapsableLayer>
       </div>
     );
   }
@@ -125,9 +127,9 @@ class ElementMenuPopover extends React.Component {
     if (!element.isExternal) { return; }
     let contents = (
       <Menu>
-        <MenuItem key="desc" disabled={true} text={element.manifest.description} />
-        <MenuItem key="author" disabled={true} text="Author" label={element.manifest.author} />
-        <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.manifest.width}x${element.manifest.height}px`} />
+        {element.manifest.description ? <MenuItem key="desc" disabled={true} text={element.manifest.description} /> : null}
+        {element.manifest.author ? <MenuItem key="author" disabled={true} text="Author" label={element.manifest.author} /> : null}
+        {element.manifest.width && element.manifest.height ? <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.manifest.width}x${element.manifest.height}px`} /> : null}
         <MenuDivider />
         <MenuItem icon="delete" text="Remove" intent={Intent.DANGER} onClick={() => this.onRemoveExternalElement(elementName)} />
       </Menu>
@@ -149,10 +151,12 @@ class ElementMenuPopover extends React.Component {
               onClick={evt => this.onElementMenuItemClick(evt, pair[0])}
             />
           ))}
-          <MenuDivider />
-          <MenuItem icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
-            <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
-          </MenuItem>
+          {this.props.canAddExternalElements ? [
+            <MenuDivider />,
+            <MenuItem icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
+              <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
+            </MenuItem>
+           ] : null}
         </Menu>
       </Popover>
     );
@@ -302,7 +306,7 @@ export default class LayerList extends React.Component {
         <div className="layer-list-header">
           <div className="left">Layers</div>
           <div className="right">
-            <ElementMenuPopover dispatcher={this.props.dispatcher} elements={this.props.elements}>
+            <ElementMenuPopover dispatcher={this.props.dispatcher} elements={this.props.elements} canAddExternalElements={this.props.canAddExternalElements}>
               <Button icon="plus" intent={Intent.PRIMARY} />
             </ElementMenuPopover>
           </div>
