@@ -9,6 +9,9 @@ export default class LayerRenderer extends React.Component {
   constructor(props) {
     super(props);
     // props.layers
+    // props.elements
+    // props.fontLoader
+
     this.state = {
       knockouts: {},
       hiddenLayerIds: []
@@ -59,8 +62,6 @@ export default class LayerRenderer extends React.Component {
       );
     }
 
-    
-
     return (
       <div className="knockout-wrapper" ref="knockoutWrapper" style={style}>
         {svg}
@@ -73,15 +74,17 @@ export default class LayerRenderer extends React.Component {
       
           // check for fonts that need to be loaded
           let isLoading = false;
-          for(var parameter of Element.manifest.parameters) {
-            if (parameter.type == "font") {
-              let font = layer.config[parameter.name];
-              if (font && font.fontFamily) {
-                let fontPromise = FontLoader.EnsureFont(font.fontFamily);
-                if (fontPromise) {
-                  isLoading = true;
-                  // when the font is loaded, re-render
-                  fontPromise.then(() => { this.forceUpdate() });
+          if (this.props.fontLoader) {
+            for(var parameter of Element.manifest.parameters) {
+              if (parameter.type == "font") {
+                let font = layer.config[parameter.name];
+                if (font && font.fontFamily) {
+                  let fontPromise = this.props.fontLoader.LoadFont(font.fontFamily);
+                  if (fontPromise) {
+                    isLoading = true;
+                    // when the font is loaded, re-render
+                    fontPromise.then(() => { this.forceUpdate() });
+                  }
                 }
               }
             }

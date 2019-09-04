@@ -12,17 +12,20 @@ import { AppToaster } from "./components/AppToaster.jsx";
 import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
 
 import "./OverlayEditor.scss";
+import FontLoader from "./shared/FontLoader.js";
 
 export default class OverlayEditor extends React.Component {
 
   _undoManager;
   _dispatcher;
+  _fontLoader;
 
   constructor(props) {
     super(props);
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
+    this._fontLoader = new FontLoader(props.fontSources);
 
     let maxLayerId = 0;
     if (this.props.layers && this.props.layers.length > 0) {
@@ -404,7 +407,7 @@ export default class OverlayEditor extends React.Component {
         <div className="app-wrapper">
           <div className="app-header">OPEN OVERLAY <a href="https://github.com/mikesci/open-overlay" target="_blank">GitHub Project Page</a></div>
           <div className="layer-list-container">
-            <LayerList layers={this.state.layers} elements={this.state.elements} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
+            <LayerList layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
           <div className="active-layer-editor-container">
             <ActiveLayerEditor layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
@@ -412,7 +415,7 @@ export default class OverlayEditor extends React.Component {
         </div>
         <div className="stage-wrapper">
           <StageManager stageWidth={this.props.width} stageHeight={this.props.height} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
-            <LayerRenderer elements={this.state.elements} layers={this.state.layers} />
+            <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} />
           </StageManager>
         </div>
       </div>

@@ -1,12 +1,11 @@
 import React from "react";
 import { Button, Popover, Position, Intent, PopoverInteractionKind, Menu, MenuItem, MenuDivider, ContextMenu, AnchorButton } from "@blueprintjs/core";
 import CollapsableLayer from "./CollapsableLayer.jsx";
-import ConfigurationForm from "../../configuration-form/src/ConfigurationForm.jsx";
+import ConfigurationForm from "./ConfigurationForm.jsx";
 import AddExternalElementForm from "./AddExternalElementForm.jsx";
 import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import "./LayerList.css";
-import GoogleFonts from "../shared/fonts-google.js";
 
 class Layer extends React.Component {
 
@@ -78,11 +77,11 @@ class Layer extends React.Component {
 
     let configForm = null;
     if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
-      configForm = <ConfigurationForm
+      configForm = (<ConfigurationForm
+        fontLoader={this.props.fontLoader}
         parameters={this.props.element.manifest.parameters}
         parameterValues={this.props.layer.config}
-        onParameterValuesChanged={this.onConfigFormParameterValuesChanged}
-        additionalFonts={GoogleFonts} />;
+        onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
     }
 
     return (
@@ -291,6 +290,7 @@ export default class LayerList extends React.Component {
           dispatcher={this.props.dispatcher}
           layer={layer}
           element={element}
+          fontLoader={this.props.fontLoader}
           isSelected={this.props.selectedLayerIds.includes(layer.id)}
           onDragStart={this.onLayerDragStart}
           onDragEnd={this.onLayerDragEnd}

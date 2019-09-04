@@ -1,28 +1,51 @@
-import GoogleFonts from "./fonts-google.js";
+import BuiltinFontSource from "./BuiltinFontSource.js";
 
-export default new class {
+export default class FontLoader {
 
     _loadedFonts = [];
     _loadPromises = {};
+    _fontSources = [ BuiltinFontSource ];
+    _fontNames;
 
-    EnsureFont = name => {
+    constructor(fontSources) {
+        if (fontSources && fontSources.length > 0) {
+            fontSources.forEach(fontSource => this._fontSources.push(fontSource));
+        }
+    }
 
-        if (!GoogleFonts.includes(name)) { return null; }
+    GetFontNames = () => {
+        // lazy load font names
+        if (!this._fontNames) {
+            // iterate through font sources to pull all available font names and cache for later
+            let fontNames = [];
+            for(let fontSource of this._fontSources) {
+                for(let fontName of fontSource.GetFontNames()) {
+                    fontNames.push(fontName);
+                }
+            }
+            this._fontNames = fontNames.sort();
+        }
+        return this._fontNames;
+    }
+
+    /// returns a Promise if a font is being loaded or null if it's already loaded
+    LoadFont = name => {
+
+        // ensure this font has not yet been loaded
         if (this._loadedFonts.includes(name)) { return null; }
+
+        // if we have an active promise, return that instead to avoid duplication
         if (this._loadPromises[name]) { return this._loadPromises[name]; }
 
-        let p = new Promise((resolve, reject) => {
-            let link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.href = "https://fonts.googleapis.com/css?family=" + encodeURIComponent(name);
-            link.addEventListener("load", () => { this._loadedFonts.push(name); resolve(); });
-            link.addEventListener("abort", reject);
-            link.addEventListener("error", reject);
-            document.head.appendChild(link);
-        });
+        for(let fontSource of this._fontSources) {
+            let possiblePromise = fontSource.LoadFont(name);
+            if (possiblePromise) {
+                this._loadPromises[name] = possiblePromise;
+                possiblePromise.then(() => this._loadedFonts.push(name));
+                return possiblePromise;
+            }
+        }
 
-        this._loadPromises[name] = p;
-
-        return p;
+        return null;
     }
 }
