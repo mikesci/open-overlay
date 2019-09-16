@@ -23,7 +23,7 @@ export default class UndoManager {
         let entry = JSON.stringify(layers);
     
         // trim the history to keep it in size
-        if (this._layerUndoHistory.length > OverlayEditor.UNDO_HISTORY_SIZE) {
+        if (this._layerUndoHistory.length > UndoManager.UNDO_HISTORY_SIZE) {
           this._layerUndoHistory.splice(0, 1); // delete the oldest element
         }
     

@@ -13,8 +13,7 @@ export default class LayerRenderer extends React.Component {
     // props.fontLoader
 
     this.state = {
-      knockouts: {},
-      hiddenLayerIds: []
+      knockouts: {}
     };
   }
 
@@ -62,53 +61,55 @@ export default class LayerRenderer extends React.Component {
       );
     }
 
-    return (
-      <div className="knockout-wrapper" ref="knockoutWrapper" style={style}>
-        {svg}
-        {this.props.layers.map((layer, index) => {
-         
-          if (layer.hidden) { return null; } // don't render anything if the layer is hidden
+    let renderedLayers = this.props.layers.map((layer, index) => {
+            
+      if (layer.hidden) { return null; } // don't render anything if the layer is hidden
 
-          let Element = this.props.elements[layer.elementName];
-          if (!Element) { return null; } // don't render anything if we don't recognize the element
-      
-          // check for fonts that need to be loaded
-          let isLoading = false;
-          if (this.props.fontLoader) {
-            for(var parameter of Element.manifest.parameters) {
-              if (parameter.type == "font") {
-                let font = layer.config[parameter.name];
-                if (font && font.fontFamily) {
-                  let fontPromise = this.props.fontLoader.LoadFont(font.fontFamily);
-                  if (fontPromise) {
-                    isLoading = true;
-                    // when the font is loaded, re-render
-                    fontPromise.then(() => { this.forceUpdate() });
-                  }
-                }
+      let Element = this.props.elements[layer.elementName];
+      if (!Element) { return null; } // don't render anything if we don't recognize the element
+
+      // check for fonts that need to be loaded
+      let isLoading = false;
+      if (this.props.fontLoader) {
+        for(var parameter of Element.manifest.parameters) {
+          if (parameter.type == "font") {
+            let font = layer.config[parameter.name];
+            if (font && font.fontFamily) {
+              let fontPromise = this.props.fontLoader.LoadFont(font.fontFamily);
+              if (fontPromise) {
+                isLoading = true;
+                // when the font is loaded, re-render
+                fontPromise.then(() => { this.forceUpdate() });
               }
             }
           }
+        }
+      }
 
-          let style = {
-            top: layer.top + "px",
-            left: layer.left + "px",
-            height: layer.height + "px",
-            width: layer.width + "px",
-            zIndex: (10000 - index),
-            visibility: (isLoading ? "hidden" : "visible")
-          };
+      let style = {
+        top: layer.top + "px",
+        left: layer.left + "px",
+        height: layer.height + "px",
+        width: layer.width + "px",
+        zIndex: (10000 - index),
+        visibility: (isLoading ? "hidden" : "visible")
+      };
 
-          if (layer.rotation) {
-            style.transform = `rotate(${layer.rotation}deg)`;
-          };
+      if (layer.rotation) {
+        style.transform = `rotate(${layer.rotation}deg)`;
+      };
 
-          return (
-            <div className="layer-container" key={layer.id} data-id={layer.id} style={style}>
-              <Element {...layer.config} layer={layer} onRegisterKnockout={this.onRegisterKnockout} onUpdateKnockout={this.onUpdateKnockout} onRemoveKnockout={this.onRemoveKnockout} />
-            </div>
-          );
-        })}
+      return (
+        <div className="layer-container" key={layer.id} data-id={layer.id} style={style}>
+          <Element key={layer.id} {...layer.config} layer={layer} onRegisterKnockout={this.onRegisterKnockout} onUpdateKnockout={this.onUpdateKnockout} onRemoveKnockout={this.onRemoveKnockout} />
+        </div>
+      );
+    });
+
+    return (
+      <div className="knockout-wrapper" ref="knockoutWrapper" style={style}>
+        {svg}
+        {renderedLayers}
       </div>
     );
   }

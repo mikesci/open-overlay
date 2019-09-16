@@ -129,8 +129,8 @@ class ElementMenuPopover extends React.Component {
         {element.manifest.description ? <MenuItem key="desc" disabled={true} text={element.manifest.description} /> : null}
         {element.manifest.author ? <MenuItem key="author" disabled={true} text="Author" label={element.manifest.author} /> : null}
         {element.manifest.width && element.manifest.height ? <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.manifest.width}x${element.manifest.height}px`} /> : null}
-        <MenuDivider />
-        <MenuItem icon="delete" text="Remove" intent={Intent.DANGER} onClick={() => this.onRemoveExternalElement(elementName)} />
+        <MenuDivider key="divider" />
+        <MenuItem key="delete" icon="delete" text="Remove" intent={Intent.DANGER} onClick={() => this.onRemoveExternalElement(elementName)} />
       </Menu>
     );
 
@@ -151,8 +151,8 @@ class ElementMenuPopover extends React.Component {
             />
           ))}
           {this.props.canAddExternalElements ? [
-            <MenuDivider />,
-            <MenuItem icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
+            <MenuDivider key="divider" />,
+            <MenuItem key="add" icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
               <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
             </MenuItem>
            ] : null}
