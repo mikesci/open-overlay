@@ -399,13 +399,14 @@ export default class OverlayEditor extends React.Component {
   }
 
   render() {
+    let appHeader = this.props.appHeader || <>OPEN OVERLAY <a href="https://github.com/mikesci/open-overlay" target="_blank">GitHub Project Page</a></>;
     return (
       <div className="app-container" onDragOver={this.onDragOver} onDrop={this.onDrop}>
         <Alert isOpen={this.state.alertText != null} onClose={() => this.setState({ alertText: null })} icon="error">
           <p>{this.state.alertText}</p>
         </Alert>
         <div className="app-wrapper">
-          <div className="app-header">OPEN OVERLAY <a href="https://github.com/mikesci/open-overlay" target="_blank">GitHub Project Page</a></div>
+          <div className="app-header">{appHeader}</div>
           <div className="layer-list-container">
             <LayerList layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
