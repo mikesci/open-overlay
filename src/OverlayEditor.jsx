@@ -1,22 +1,21 @@
 import React from "react";
 import { Alert } from "@blueprintjs/core";
-
 import ClipboardHelper from "./shared/ClipboardHelper.js";
 import Dispatcher from "./shared/dispatcher.js";
 import UndoManager from "./shared/UndoManager.js";
-
 import LayerList from "./components/LayerList.jsx";
 import StageManager from "./components/StageManager.jsx";
 import LayerRenderer from "./components/LayerRenderer.jsx";
 import { AppToaster } from "./components/AppToaster.jsx";
 import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
-
-import "./OverlayEditor.scss";
 import FontLoader from "./shared/FontLoader.js";
+import DataTransferManager from "./components/DataTransferManager.jsx";
+import "./OverlayEditor.scss";
 
 export default class OverlayEditor extends React.Component {
 
   _undoManager;
+  _dataTransferManager;
   _dispatcher;
   _fontLoader;
 
@@ -25,6 +24,7 @@ export default class OverlayEditor extends React.Component {
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
+    this._dataTransferManager = new DataTransferManager(this._dispatcher, this.props.uploadUrl);
     this._fontLoader = new FontLoader(props.fontSources);
 
     let maxLayerId = 0;
@@ -200,9 +200,8 @@ export default class OverlayEditor extends React.Component {
       ClipboardHelper.CopyToClipboard(JSON.stringify(copyData));
     });
 
-    this._dispatcher.Register("SHOW_TOAST", (config, key, callback) => {
-      key = AppToaster.show(config, key);
-      if (callback) { callback(key); }
+    this._dispatcher.Register("SHOW_TOAST", (config, key) => {
+      return AppToaster.show(config, key);
     });
 
     if (this.props.onAddExternalElement) {
@@ -381,9 +380,7 @@ export default class OverlayEditor extends React.Component {
     // pass through input elements
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
     evt.preventDefault();
-    if (this.props.onDataTransfer) {
-      this.props.onDataTransfer(evt.clipboardData, this._dispatcher);
-    }
+    this.refs.dataTransferManager.handleDataTransfer(evt.dataTransfer);
   }
 
   onDragOver = evt => {
@@ -393,9 +390,11 @@ export default class OverlayEditor extends React.Component {
 
   onDrop = evt => {
     evt.preventDefault();
-    if (this.props.onDataTransfer) {
-      this.props.onDataTransfer(evt.dataTransfer, this._dispatcher);
-    }
+    this.refs.dataTransferManager.handleDataTransfer(evt.dataTransfer);
+  }
+
+  onCreateLayerFromDataTransfer = (name, config) => {
+    this._dispatcher.Dispatch("CREATE_LAYER", name, config);
   }
 
   render() {
@@ -404,6 +403,7 @@ export default class OverlayEditor extends React.Component {
         <Alert isOpen={this.state.alertText != null} onClose={() => this.setState({ alertText: null })} icon="error">
           <p>{this.state.alertText}</p>
         </Alert>
+        <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref="dataTransferManager" />
         <div className="app-wrapper">
           {this.props.appHeader ? <div className="app-header">{this.props.appHeader}</div> : null}
           <div className="layer-list-container">

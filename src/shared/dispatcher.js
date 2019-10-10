@@ -30,4 +30,13 @@ export default class Dispatcher {
             }
         }
     }
+
+    DispatchForResult(eventName, ...eventArguments) {
+        let callbacksForEvent = this._callbacks[eventName];
+        if (callbacksForEvent.length != 1) {
+            console.log(`DispatchWithResult called with ${callbacksForEvent.length}callbacks registered. (Should be 1)`);
+            return;
+        }
+        return callbacksForEvent[0](...eventArguments);
+    }
 }

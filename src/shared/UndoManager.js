@@ -20,7 +20,7 @@ export default class UndoManager {
         }
     
         // deep copy layer data
-        let entry = JSON.stringify(layers);
+        let entry = JSON.stringify(layers, null, 0); // no spaces!
     
         // trim the history to keep it in size
         if (this._layerUndoHistory.length > UndoManager.UNDO_HISTORY_SIZE) {
