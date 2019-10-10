@@ -3,14 +3,17 @@ const path = require('path');
 module.exports = {
     mode: "development",
     entry: {
-        'OverlayEditor': './src/OverlayEditor.jsx',
-        'ElementEditor': './src/ElementEditor.jsx'
+        'OverlayEditor': './src/OverlayEditor.jsx'
     },
     output: {
-        path: path.resolve(__dirname, './build'),
+        path: path.resolve(__dirname, './test'),
         filename: '[name].js'
     },
     optimization: { minimize: false },
+    externals: {
+        "react": "React",
+        "react-dom": "ReactDOM"
+    },
     module: {
         rules: [
             {

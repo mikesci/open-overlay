@@ -2,14 +2,9 @@
   "name": "overlay-js",
   "version": "1.0.0",
   "description": "A system to build modular overlays.",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
     "build": "webpack --config build.webpack.js",
-    "build-release": "webpack --config build-release.webpack.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-dist": "webpack --config build-dist.webpack.js"
   },
   "author": "MikeSci",
   "license": "Apache 2.0",
@@ -22,9 +17,9 @@
     "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
     "@babel/plugin-transform-react-jsx": "^7.3.0",
     "@babel/plugin-transform-runtime": "^7.6.2",
-    "@babel/runtime": "^7.6.3",
     "@babel/polyfill": "^7.4.4",
     "@babel/preset-env": "^7.5.5",
+    "@babel/runtime": "^7.6.3",
     "babel-loader": "^8.0.6",
     "babel-minify-webpack-plugin": "^0.3.1",
     "classnames": "^2.2.6",

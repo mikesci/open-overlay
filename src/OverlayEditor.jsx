@@ -10,12 +10,12 @@ import { AppToaster } from "./components/AppToaster.jsx";
 import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
 import FontLoader from "./shared/FontLoader.js";
 import DataTransferManager from "./components/DataTransferManager.jsx";
+import Elements from "./components/Elements.jsx";
 import "./OverlayEditor.scss";
 
-export default class OverlayEditor extends React.Component {
+class OverlayEditor extends React.Component {
 
   _undoManager;
-  _dataTransferManager;
   _dispatcher;
   _fontLoader;
 
@@ -24,7 +24,6 @@ export default class OverlayEditor extends React.Component {
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
-    this._dataTransferManager = new DataTransferManager(this._dispatcher, this.props.uploadUrl);
     this._fontLoader = new FontLoader(props.fontSources);
 
     let maxLayerId = 0;
@@ -36,7 +35,7 @@ export default class OverlayEditor extends React.Component {
       alertText: null,
       maxLayerId: maxLayerId, // get maximum id and add one
       selectedLayerIds: [],
-      elements: this.props.elements,
+      elements: Elements.Builtin,
       layers: this.props.layers || [],
       addExternalElementDialogIsOpen: false
     };
@@ -405,7 +404,6 @@ export default class OverlayEditor extends React.Component {
         </Alert>
         <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref="dataTransferManager" />
         <div className="app-wrapper">
-          {this.props.appHeader ? <div className="app-header">{this.props.appHeader}</div> : null}
           <div className="layer-list-container">
             <LayerList layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
@@ -422,3 +420,8 @@ export default class OverlayEditor extends React.Component {
     );
   }
 }
+
+// export to window to allow this to be consumed in the browser easily
+window.OverlayEditor = OverlayEditor;
+
+export default OverlayEditor;

@@ -3,14 +3,17 @@ const path = require('path');
 module.exports = {
     mode: "production",
     entry: {
-        'OverlayEditor': './src/OverlayEditor.jsx',
-        'ElementEditor': './src/ElementEditor.jsx'
+        'OverlayEditor': './src/OverlayEditor.jsx'
     },
     output: {
-        path: path.resolve(__dirname, './release'),
+        path: path.resolve(__dirname, './dist'),
         filename: '[name].js'
     },
     optimization: { minimize: true },
+    externals: {
+        "react": "React",
+        "react-dom": "ReactDOM"
+    },
     module: {
         rules: [
             {
@@ -19,7 +22,7 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: [ "@babel/preset-env", { "targets": { "node": "current" } } ],
+                        presets: [ "@babel/preset-env" ],
                         plugins: [
                             "@babel/plugin-transform-react-jsx",
                             "@babel/plugin-proposal-class-properties",

@@ -1,10 +1,11 @@
 import BuiltinFontSource from "./BuiltinFontSource.js";
+import GoogleFontSource from "./GoogleFontSource.js";
 
 export default class FontLoader {
 
     _loadedFonts = [];
     _loadPromises = {};
-    _fontSources = [ BuiltinFontSource ];
+    _fontSources = [ BuiltinFontSource, GoogleFontSource ];
     _fontNames;
 
     constructor(fontSources) {
