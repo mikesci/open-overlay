@@ -71,7 +71,7 @@ let contentTypeHandlers = [
         }
     },
     {   // youtube
-        match: (type, value) => type.match(/text\/html/i) && value.match(YOUTUBE_URL_REGEX),
+        match: (type, data) => type.match(/text\/html/i) && data.match(YOUTUBE_URL_REGEX),
         getLayers: async (url) => {
             // parse out the start parameter, if there is one
             let match = url.match(/(?:star)?t=(\d+)/i);
@@ -105,12 +105,27 @@ let contentTypeHandlers = [
             }];
         }
     },
-    {   // iframe (any HTML content type)
-        match: type => type.match(/text\/plain/i),
+    {   // JSON
+        match: (type, data) => type.match(/text\/plain/i) && data.startsWith("{"),
         getLayers: async (data) => {
-            return [];
+            let layers = [];
+            try {
+                let obj = JSON.parse(data);
+                if (obj.objectType == "layers") {
+                    for(let layer of obj.data) {
+                        let { elementName, ...elementConfig } = layer;
+                        // add the layers in reverse to preserve copy order
+                        layers.unshift({
+                            elementName: elementName,
+                            elementConfig: elementConfig
+                        });
+                    }
+                }
+           }
+           catch { }
+           return layers;
         }
-    },
+    }
 ];
 
 export default contentTypeHandlers;

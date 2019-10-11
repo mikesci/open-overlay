@@ -15,8 +15,8 @@ export default class DataTransferManager extends React.Component {
         };
     }
 
-    getContentTypeHandler = (contentType, url) => {
-        return ContentTypeHandlers.find(handler => handler.match(contentType, url));
+    getContentTypeHandler = (contentType, data) => {
+        return ContentTypeHandlers.find(handler => handler.match(contentType, data));
     }
 
     // tries to fetch HEAD for the URL to ask the remote server what the content type is
@@ -43,12 +43,11 @@ export default class DataTransferManager extends React.Component {
         // if there are plain text items, extract them
         let items = [];
         if (dataTransfer.items.length > 0) {
-            for(var item of dataTransfer.items) {
+            for(let item of dataTransfer.items) {
                 if (item.type == "text/plain") {
                     let data = await new Promise((resolve) => item.getAsString(resolve));
                     let contentType = await this.getContentTypeForData(data);
                     let contentTypeHandler = await this.getContentTypeHandler(contentType, data);
-                    // if the item
                     items.push({
                         data: data,
                         contentTypeHandler: contentTypeHandler
@@ -93,11 +92,11 @@ export default class DataTransferManager extends React.Component {
 
         // now process all of the items
         for(let item of items) {
-            console.log("Getting layers...");
             let layers = await item.contentTypeHandler.getLayers(item.data);
-            console.log({ LAYERS: layers });
+            let addToSelection = false;
             for(let layer of layers) {
-                this.props.onCreateLayer(layer.elementName, layer.elementConfig);
+                this.props.onCreateLayer(layer.elementName, layer.elementConfig, addToSelection);
+                if (!addToSelection) { addToSelection = true; }
             }
         }
     }

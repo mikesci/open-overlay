@@ -3,7 +3,8 @@ const path = require('path');
 module.exports = {
     mode: "production",
     entry: {
-        'OverlayEditor': './src/OverlayEditor.jsx'
+        'OverlayEditor': './src/OverlayEditor.jsx',
+        'OverlayRenderer': './src/OverlayRenderer.jsx'
     },
     output: {
         path: path.resolve(__dirname, './dist'),

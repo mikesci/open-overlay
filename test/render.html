@@ -7,7 +7,7 @@
     <script crossorigin src="https://unpkg.com/react@16.10.2/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16.10.2/umd/react-dom.development.js"></script>
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@blueprintjs/core@3.19.1/lib/css/blueprint.css" />
-    <script src="OverlayEditor.js" defer></script>
+    <script src="OverlayRenderer.js" defer></script>
     <style>
     html, body { overflow: hidden; height: 100%; width: 100%; padding: 0; margin: 0; }
     body { display: flex; flex-direction: column; }
@@ -22,14 +22,11 @@
             if (window.location.hash.length > 1)
                 layers = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
             ReactDOM.render(
-                React.createElement(OverlayEditor, {
-                    //renderMode: true,
+                React.createElement(OverlayRenderer, {
+                    renderMode: true,
                     width: 1920,
                     height: 1080,
-                    layers: layers,
-                    onLayersChanged: function(layers, serializedLayers) {
-                        window.location.hash = serializedLayers;
-                    }
+                    layers: layers
                 }, null),
                 document.querySelector(".app")
             );

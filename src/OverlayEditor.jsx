@@ -10,6 +10,7 @@ import { AppToaster } from "./components/AppToaster.jsx";
 import ActiveLayerEditor from "./components/ActiveLayerEditor.jsx";
 import FontLoader from "./shared/FontLoader.js";
 import DataTransferManager from "./components/DataTransferManager.jsx";
+import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import Elements from "./components/Elements.jsx";
 import "./OverlayEditor.scss";
 
@@ -21,21 +22,30 @@ class OverlayEditor extends React.Component {
 
   constructor(props) {
     super(props);
+    // props.width
+    // props.height
+    // props.layers
+    // props.onLayersChanged
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
-    this._fontLoader = new FontLoader(props.fontSources);
+    this._fontLoader = new FontLoader();
 
     let maxLayerId = 0;
     if (this.props.layers && this.props.layers.length > 0) {
       maxLayerId = this.props.layers.map(r => r.id).reduce((p,c) => (c > p ? c : p)) + 1;
     }
 
+    let elements = Elements.Builtin;
+    if (this.props.elements) {
+      elements = {...elements, ...this.props.elements};
+    }
+
     this.state = {
       alertText: null,
       maxLayerId: maxLayerId, // get maximum id and add one
       selectedLayerIds: [],
-      elements: Elements.Builtin,
+      elements: elements,
       layers: this.props.layers || [],
       addExternalElementDialogIsOpen: false
     };
@@ -43,6 +53,15 @@ class OverlayEditor extends React.Component {
     this.registerDispatcherCallbacks();
 
     this._undoManager.createUndoPoint(this.state.layers);
+
+    this.loadElementsFromLayers();
+  }
+
+  loadElementsFromLayers = async () => {
+    let externalElements = await ExternalElementHelper.LoadFromLayers(this.props.layers, this.state.elements);
+    this.setState(ps => ({
+      elements: {...ps.elements, ...externalElements}
+    }));
   }
 
   onLayersChanged(layers) {
@@ -78,7 +97,7 @@ class OverlayEditor extends React.Component {
       });
     });
 
-    this._dispatcher.Register("CREATE_LAYER", (elementName, elementConfig) => {
+    this._dispatcher.Register("CREATE_LAYER", (elementName, elementConfig, addToSelection) => {
       this.setState(prevState => {
         let layers = [...prevState.layers];
         
@@ -128,7 +147,7 @@ class OverlayEditor extends React.Component {
         this.onLayersChanged(layers);
         return {
           maxLayerId: newLayerId,
-          selectedLayerIds: [ newLayerId ],
+          selectedLayerIds: (addToSelection ? [...prevState.selectedLayerIds, newLayerId] : [ newLayerId ]),
           layers: layers
         };
       });
@@ -379,7 +398,7 @@ class OverlayEditor extends React.Component {
     // pass through input elements
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
     evt.preventDefault();
-    this.refs.dataTransferManager.handleDataTransfer(evt.dataTransfer);
+    this.refs.dataTransferManager.handleDataTransfer(evt.clipboardData);
   }
 
   onDragOver = evt => {
@@ -392,8 +411,8 @@ class OverlayEditor extends React.Component {
     this.refs.dataTransferManager.handleDataTransfer(evt.dataTransfer);
   }
 
-  onCreateLayerFromDataTransfer = (name, config) => {
-    this._dispatcher.Dispatch("CREATE_LAYER", name, config);
+  onCreateLayerFromDataTransfer = (elementName, elementConfig, addToSelection) => {
+    this._dispatcher.Dispatch("CREATE_LAYER", elementName, elementConfig, addToSelection);
   }
 
   render() {
