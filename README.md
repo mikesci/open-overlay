@@ -13,8 +13,7 @@ This package contains the core designer component used in the system above.
     - height - the height of the output stage
     - layers - an array of Layers (more below)
     - elements - an object containing the Elements to be made available in the editor (more below)
-    - storage - a class containing storage methods (more below)
-    - onDataTransfer - a method called whenever a data transfer event happens (more below)
+    - uploadUrl - the url to a file upload handler.  required for file uploads.
     - onLayersChanged - a method called whenever layer data changes permanently
   
 ## Layers
