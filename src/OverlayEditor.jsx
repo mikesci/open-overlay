@@ -24,6 +24,7 @@ class OverlayEditor extends React.Component {
     super(props);
     // props.width
     // props.height
+    // props.title
     // props.layers
     // props.onLayersChanged
 
@@ -424,7 +425,7 @@ class OverlayEditor extends React.Component {
         <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref="dataTransferManager" />
         <div className="app-wrapper">
           <div className="layer-list-container">
-            <LayerList layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
+            <LayerList title={this.props.title} layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
           <div className="active-layer-editor-container">
             <ActiveLayerEditor layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />

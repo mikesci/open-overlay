@@ -304,7 +304,7 @@ export default class LayerList extends React.Component {
     return (
       <div className="layer-list">
         <div className="layer-list-header">
-          <div className="left">Layers</div>
+          <div className="left">{this.props.title || "Layers"}</div>
           <div className="right">
             <ElementMenuPopover dispatcher={this.props.dispatcher} elements={this.props.elements} canAddExternalElements={this.props.canAddExternalElements}>
               <Button icon="plus" intent={Intent.PRIMARY} />
