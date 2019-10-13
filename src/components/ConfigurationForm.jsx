@@ -3,6 +3,7 @@ import { FormGroup, InputGroup, TextArea, Switch, HTMLSelect, RadioGroup, Radio,
 import FontStyleEditor from "./FontStyleEditor.jsx";
 import CollapsableGroup from "./CollapsableGroup.jsx";
 import StyleInput from "./StyleInput.jsx";
+import VerticalAlignEditor from "./VerticalAlignEditor.jsx";
 import { SketchPicker } from 'react-color'
 import "./ConfigurationForm.css";
 
@@ -59,6 +60,14 @@ export default class ConfigurationForm extends React.Component {
     if (this.props.onParameterValuesChanged) {
       let obj = {};
       obj[evt.target.getAttribute("data-param")] = evt.target.value;
+      this.props.onParameterValuesChanged(obj);
+    }
+  }
+
+  onVerticalAlignChanged = (param, value) => {
+    if (this.props.onParameterValuesChanged) {
+      let obj = {};
+      obj[param.name] = value;
       this.props.onParameterValuesChanged(obj);
     }
   }
@@ -160,6 +169,8 @@ export default class ConfigurationForm extends React.Component {
         return (<StyleInput value={value} onChange={this.onStyleChanged} onCommit={this.onStyleCommitted} param={parameter} />);
       case "font":
         return (<FontStyleEditor value={value} onChange={this.onFontChanged} param={parameter} fontLoader={this.props.fontLoader} />);
+      case "valign":
+        return (<VerticalAlignEditor value={value} param={parameter} onChange={this.onVerticalAlignChanged} />);
       case "color":
         return (
           <Popover boundary="window">
@@ -183,7 +194,7 @@ export default class ConfigurationForm extends React.Component {
         return (<TextArea value={value} onChange={this.onFieldChanged} onFocus={this.onTextboxFocus} onBlur={this.onTextboxBlur} data-param={parameter.name} fill={true} growVertically={true} />);
       case "text":
       default:
-        return (<InputGroup value={value} onChange={this.onFieldChanged} onFocus={this.onTextboxFocus} onBlur={this.onTextboxBlur} data-param={parameter.name} fill={true} />);
+        return (<InputGroup value={value} type={parameter.type} onChange={this.onFieldChanged} onFocus={this.onTextboxFocus} onBlur={this.onTextboxBlur} data-param={parameter.name} fill={true} />);
         break;
     }
   }

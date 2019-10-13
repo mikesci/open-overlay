@@ -7,6 +7,8 @@ export default class FontStyleEditor extends React.Component {
 
     static RGBA_COLOR_REGEX = /^rgba\((\d+),(\d+),(\d+),(\d*(?:\.\d+)?)\)$/i;
 
+    _fontSizeDragOrigin;
+
     constructor(props) {
         super(props);
         // props.fontLoader
@@ -58,6 +60,45 @@ export default class FontStyleEditor extends React.Component {
         }, true, true);
     }
 
+    onFontSizeMouseDown = evt => {
+        window.addEventListener("mousemove", this.onFontSizeMouseMove);
+        window.addEventListener("mouseup", () => {
+            if (this._fontSizeDragData)
+                this.onValueChanged({ "fontSize": this._fontSizeDragData.value }, true, true);
+
+            this._fontSizeDragData = null;
+            window.removeEventListener(this.onFontSizeMouseMove);
+        });
+
+        let originalValue, originalUnits;
+        let matches = [...evt.target.value.matchAll(/([0-9]+)(pt|px|em)/)];
+        if (matches.length == 0) {
+            originalValue = 72;
+            originalUnits = "pt";
+        } else {
+            originalValue = parseInt(matches[0][1]);
+            originalUnits = matches[0][2];
+        }
+
+        this._fontSizeDragData = {
+            originY: evt.clientY,
+            originalValue: originalValue,
+            originalUnits: originalUnits,
+            value: evt.target.value
+        };
+    }
+
+    onFontSizeMouseMove = evt => {
+        if (this._fontSizeDragData) {
+            let invertedDeltaY = this._fontSizeDragData.originY - evt.clientY;
+            let newSize = Math.max(0, this._fontSizeDragData.originalValue + invertedDeltaY);
+            this._fontSizeDragData.value = newSize + this._fontSizeDragData.originalUnits;
+            this.onValueChanged({
+                "fontSize": this._fontSizeDragData.value
+            }, true, false);
+        }
+    }
+
     onFontColorChanged = color => {
         this.onValueChanged({
             "color": `rgba(${color.rgb.r},${color.rgb.g},${color.rgb.b},${color.rgb.a})`
@@ -88,10 +129,9 @@ export default class FontStyleEditor extends React.Component {
         }, true, true);
     }
 
-    onTextAlignToggled = (evt) => {
-        let alignValue = evt.target.getAttribute("alignvalue");
+    onTextAlignToggled = (align) => {
         this.onValueChanged({
-            "textAlign": (this.state.value["textAlign"] != alignValue ? alignValue : "")
+            "textAlign": (this.state.value["textAlign"] != align ? align : "")
         }, true, true);
     }
 
@@ -135,19 +175,19 @@ export default class FontStyleEditor extends React.Component {
             <div className="font-style-editor">
                 <ControlGroup fill={true}>
                     <HTMLSelect value={this.state.value["fontFamily"]} onChange={this.onFontFamilyChanged} options={fontNames} className="font-family" fill={true} />
-                    <InputGroup type="text" value={this.state.value["fontSize"]} onChange={this.onFontSizeChanged} onBlur={this.onFontSizeBlurred} onKeyDown={this.onTextKeyDown} className="font-size" />
+                    <InputGroup type="text" value={this.state.value["fontSize"]} onChange={this.onFontSizeChanged} onBlur={this.onFontSizeBlurred} onKeyDown={this.onTextKeyDown} onMouseDown={this.onFontSizeMouseDown} className="font-size" />
                     <Popover boundary="window">
                         <Button className="font-color" style={{ "backgroundColor": this.state.value["color"] }} text="" />
                         <SketchPicker color={this.parseColor(this.state.value["color"])} onChange={this.onFontColorChanged} onChangeComplete={this.onFontColorCommitted} />
                     </Popover>
                 </ControlGroup>
                 <ButtonGroup fill={true}>
-                    <Button className="toggle-bold" active={this.state.value["fontWeight"] == "bold"} onClick={this.onBoldToggled}>B</Button>
-                    <Button className="toggle-italic" active={this.state.value["fontStyle"] == "italic"} onClick={this.onItalicToggled}>I</Button>
-                    <Button className="toggle-underline" active={this.state.value["textDecoration"] == "underline"} onClick={this.onUnderlineToggled}>U</Button>
-                    <Button className="toggle-align-left" active={this.state.value["textAlign"] == "left"} alignvalue="left" onClick={this.onTextAlignToggled}></Button>
-                    <Button className="toggle-align-center" active={this.state.value["textAlign"] == "center"} alignvalue="center" onClick={this.onTextAlignToggled}></Button>
-                    <Button className="toggle-align-right" active={this.state.value["textAlign"] == "right"} alignvalue="right" onClick={this.onTextAlignToggled}></Button>
+                    <Button icon="bold" active={this.state.value["fontWeight"] == "bold"} onClick={this.onBoldToggled}></Button>
+                    <Button icon="italic" active={this.state.value["fontStyle"] == "italic"} onClick={this.onItalicToggled}></Button>
+                    <Button icon="underline" active={this.state.value["textDecoration"] == "underline"} onClick={this.onUnderlineToggled}></Button>
+                    <Button icon="align-left" active={this.state.value["textAlign"] == "left"} onClick={() => this.onTextAlignToggled("left")}></Button>
+                    <Button icon="align-center" active={this.state.value["textAlign"] == "center"} onClick={() => this.onTextAlignToggled("center")}></Button>
+                    <Button icon="align-right" active={this.state.value["textAlign"] == "right"} onClick={() => this.onTextAlignToggled("right")}></Button>
                 </ButtonGroup>
             </div>
         );

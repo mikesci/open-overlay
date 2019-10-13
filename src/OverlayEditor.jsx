@@ -26,6 +26,7 @@ class OverlayEditor extends React.Component {
     // props.height
     // props.title
     // props.layers
+    // props.elements
     // props.onLayersChanged
 
     this._dispatcher = new Dispatcher();

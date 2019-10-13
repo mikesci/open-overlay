@@ -5,23 +5,17 @@ class RectangleElement extends React.Component {
         name: "Rectangle",
         author: "SCI",
         description: "A customizable rectangle.",
-        width: 400,
-        height: 400,
+        width: 640,
+        height: 360,
         preserveAspect: false,
-        parameters: [{
-          "name": "style",
-          "type": "style",
-          "displayName": "Style",
-          "grouped": "checkbox",
-          "defaultValue": {
-            "backgroundColor": "#8247cf",
-            "borderRadius": "20px"
-          }
-        }]
+        parameters: [
+            { "name": "background", "type": "color", "displayName": "Color", "defaultValue": "#fff" },
+            { "name": "borderRadius", "type": "number", "displayName": "Corner Radius", "defaultValue": null }
+        ]
     };
   
     render() {
-        let style = Object.assign({}, this.props.style, { height: "100%", width: "100%" });
+        let style = Object.assign({}, { height: "100%", width: "100%", backgroundColor: this.props.background, borderRadius: this.props.borderRadius + "px" });
         return (
             <div style={style}></div>
         );
@@ -107,6 +101,7 @@ class TextElement extends React.Component {
         parameters: [
             { "name": "text", "displayName": "Text", "type": "text", "defaultValue": "text" },
             { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
+            { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" },
             // need to write a font style type
         ]
     };
@@ -114,9 +109,33 @@ class TextElement extends React.Component {
     constructor(props) {
         super(props);
     }
+
+    valignToAlignItems = valign => {
+        if (valign == "top") { return "flex-start"; }
+        if (valign == "center") { return "center"; }
+        if (valign == "bottom") { return "flex-end"; }
+        return null;
+    }
+
+    textAlignToJustifyContent = textAlign => {
+        if (textAlign == "left") { return "flex-start"; }
+        if (textAlign == "center") { return "center"; }
+        if (textAlign == "right") { return "flex-end"; }
+        return null;
+    }
   
     render() {
-        let style = Object.assign({}, this.props.font, { height: "100%", width: "100%", overflow: "hidden", lineHeight: "normal" });
+        let style = Object.assign({},
+            this.props.font,
+            {
+                height: "100%",
+                width: "100%",
+                overflow: "hidden",
+                lineHeight: "normal",
+                display: "flex",
+                alignItems: this.valignToAlignItems(this.props.valign),
+                justifyContent: this.textAlignToJustifyContent(this.props.font.textAlign)
+            });
         return (
             <div style={style}>{this.props.text}</div>
         );
