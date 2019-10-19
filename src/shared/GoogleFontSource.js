@@ -1,13 +1,11 @@
 export default new class GoogleFontSource {
 
-    _loadedFonts = [];
-    _loadPromises = {};
-
     GetFontNames = () => {
         return this._fontNames;
     }
 
     LoadFont = name => {
+        if (!this._fontNames.includes(name)) { return null; }
         return new Promise((resolve, reject) => {
             let link = document.createElement("link");
             link.rel = "stylesheet";

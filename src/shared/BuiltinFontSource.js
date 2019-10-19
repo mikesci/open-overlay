@@ -19,7 +19,9 @@ export default new class BuiltinFontSource {
     }
 
     LoadFont(fontName) {
-        // we never have to load anything, so never return a promise -- always return null
-        return null;
+        if (!this._BUILTIN_FONTS.includes(fontName))
+            return null;
+
+        return Promise.resolve();
     }
 }

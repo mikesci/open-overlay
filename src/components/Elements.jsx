@@ -100,7 +100,7 @@ class TextElement extends React.Component {
         preserveAspect: false,
         parameters: [
             { "name": "text", "displayName": "Text", "type": "text", "defaultValue": "text" },
-            { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
+            { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontFamily": "Arial", "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
             { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" },
             // need to write a font style type
         ]
