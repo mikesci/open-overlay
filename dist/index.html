@@ -59,7 +59,9 @@
     
             Promise.all(loadPromises).then(() => {
                 let app = document.querySelector(".app");
+                let renderKey = Math.random();
                 let disableHashMonitoring = false;
+                let hashSetTimeout = null;
                 
                 function render() {
                     let layers = (window.location.hash.length > 1 ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : []);
@@ -67,7 +69,7 @@
                     if (showMode) {
                         ReactDOM.render(
                             React.createElement(OverlayRenderer, {
-                                key: Math.random(),
+                                key: renderKey,
                                 width: 1920,
                                 height: 1080,
                                 layers: layers
@@ -77,13 +79,17 @@
                     } else {
                         ReactDOM.render(
                             React.createElement(OverlayEditor, {
-                                key: Math.random(),
+                                key: renderKey,
                                 width: 1920,
                                 height: 1080,
                                 layers: layers,
                                 onLayersChanged: function(layers, serializedLayers) {
-                                    disableHashMonitoring = true;
-                                    window.location.hash = serializedLayers;
+                                    if (hashSetTimeout) { clearTimeout(hashSetTimeout); hashSetTimeout = null; }
+                                    // change the hash at most every 100ms
+                                    hashSetTimeout = setTimeout(() => {
+                                        disableHashMonitoring = true;
+                                        window.location.hash = serializedLayers;
+                                    }, 100);
                                 }
                             }, null),
                             app
@@ -93,14 +99,12 @@
     
                 window.addEventListener("hashchange", () => {
                     if (disableHashMonitoring) { disableHashMonitoring = false; return; }
+                    renderKey = Math.random();
                     render();
                 });
     
                 render();
             });
-    
-            
-    
         </script>
     </body>
     </html>

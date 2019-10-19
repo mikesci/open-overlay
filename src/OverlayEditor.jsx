@@ -12,6 +12,7 @@ import FontLoader from "./shared/FontLoader.js";
 import DataTransferManager from "./components/DataTransferManager.jsx";
 import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import Elements from "./components/Elements.jsx";
+import memoise from "memoize-one";
 import "./OverlayEditor.scss";
 
 class OverlayEditor extends React.Component {
@@ -241,13 +242,22 @@ class OverlayEditor extends React.Component {
     // assign global handlers
     window.addEventListener("keydown", this.onWindowKeyDown);
     // disable browser zooming
-    window.addEventListener("wheel", evt => { if (evt.ctrlKey) { evt.preventDefault(); evt.stopPropagation(); } }, { passive: false });
+    window.addEventListener("wheel", this.onWindowWheel);
     document.addEventListener("paste", this.onPaste);
   }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.onWindowKeyDown);
+    window.removeEventListener("wheel", this.onWindowWheel);
     document.removeEventListener("paste", this.onPaste);
+  }
+
+  onWindowWheel = evt => {
+    if (evt.ctrlKey)
+    {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
   }
 
   onWindowKeyDown = evt => {
@@ -280,16 +290,16 @@ class OverlayEditor extends React.Component {
         this._dispatcher.Dispatch("COPY_LAYERS", selectedLayers);
       } else if (evt.key == "c") { // center all
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = { top: (this.props.height - layer.height) / 2, left: (this.props.width - layer.width) / 2 };
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1)); // only commit on the last layer
+        });
       } else if (evt.key == "f") {
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = { top: 0, left: 0, height: this.props.height, width: this.props.width };
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1)); // only commit on the last layer
+        });
       } else if (evt.key == "[") {
         evt.preventDefault();
 
@@ -338,41 +348,41 @@ class OverlayEditor extends React.Component {
       } else if (evt.key == "+") {
         evt.preventDefault();
         let magnitude = (evt.shiftKey ? 1.2 : 1.1);
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = { height: layer.height * magnitude, width: layer.width * magnitude };
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       } else if (evt.key == "-") {
         evt.preventDefault();
         let magnitude = (evt.shiftKey ? 1.2 : 1.1);
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = { height: layer.height / magnitude, width: layer.width / magnitude };
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       } else if (evt.key == "ArrowRight") {
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = (evt.ctrlKey ? { left: 1920 - layer.width } : { left: layer.left + (evt.shiftKey ? 1 : 5) });
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       } else if (evt.key == "ArrowLeft") {
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = (evt.ctrlKey ? { left: 0 } : { left: layer.left - (evt.shiftKey ? 1 : 5) });
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       } else if (evt.key == "ArrowDown") {
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = (evt.ctrlKey ? { top: 1080 - layer.height } : { top: layer.top + (evt.shiftKey ? 1 : 5) });
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       } else if (evt.key == "ArrowUp") {
         evt.preventDefault();
-        for(let layer of selectedLayers) {
+        selectedLayers.forEach((layer, index) => {
           let newValues = (evt.ctrlKey ? { top: 0 } : { top: layer.top - (evt.shiftKey ? 1 : 5) });
-          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, true);
-        }
+          this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
+        });
       }
     } 
 
@@ -418,6 +428,7 @@ class OverlayEditor extends React.Component {
   }
 
   render() {
+
     return (
       <div className="app-container" onDragOver={this.onDragOver} onDrop={this.onDrop}>
         <Alert isOpen={this.state.alertText != null} onClose={() => this.setState({ alertText: null })} icon="error">
