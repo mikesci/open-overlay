@@ -84,7 +84,6 @@
                                 onLayersChanged: function(layers, serializedLayers) {
                                     disableHashMonitoring = true;
                                     window.location.hash = serializedLayers;
-                                    disableHashMonitoring = false;
                                 }
                             }, null),
                             app
@@ -93,7 +92,8 @@
                 }
     
                 window.addEventListener("hashchange", () => {
-                    if (!disableHashMonitoring) { render(); }
+                    if (disableHashMonitoring) { disableHashMonitoring = false; return; }
+                    render();
                 });
     
                 render();
