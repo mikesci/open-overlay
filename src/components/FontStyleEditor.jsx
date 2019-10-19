@@ -62,13 +62,7 @@ export default class FontStyleEditor extends React.Component {
 
     onFontSizeMouseDown = evt => {
         window.addEventListener("mousemove", this.onFontSizeMouseMove);
-        window.addEventListener("mouseup", () => {
-            if (this._fontSizeDragData)
-                this.onValueChanged({ "fontSize": this._fontSizeDragData.value }, true, true);
-
-            this._fontSizeDragData = null;
-            window.removeEventListener(this.onFontSizeMouseMove);
-        });
+        window.addEventListener("mouseup", this.onFontSizeMouseUp);
 
         let originalValue, originalUnits;
         let matches = [...evt.target.value.matchAll(/([0-9]+)(pt|px|em)/)];
@@ -86,6 +80,15 @@ export default class FontStyleEditor extends React.Component {
             originalUnits: originalUnits,
             value: evt.target.value
         };
+    }
+
+    onFontSizeMouseUp = evt => {
+        if (this._fontSizeDragData)
+            this.onValueChanged({ "fontSize": this._fontSizeDragData.value }, true, true);
+
+        this._fontSizeDragData = null;
+        window.removeEventListener("mousemove", this.onFontSizeMouseMove);
+        window.removeEventListener("mouseup", this.onFontSizeMouseUp);
     }
 
     onFontSizeMouseMove = evt => {
