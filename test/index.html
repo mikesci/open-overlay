@@ -13,87 +13,87 @@
     </style>
 </head>
 <body class="bp3-dark">
-    <div class="app"></div>
-    <script>
-        let showMode = (window.location.search == "?showMode=1" || window.obsstudio);
-
-        function loadScript(url) {
-            return new Promise((resolve, reject) => {
-                let script = document.createElement("script");
-                script.src = url;
-                script.addEventListener("load", resolve);
-                document.head.appendChild(script);
-                setTimeout(reject, 5000);
-            });
-        }
-
-        function loadStylesheet(url) {
-            return new Promise((resolve, reject) => {
-                let link = document.createElement("link");
-                link.href = url;
-                link.rel = "stylesheet";
-                link.type = "text/css";
-                link.addEventListener("load", resolve);
-                document.head.appendChild(link);
-                setTimeout(reject, 5000);
-            });
-        }
-
-        let loadPromises = [
-            new Promise(resolve => { window.addEventListener("load", resolve); })
-        ];
-
-        if (showMode) {
-            loadPromises.push(loadScript("OverlayRenderer.js"));
-        } else {
-            loadPromises.push(loadScript("OverlayEditor.js"));
-            loadPromises.push(loadStylesheet("https://unpkg.com/@blueprintjs/core@3.19.1/lib/css/blueprint.css"));
-        }
-
-        Promise.all(loadPromises).then(() => {
-            let app = document.querySelector(".app");
-            let disableHashMonitoring = false;
-            
-            function render() {
-                let layers = (window.location.hash.length > 1 ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : []);
-                //console.log(layers);
-                if (showMode) {
-                    ReactDOM.render(
-                        React.createElement(OverlayRenderer, {
-                            key: Math.random(),
-                            width: 1920,
-                            height: 1080,
-                            layers: layers
-                        }, null),
-                        app
-                    );
-                } else {
-                    ReactDOM.render(
-                        React.createElement(OverlayEditor, {
-                            key: Math.random(),
-                            width: 1920,
-                            height: 1080,
-                            layers: layers,
-                            onLayersChanged: function(layers, serializedLayers) {
-                                disableHashMonitoring = true;
-                                window.location.hash = serializedLayers;
-                                disableHashMonitoring = false;
-                            }
-                        }, null),
-                        app
-                    );
-                }
+        <div class="app"></div>
+        <script>
+            let showMode = (window.location.search == "?showMode=1" || window.obsstudio);
+    
+            function loadScript(url) {
+                return new Promise((resolve, reject) => {
+                    let script = document.createElement("script");
+                    script.src = url;
+                    script.addEventListener("load", resolve);
+                    document.head.appendChild(script);
+                    setTimeout(reject, 5000);
+                });
             }
-
-            window.addEventListener("hashchange", () => {
-                if (!disableHashMonitoring) { render(); }
+    
+            function loadStylesheet(url) {
+                return new Promise((resolve, reject) => {
+                    let link = document.createElement("link");
+                    link.href = url;
+                    link.rel = "stylesheet";
+                    link.type = "text/css";
+                    link.addEventListener("load", resolve);
+                    document.head.appendChild(link);
+                    setTimeout(reject, 5000);
+                });
+            }
+    
+            let loadPromises = [
+                new Promise(resolve => { window.addEventListener("load", resolve); })
+            ];
+    
+            if (showMode) {
+                loadPromises.push(loadScript("OverlayRenderer.js"));
+            } else {
+                loadPromises.push(loadScript("OverlayEditor.js"));
+                loadPromises.push(loadStylesheet("https://unpkg.com/@blueprintjs/core@3.19.1/lib/css/blueprint.css"));
+            }
+    
+            Promise.all(loadPromises).then(() => {
+                let app = document.querySelector(".app");
+                let disableHashMonitoring = false;
+                
+                function render() {
+                    let layers = (window.location.hash.length > 1 ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : []);
+                    //console.log(layers);
+                    if (showMode) {
+                        ReactDOM.render(
+                            React.createElement(OverlayRenderer, {
+                                key: Math.random(),
+                                width: 1920,
+                                height: 1080,
+                                layers: layers
+                            }, null),
+                            app
+                        );
+                    } else {
+                        ReactDOM.render(
+                            React.createElement(OverlayEditor, {
+                                key: Math.random(),
+                                width: 1920,
+                                height: 1080,
+                                layers: layers,
+                                onLayersChanged: function(layers, serializedLayers) {
+                                    disableHashMonitoring = true;
+                                    window.location.hash = serializedLayers;
+                                }
+                            }, null),
+                            app
+                        );
+                    }
+                }
+    
+                window.addEventListener("hashchange", () => {
+                    if (disableHashMonitoring) { disableHashMonitoring = false; return; }
+                    render();
+                });
+    
+                render();
             });
-
-            render();
-        });
-
-        
-
-    </script>
-</body>
-</html>
+    
+            
+    
+        </script>
+    </body>
+    </html>
