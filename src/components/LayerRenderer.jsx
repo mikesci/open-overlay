@@ -1,6 +1,65 @@
 import React from "react";
-import FontLoader from "../shared/FontLoader.js";
+import { effects } from "../shared/effects.js";
 import "./LayerRenderer.css";
+
+class Layer extends React.Component {
+
+  //_entryAnimation = [];
+
+  constructor(props) {
+    super(props);
+    // props.layer
+    // props.element
+    // props.index
+  }
+
+  /*
+  componentDidMount() {
+    this._entryAnimation = this.buildAnimations(this.props.layer.keyframes);
+  }
+
+  componentDidUpdate() {
+    // clear out the animations
+    if (this._entryAnimation) { this._entryAnimation.cancel(); }
+    this._entryAnimation = this.buildAnimations(this.props.layer.keyframes);
+  }
+
+  buildAnimations = (keyframes) => {
+    if (!keyframes) { return null; }
+    let animation = this.refs.el.animate(keyframes, {
+      duration: 2000,
+      iterations: Infinity
+    });
+    animation.pause();
+    return animation;
+  }
+  */
+
+  render() {
+    let style = {
+      top: this.props.layer.top + "px",
+      left: this.props.layer.left + "px",
+      height: this.props.layer.height + "px",
+      width:this.props.layer.width + "px",
+      zIndex: (10000 - this.props.index),
+      transform: (this.props.layer.rotation ? `rotate(${this.props.layer.rotation}deg)` : null)
+    };
+
+    if (this.props.layer.effects) {
+      Object.entries(this.props.layer.effects).forEach(([effectName, config]) => {
+        let effect = effects[effectName];
+        if (!effect) { return; }
+        effect.apply(style, config);
+      });
+    }
+
+    return (
+      <div className="layer-container" data-id={this.props.layer.id} style={style} ref="el">
+        <this.props.Element {...this.props.layer.config} layer={this.props.layer} onRegisterKnockout={this.props.onRegisterKnockout} onUpdateKnockout={this.props.onUpdateKnockout} onRemoveKnockout={this.props.onRemoveKnockout} />
+      </div>
+    );
+  }
+}
 
 export default class LayerRenderer extends React.Component {
 
@@ -62,12 +121,12 @@ export default class LayerRenderer extends React.Component {
     }
 
     let renderedLayers = this.props.layers.map((layer, index) => {
-            
+      
       if (layer.hidden) { return null; } // don't render anything if the layer is hidden
 
       let Element = this.props.elements[layer.elementName];
       if (!Element) { return null; } // don't render anything if we don't recognize the element
-
+      
       // check for fonts that need to be loaded
       let isLoading = false;
       if (this.props.fontLoader) {
@@ -86,23 +145,17 @@ export default class LayerRenderer extends React.Component {
         }
       }
 
-      let style = {
-        top: layer.top + "px",
-        left: layer.left + "px",
-        height: layer.height + "px",
-        width: layer.width + "px",
-        zIndex: (10000 - index),
-        visibility: (isLoading ? "hidden" : "visible")
-      };
-
-      if (layer.rotation) {
-        style.transform = `rotate(${layer.rotation}deg)`;
-      };
+      if (isLoading) { return null; }
 
       return (
-        <div className="layer-container" key={layer.id} data-id={layer.id} style={style}>
-          <Element key={layer.id} {...layer.config} layer={layer} onRegisterKnockout={this.onRegisterKnockout} onUpdateKnockout={this.onUpdateKnockout} onRemoveKnockout={this.onRemoveKnockout} />
-        </div>
+        <Layer
+          key={layer.id}
+          layer={layer}
+          Element={Element}
+          index={index}
+          onRegisterKnockout={this.onRegisterKnockout}
+          onRemoveKnockout={this.onRemoveKnockout}
+          onUpdateKnockout={this.onUpdateKnockout} />
       );
     });
 

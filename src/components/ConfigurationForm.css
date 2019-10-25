@@ -1,2 +1,3 @@
-.configuration-form { margin-bottom: -10px; }
+.configuration-form { margin-bottom: -10px; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; }
+.configuration-form > .bp3-form-group { flex: 1 1 100%; }
 .formgroup-slider { margin: 10px !important; }

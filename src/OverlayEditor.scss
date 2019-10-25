@@ -1,5 +1,12 @@
 @import "~@blueprintjs/core/lib/scss/variables";
 
+.app ::-webkit-scrollbar { width: 10px; background: rgba(0,0,0,0.5); }
+.app ::-webkit-scrollbar-button {  }
+.app ::-webkit-scrollbar-thumb { width: 10PX; background: #137cbd; }
+.app ::-webkit-scrollbar-track { }
+.app ::-webkit-scrollbar-track-piece { }
+.app ::-webkit-scrollbar-corner { }
+.app ::-webkit-resizer { }
 
 .app { width: 100%; height: 100%; user-select: none; }
 

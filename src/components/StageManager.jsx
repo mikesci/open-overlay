@@ -214,7 +214,7 @@ export default class StageManager extends React.Component {
             if (!layer) { continue; }
             let element = this.props.elements[layer.elementName];
             if (element.manifest.nonVisual) { continue; } // skip non-visual elements
-            if (!element.manifest.preserveAspect && preserveAspect) { preserveAspect = false; } // preserve aspect only when ALL elements preserve aspect
+            if (!element.manifest.preserveAspect && preserveAspect) { preserveAspect = false; } // preserve aspect only when ALL selected elements preserve aspect
             selectedRects.push({
                 id: id,
                 top: layer.top,
@@ -222,7 +222,8 @@ export default class StageManager extends React.Component {
                 height: layer.height,
                 width: layer.width,
                 right: layer.left + layer.width,
-                bottom: layer.top + layer.height
+                bottom: layer.top + layer.height,
+                rotation: layer.rotation
             });
         }
 

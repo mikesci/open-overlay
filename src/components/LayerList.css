@@ -2,12 +2,21 @@
 .layer-list .layer-list-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 10px 0 10px; }
 .layer-list .layer-list-header .left { flex: 1 1 auto; }
 .layer-list .layer-list-header .right { text-align: right; }
-.layer-list .layer-list-layers { margin: 10px; overflow-y: auto; }
+.layer-list > .layer-list-layers { margin: 10px; overflow-y: auto; }
 
 .layer-label { display: flex; justify-content: space-between; align-items: center; }
 .layer-label .buttons { display: flex; }
-.layer-label .buttons a { display: none; padding: 0; min-height: 20px; min-width: 20px; }
-.layer-label:hover .buttons a { display: block; }
+.layer-label .buttons a { padding: 0; min-height: 20px; min-width: 20px; margin-left: 5px; }
+.layer-label .buttons a.hideable { display: none; }
+.layer-label:hover .buttons a.hideable { display: block; }
 .layer-label .buttons .bp3-editable-text:hover { cursor: default; }
 .layer-label .buttons .bp3-editable-text:hover::before { content: none; }
 .layer-label .buttons a .bp3-icon:first-child:last-child, .layer-label a .bp3-spinner + .bp3-icon:last-child { margin: 2px; }
+
+.layer-list > .layer-list-layers > .layer .effect-item { background: rgba(0,0,0,0.1);}
+.layer-list > .layer-list-layers > .layer .effect-item > .effect-name { background: rgba(0,0,0,0.2); padding: 5px; display: flex; justify-content: space-between; align-items: center; }
+.layer-list > .layer-list-layers > .layer .effect-item > .effect-name .buttons { display: flex; }
+.layer-list > .layer-list-layers > .layer .effect-item > .effect-name > .buttons > a { min-height: 20px; min-width: 20px; }
+.layer-list > .layer-list-layers > .layer .effect-item > .configuration-form { margin: 5px 5px 0 5px; }
+.layer-list > .layer-list-layers > .layer .effect-item > .configuration-form > .bp3-form-group { margin-bottom: 5px; }
+.layer-list > .layer-list-layers > .layer .btn-add-effect { background: rgba(0,0,0,0.3); }

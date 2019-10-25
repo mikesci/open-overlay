@@ -12,7 +12,8 @@ import FontLoader from "./shared/FontLoader.js";
 import DataTransferManager from "./components/DataTransferManager.jsx";
 import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import Elements from "./components/Elements.jsx";
-import memoise from "memoize-one";
+import { effects } from "./shared/effects.js";
+import cloneDeep from "lodash/cloneDeep";
 import "./OverlayEditor.scss";
 
 class OverlayEditor extends React.Component {
@@ -131,7 +132,8 @@ class OverlayEditor extends React.Component {
           top: (elementConfig.top || 0),
           left: (elementConfig.left || 0),
           width: (elementConfig.width || element.manifest.width),
-          height: (elementConfig.height || element.manifest.height)
+          height: (elementConfig.height || element.manifest.height),
+          effects: (elementConfig.effects || (element.manifest.defaultEffects ? {...element.manifest.defaultEffects} : null))
         };
 
         if (elementConfig.config) {
@@ -219,6 +221,57 @@ class OverlayEditor extends React.Component {
         data: layers
       };
       ClipboardHelper.CopyToClipboard(JSON.stringify(copyData));
+    });
+
+    this._dispatcher.Register("ADD_EFFECT", (id, effectName) => {
+      this.setState(prevState => {
+        let layers = [...prevState.layers];
+        let layer = layers.find(r => r.id == id);
+        if (!layer) { return null; }
+        if (!layer.effects) { layer.effects = {}; }
+        if (layer.effects[effectName]) { return null; }
+        let effect = effects[effectName];
+        if (!effect) { return null; }
+        let initialValues = {};
+        for(let parameter of effect.parameters) {
+          if (parameter.defaultValue != null) { initialValues[parameter.name] = parameter.defaultValue; }
+        }
+        layer.effects[effectName] = initialValues;
+        this.onLayersChanged(layers);
+        return { layers: layers };
+      });
+    });
+
+    this._dispatcher.Register("UPDATE_EFFECT", (id, effectName, values, createUndoHistory) => {
+      //this.props.dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
+      this.setState(prevState => {
+        let layers = [...prevState.layers];
+        let layerIndex = layers.findIndex(r => r.id == id);
+        if (layerIndex == -1 || !layers[layerIndex].effects) { return null; }
+        let layer = cloneDeep(layers[layerIndex]);
+        let effectConfig = layer.effects[effectName];
+        if (!effectConfig) { return null; }
+        Object.assign(effectConfig, values);
+        layers[layerIndex] = layer;
+        if (createUndoHistory) { this.onLayersChanged(layers); }
+        return { layers: layers };
+      });
+    });
+
+    this._dispatcher.Register("DELETE_EFFECT", (id, effectName) => {
+      this.setState(prevState => {
+        let layers = [...prevState.layers];
+        let layerIndex = layers.findIndex(r => r.id == id);
+        if (layerIndex == -1 || !layers[layerIndex].effects) { return null; }
+        let layer = cloneDeep(layers[layerIndex]);
+        let effectConfig = layer.effects[effectName];
+        if (!effectConfig) { return null; }
+        delete layer.effects[effectName];
+        if (Object.entries(layer.effects).length == 0) { delete layer.effects; }
+        layers[layerIndex] = layer;
+        this.onLayersChanged(layers);
+        return { layers: layers };
+      });
     });
 
     this._dispatcher.Register("SHOW_TOAST", (config, key) => {

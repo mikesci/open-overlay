@@ -42,7 +42,8 @@ export default class Resizer extends React.Component {
             top: ((rect.top - (this.props.stageHeight / 2) + this.props.panning.y) * this.props.zoom) + (containerRect.height / 2),
             left: ((rect.left - (this.props.stageWidth / 2) + this.props.panning.x) * this.props.zoom) + (containerRect.width / 2),
             height: (rect.height ? (rect.height * this.props.zoom) : 0),
-            width: (rect.width ? (rect.width * this.props.zoom) : 0)
+            width: (rect.width ? (rect.width * this.props.zoom) : 0),
+            transform: (rect.rotation ? `rotate(${rect.rotation}deg)` : null)
         };
     }
     
@@ -287,8 +288,8 @@ export default class Resizer extends React.Component {
             );
         }
 
-        // render each selected rect if there is more than one
-        if (this.props.selectedRects.length > 1) {
+        // render each selected rect
+        if (this.props.selectedRects.length > 0) {
             for(var selectedRect of this.props.selectedRects) {
                 selectorBoxes.push(<div className="resizer-subrect" style={this.stageToScreenCoordinates(selectedRect)} key={selectedRect.id} />);
             }

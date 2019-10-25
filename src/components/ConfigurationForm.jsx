@@ -2,7 +2,6 @@ import React from "react";
 import { FormGroup, InputGroup, TextArea, Switch, HTMLSelect, RadioGroup, Radio, Slider, Collapse, Button, Popover } from "@blueprintjs/core";
 import FontStyleEditor from "./FontStyleEditor.jsx";
 import CollapsableGroup from "./CollapsableGroup.jsx";
-import StyleInput from "./StyleInput.jsx";
 import VerticalAlignEditor from "./VerticalAlignEditor.jsx";
 import { SketchPicker } from 'react-color'
 import "./ConfigurationForm.css";
@@ -165,8 +164,6 @@ export default class ConfigurationForm extends React.Component {
     }
 
     switch (parameter.type) {
-      case "style":
-        return (<StyleInput value={value} onChange={this.onStyleChanged} onCommit={this.onStyleCommitted} param={parameter} />);
       case "font":
         return (<FontStyleEditor value={value} onChange={this.onFontChanged} param={parameter} fontLoader={this.props.fontLoader} />);
       case "valign":
@@ -179,7 +176,7 @@ export default class ConfigurationForm extends React.Component {
           </Popover>
         );
       case "checkbox":
-        return (<Switch checked={value} onChange={this.onCheckboxChanged} data-param={parameter.name} label={parameter.displayName} />);
+        return (<Switch checked={value} onChange={this.onCheckboxChanged} data-param={parameter.name} label={parameter.compact != false ? parameter.displayName : null} />);
       case "select":
         return (<HTMLSelect value={value} onChange={this.onSelectChanged} data-param={parameter.name} options={parameter.options} />);
       case "radiogroup":
@@ -200,8 +197,13 @@ export default class ConfigurationForm extends React.Component {
   }
 
   renderFormGroup = parameter => {
+    let style = null;
+    if (parameter.inline) {
+      style = { flexShrink: 0, flexGrow: 0, flexBasis: parameter.inline + "%" };
+    }
+    let label = (parameter.type == "checkbox" && parameter.compact != false ? null : parameter.displayName)
     return (
-      <FormGroup key={parameter.name} label={(parameter.type == "checkbox" || parameter.type == "style" ? null : parameter.displayName)} label-for={parameter.name} className={"formgroup-" + parameter.type}>
+      <FormGroup key={parameter.name} label={label} label-for={parameter.name} className={"formgroup-" + parameter.type} style={style}>
         {this.renderInputGroup(parameter, this.props.parameterValues[parameter.name])}
       </FormGroup>
     );

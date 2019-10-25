@@ -9,13 +9,14 @@ class RectangleElement extends React.Component {
         height: 360,
         preserveAspect: false,
         parameters: [
-            { "name": "background", "type": "color", "displayName": "Color", "defaultValue": "#fff" },
-            { "name": "borderRadius", "type": "number", "displayName": "Corner Radius", "defaultValue": null }
-        ]
+        ],
+        defaultEffects: {
+            "backgroundColor": { "color": "#fff" }
+        }
     };
   
     render() {
-        let style = Object.assign({}, { height: "100%", width: "100%", backgroundColor: this.props.background, borderRadius: this.props.borderRadius + "px" });
+        let style = Object.assign({}, { height: "100%", width: "100%" });
         return (
             <div style={style}></div>
         );
@@ -101,8 +102,7 @@ class TextElement extends React.Component {
         parameters: [
             { "name": "text", "displayName": "Text", "type": "text", "defaultValue": "text" },
             { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontFamily": "Arial", "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
-            { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" },
-            // need to write a font style type
+            { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" }
         ]
     };
 
@@ -159,7 +159,6 @@ class EllipseElement extends React.Component {
     };
   
     render() {
-        let style = Object.assign({}, this.props.style);
         return (
             <svg style={{ height: "100%", width: "100%" }}><ellipse cx="50%" cy="50%" rx="50%" ry="50%" fill={this.props.fill} /></svg>
         );
@@ -181,8 +180,7 @@ class ImageElement extends React.Component {
                 { label: "Cover", value: "cover" },
                 { label: "Fill", value: "fill" }
             ]},
-            { "name": "offset", "displayName": "Offset", "type": "text" },
-            { "name": "style", "type": "style", "displayName": "Style" }
+            { "name": "offset", "displayName": "Offset", "type": "text" }
         ]
     };
 
@@ -212,7 +210,7 @@ class ImageElement extends React.Component {
         if (!this.state.preloaded) { return null; }
 
         return (
-            <img src={this.props.url} style={Object.assign({}, this.props.style, { "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset })} />
+            <img src={this.props.url} style={{ "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset }} />
         );
     }
 }
@@ -235,8 +233,7 @@ class VideoElement extends React.Component {
                 { label: "Cover", value: "cover" },
                 { label: "Fill", value: "fill" }
             ]},
-            { "name": "offset", "displayName": "Offset", "type": "text" },
-            { "name": "style", "type": "style", "displayName": "Style" }
+            { "name": "offset", "displayName": "Offset", "type": "text" }
         ]
     };
 
@@ -278,13 +275,13 @@ class VideoElement extends React.Component {
     }
   
     render() {
-        let style = Object.assign({}, this.props.style, {
+        let style = {
             "height": "100%",
             "width": "100%",
             "objectFit": this.props.fit,
             "objectPosition": this.props.offset,
             "opacity": (this.state.preloaded ? 1 : 0)
-        });
+        };
         
         return (
             <video ref="vid" onLoadedData={this.onLoadedData} loop={this.props.loop} style={style}>
@@ -363,15 +360,13 @@ class IFrameElement extends React.Component {
         height: 400,
         preserveAspect: false,
         parameters: [
-            { "name": "url", "type": "text", "displayName": "Url" },
-            { "name": "style", "type": "style", "displayName": "Style" }
+            { "name": "url", "type": "text", "displayName": "Url" }
         ]
     };
   
     render() {
-        let style = Object.assign({}, this.props.style, { "border": "0", height: "100%", width: "100%" });
         return (
-            <iframe src={this.props.url} style={style}></iframe>
+            <iframe src={this.props.url} style={{ "border": "0", height: "100%", width: "100%" }}></iframe>
         );
     }
 }
@@ -385,11 +380,10 @@ class YoutubeElement extends React.Component {
         height: 720,
         preserveAspect: true,
         parameters: [
-            { "name": "url", "type": "text", "displayName": "Url" },
-            { "name": "playing", "type": "checkbox", "displayName": "Playing", "defaultValue": true },
-            { "name": "start", "type": "text", "displayName": "Start At (s)" },
-            { "name": "volume", "type": "slider", "displayName": "Volume", "defaultValue": 100 },
-            { "name": "style", "type": "style", "displayName": "Style" }
+            { "name": "url", "type": "text", "displayName": "Url", "inline": 78 },
+            { "name": "start", "type": "text", "displayName": "Start (s)", "inline": 20 },
+            { "name": "volume", "type": "slider", "displayName": "Volume", "defaultValue": 100, "inline": 70 },
+            { "name": "playing", "type": "checkbox", "displayName": "Playing", "defaultValue": true, "inline": 20, "compact": false }
         ]
     };
 
@@ -489,11 +483,10 @@ class YoutubeElement extends React.Component {
     }
   
     render() {
-        let style = Object.assign({}, this.props.style, { overflow: "hidden", height: "100%", width: "100%", display: (this.props.url != null && this.props.url.length > 0 ? "block" : "none") });
         return (
             <>
                 <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
-                <div style={style}><div ref="target"></div></div>
+                <div style={{ overflow: "hidden", height: "100%", width: "100%", display: (this.props.url != null && this.props.url.length > 0 ? "block" : "none") }}><div ref="target"></div></div>
             </>
         );
     }

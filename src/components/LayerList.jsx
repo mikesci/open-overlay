@@ -1,11 +1,55 @@
 import React from "react";
-import { Button, Popover, Position, Intent, PopoverInteractionKind, Menu, MenuItem, MenuDivider, ContextMenu, AnchorButton } from "@blueprintjs/core";
+import { Button, Intent, AnchorButton } from "@blueprintjs/core";
 import CollapsableLayer from "./CollapsableLayer.jsx";
 import ConfigurationForm from "./ConfigurationForm.jsx";
-import AddExternalElementForm from "./AddExternalElementForm.jsx";
 import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
+import ElementMenuPopover from "./ElementMenuPopover.jsx";
+import EffectMenuPopover from "./EffectMenuPopover.jsx";
+import { effects } from "../shared/effects.js";
 import "./LayerList.css";
+
+class EffectItem extends React.PureComponent {
+
+  constructor(props) {
+    super(props);
+    // props.dispatcher
+    // props.effectName
+    // props.config
+    // props.onConfigChanged
+
+    this.state = {
+      effect: effects[this.props.effectName]
+    };
+  }
+
+  onParameterValuesChanged = (values, createUndoHistory) => {
+    this.props.dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
+  }
+
+  onDeleteClick = () => {
+    this.props.dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
+  }
+
+  render() {
+    if (!this.state.effect) { return <div>Effect {this.props.effectName} not found</div>; }
+
+    return (
+        <div className="effect-item">
+          <div className="effect-name">
+            {this.state.effect.displayName}
+            <div className="buttons">
+              <AnchorButton minimal={true} icon="trash" onClick={this.onDeleteClick} />
+            </div>
+          </div>
+          <ConfigurationForm
+            parameters={this.state.effect.parameters}
+            parameterValues={this.props.config}
+            onParameterValuesChanged={this.onParameterValuesChanged} />
+        </div>
+    );
+  }
+}
 
 class Layer extends React.Component {
 
@@ -52,6 +96,10 @@ class Layer extends React.Component {
     this.props.dispatcher.Dispatch("SELECT_LAYER", this.props.layer.id);
   }
 
+  onAddEffect = () => {
+
+  }
+
   onDragStart = evt => {
     if (!this.props.onDragStart) { evt.preventDefault(); return; }
     this.props.onDragStart(evt, this.props.layer.id);
@@ -69,9 +117,9 @@ class Layer extends React.Component {
           onConfirm={() => this.setState({ isEditingLabel: false })}
           onCancel={() => this.setState({ isEditingLabel: false })} />
           <div className="buttons">
-            <AnchorButton minimal={true} icon={this.props.layer.hidden ? "eye-off" : "eye-open"} title="Toggle Visibility" onClick={evt => { evt.stopPropagation(); this.onToggleVisibility(); }} />
-            <AnchorButton minimal={true} icon="edit" title="Edit Label" onClick={evt => { evt.stopPropagation(); this.setState({ isEditingLabel: true })}} />
-            <AnchorButton minimal={true} icon="trash" title="Delete" onClick={evt => { evt.stopPropagation(); this.onDelete(); }} />
+            <AnchorButton minimal={true} icon={this.props.layer.hidden ? "eye-off" : "eye-open"} className="hideable" title="Toggle Visibility" onClick={evt => { evt.stopPropagation(); this.onToggleVisibility(); }} />
+            <AnchorButton minimal={true} icon="edit" className="hideable" title="Edit Label" onClick={evt => { evt.stopPropagation(); this.setState({ isEditingLabel: true })}} />
+            <AnchorButton minimal={true} icon="trash" className="hideable" title="Delete" onClick={evt => { evt.stopPropagation(); this.onDelete(); }} />
           </div>
     </span>;
 
@@ -82,6 +130,13 @@ class Layer extends React.Component {
         parameters={this.props.element.manifest.parameters}
         parameterValues={this.props.layer.config}
         onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
+    }
+
+    let effectsForms = null;
+    if (this.props.layer.effects) {
+      effectsForms = Object.entries(this.props.layer.effects).map(pair => (
+        <EffectItem dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={pair[0]} config={pair[1]} />
+      ));
     }
 
     return (
@@ -97,70 +152,17 @@ class Layer extends React.Component {
           onDragStart={this.onDragStart}
           collapsed={this.props.collapsed}>
           {configForm}
+          {effectsForms}
+          <EffectMenuPopover dispatcher={this.props.dispatcher} layer={this.props.layer}>
+            <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Effect" />
+          </EffectMenuPopover>
         </CollapsableLayer>
       </div>
     );
   }
 }
 
-class ElementMenuPopover extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      isMenuLockedOpen: false
-    };
-  }
-
-  onRemoveExternalElement = element => {
-    this.props.dispatcher.Dispatch("REMOVE_EXTERNAL_ELEMENT", element);
-  }
-
-  onElementMenuItemClick = (evt, elementName) => {
-    this.props.dispatcher.Dispatch("CREATE_LAYER", elementName);
-  }
-
-  onElementMenuItemContextMenu = (evt, elementName) => {
-    evt.preventDefault();
-    let element = this.props.elements[elementName];
-    if (!element.isExternal) { return; }
-    let contents = (
-      <Menu>
-        {element.manifest.description ? <MenuItem key="desc" disabled={true} text={element.manifest.description} /> : null}
-        {element.manifest.author ? <MenuItem key="author" disabled={true} text="Author" label={element.manifest.author} /> : null}
-        {element.manifest.width && element.manifest.height ? <MenuItem key="dimensions" disabled={true} text="Dimensions" label={`${element.manifest.width}x${element.manifest.height}px`} /> : null}
-        <MenuDivider key="divider" />
-        <MenuItem key="delete" icon="delete" text="Remove" intent={Intent.DANGER} onClick={() => this.onRemoveExternalElement(elementName)} />
-      </Menu>
-    );
-
-    ContextMenu.show(contents, { left: evt.clientX, top: evt.clientY });
-  }
-
-  render() {
-    return (
-      <Popover position={Position.RIGHT_BOTTOM} interactionKind={PopoverInteractionKind.CLICK} boundary={"window"} isOpen={this.state.isMenuLockedOpen ? true : undefined}>
-        {this.props.children}
-        <Menu>
-          {Object.entries(this.props.elements).map(pair => (
-            <MenuItem
-              key={pair[0]}
-              text={pair[1].manifest.name}
-              onContextMenu={evt => this.onElementMenuItemContextMenu(evt, pair[0])}
-              onClick={evt => this.onElementMenuItemClick(evt, pair[0])}
-            />
-          ))}
-          {this.props.canAddExternalElements ? [
-            <MenuDivider key="divider" />,
-            <MenuItem key="add" icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
-              <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
-            </MenuItem>
-           ] : null}
-        </Menu>
-      </Popover>
-    );
-  }
-}
 
 export default class LayerList extends React.Component {
 
