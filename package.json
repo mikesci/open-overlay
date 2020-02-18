@@ -23,6 +23,7 @@
     "@babel/runtime": "^7.6.3",
     "babel-loader": "^8.0.6",
     "babel-minify-webpack-plugin": "^0.3.1",
+    "bson": "^4.0.3",
     "classnames": "^2.2.6",
     "css-loader": "^3.1.0",
     "express": "^4.17.1",

@@ -57,15 +57,12 @@
                 let hashSetTimeout = null;
                 
                 function render() {
-                    let layers = (window.location.hash.length > 1 ? JSON.parse(decodeURIComponent(window.location.hash.substring(1))) : []);
-                    //console.log(layers);
                     if (showMode) {
                         ReactDOM.render(
                             React.createElement(OverlayRenderer, {
                                 key: renderKey,
                                 width: 1920,
-                                height: 1080,
-                                layers: layers
+                                height: 1080
                             }, null),
                             app
                         );
@@ -75,7 +72,6 @@
                                 key: renderKey,
                                 width: 1920,
                                 height: 1080,
-                                layers: layers,
                                 onLayersChanged: function(layers, serializedLayers) {
                                     if (hashSetTimeout) { clearTimeout(hashSetTimeout); hashSetTimeout = null; }
                                     // change the hash at most every 100ms

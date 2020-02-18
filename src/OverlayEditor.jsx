@@ -16,6 +16,7 @@ import { effects } from "./shared/effects.js";
 import cloneDeep from "lodash/cloneDeep";
 import "./OverlayEditor.css";
 import ResizeBar from "./components/ResizeBar.jsx";
+import SerializationHelper from "./shared/SerializationHelper.js";
 
 class OverlayEditor extends React.Component {
 
@@ -46,13 +47,28 @@ class OverlayEditor extends React.Component {
       elements = {...elements, ...this.props.elements};
     }
 
+    let layers = this.props.layers;
+    if (!layers && window.location.hash.length > 1) // try to load layers from the window
+    {
+      let data = decodeURIComponent(window.location.hash.substring(1));
+      // try to parse as JSON for legacy support
+      try { layers = JSON.parse(data); }
+      catch { console.log("failed parsing json data"); }
+      // if that failed, we can parse with the new method
+      console.log({ data, layers });
+      if (!layers)
+        layers = SerializationHelper.stringToModel(data);
+    } else {
+      layers = [];
+    }
+
     this.state = {
       sidepanelWidth: 350,
       alertText: null,
       maxLayerId: maxLayerId, // get maximum id and add one
       selectedLayerIds: [],
       elements: elements,
-      layers: this.props.layers || [],
+      layers: layers,
       addExternalElementDialogIsOpen: false,
       animationTime: 1
     };

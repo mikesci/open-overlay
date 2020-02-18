@@ -1,3 +1,5 @@
+import bson from "bson";
+import SerializationHelper from "./SerializationHelper.js";
 
 export default class UndoManager {
 
@@ -6,9 +8,9 @@ export default class UndoManager {
     _undoPointer = 0;
 
     constructor(options) {
-
+        
     }
-
+    
     /* NOTE: The undo pointer counts BACKWARD from the end of the undo history */
 
     createUndoPoint = (layers) => {
@@ -20,7 +22,7 @@ export default class UndoManager {
         }
     
         // deep copy layer data
-        let entry = JSON.stringify(layers, null, 0); // no spaces!
+        let entry = SerializationHelper.modelToString(layers);
     
         // trim the history to keep it in size
         if (this._layerUndoHistory.length > UndoManager.UNDO_HISTORY_SIZE) {
@@ -41,7 +43,7 @@ export default class UndoManager {
         if (undoIndex < 0 || undoIndex > this._layerUndoHistory.length - 1) { return; }
         let entry = this._layerUndoHistory[undoIndex];
 
-        let layers = JSON.parse(entry);
+        let layers = SerializationHelper.stringToModel(entry);
 
         return {
             layers: layers,
