@@ -4,6 +4,7 @@ import FontStyleEditor from "./FontStyleEditor.jsx";
 import CollapsableGroup from "./CollapsableGroup.jsx";
 import VerticalAlignEditor from "./VerticalAlignEditor.jsx";
 import { SketchPicker } from 'react-color'
+import ColorHelper from "../shared/ColorHelper.js";
 import "./ConfigurationForm.css";
 
 export default class ConfigurationForm extends React.Component {
@@ -40,9 +41,9 @@ export default class ConfigurationForm extends React.Component {
   }
 
   onColorChanged = (param, color) => {
-    if (this.props.onParameterValuesChanged) {
+    if (this.props.onParameterValuesChanged) { 
       let obj = {};
-      obj[param.name] = `rgba(${color.rgb.r},${color.rgb.g},${color.rgb.b},${color.rgb.a})`;
+      obj[param.name] = ColorHelper.rgbaObjectToHexString(color.rgb);
       this.props.onParameterValuesChanged(obj, false);
     }
   }
@@ -50,7 +51,7 @@ export default class ConfigurationForm extends React.Component {
   onColorCommitted = (param, color) => {
     if (this.props.onParameterValuesChanged) {
       let obj = {};
-      obj[param.name] = `rgba(${color.rgb.r},${color.rgb.g},${color.rgb.b},${color.rgb.a})`;
+      obj[param.name] = ColorHelper.rgbaObjectToHexString(color.rgb);
       this.props.onParameterValuesChanged(obj, true);
     }
   }
@@ -186,7 +187,7 @@ export default class ConfigurationForm extends React.Component {
           </RadioGroup>
         );
       case "slider":
-        return (<Slider value={value} onChange={this.getOnSliderChangedCallback(parameter.name)} onRelease={this.getOnSliderReleasedCallback(parameter.name)} min={parameter.min || 0} max={parameter.max || 100} labelStepSize={parameter.labelStepSize || ((parameter.max || 100) / 2)} />);
+        return (<Slider value={value} onChange={this.getOnSliderChangedCallback(parameter.name)} onRelease={this.getOnSliderReleasedCallback(parameter.name)} min={parameter.min || 0} max={parameter.max || 100} stepSize={parameter.step} labelStepSize={parameter.labelStepSize || ((parameter.max || 100) / 2)} />);
       case "textarea":
         return (<TextArea value={value} onChange={this.onFieldChanged} onFocus={this.onTextboxFocus} onBlur={this.onTextboxBlur} data-param={parameter.name} fill={true} growVertically={true} />);
       case "text":

@@ -100,7 +100,7 @@ class TextElement extends React.Component {
         height: 400,
         preserveAspect: false,
         parameters: [
-            { "name": "text", "displayName": "Text", "type": "text", "defaultValue": "text" },
+            { "name": "text", "displayName": "Text", "type": "textarea", "defaultValue": "text" },
             { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontFamily": "Arial", "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
             { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" }
         ]
@@ -131,8 +131,8 @@ class TextElement extends React.Component {
                 height: "100%",
                 width: "100%",
                 overflow: "hidden",
-                lineHeight: "normal",
                 display: "flex",
+                whiteSpace: "pre",
                 alignItems: this.valignToAlignItems(this.props.valign),
                 justifyContent: this.textAlignToJustifyContent(this.props.font.textAlign)
             });

@@ -31,8 +31,20 @@ class EffectItem extends React.PureComponent {
     this.props.dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
   }
 
+  getInterpolatedConfig = () => {
+    // this.props.layer
+    // this.props.config
+    // this.props.animationTime
+
+    // COME BACK HERE LATER
+
+  }
+
   render() {
     if (!this.state.effect) { return <div>Effect {this.props.effectName} not found</div>; }
+
+
+    // interpolate config form values based on animationTime
 
     return (
         <div className="effect-item">
@@ -135,7 +147,7 @@ class Layer extends React.Component {
     let effectsForms = null;
     if (this.props.layer.effects) {
       effectsForms = Object.entries(this.props.layer.effects).map(pair => (
-        <EffectItem dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={pair[0]} config={pair[1]} />
+        <EffectItem dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={pair[0]} config={pair[1]} animationTime={this.props.animationTime} />
       ));
     }
 
@@ -297,6 +309,7 @@ export default class LayerList extends React.Component {
           onDragStart={this.onLayerDragStart}
           onDragEnd={this.onLayerDragEnd}
           collapsed={this.state.draggedLayerId == null ? undefined : true}
+          animationTime={this.props.animationTime}
           />);
       }
     });

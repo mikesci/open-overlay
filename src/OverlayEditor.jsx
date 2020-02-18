@@ -14,7 +14,8 @@ import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import Elements from "./components/Elements.jsx";
 import { effects } from "./shared/effects.js";
 import cloneDeep from "lodash/cloneDeep";
-import "./OverlayEditor.scss";
+import "./OverlayEditor.css";
+import ResizeBar from "./components/ResizeBar.jsx";
 
 class OverlayEditor extends React.Component {
 
@@ -46,12 +47,14 @@ class OverlayEditor extends React.Component {
     }
 
     this.state = {
+      sidepanelWidth: 350,
       alertText: null,
       maxLayerId: maxLayerId, // get maximum id and add one
       selectedLayerIds: [],
       elements: elements,
       layers: this.props.layers || [],
-      addExternalElementDialogIsOpen: false
+      addExternalElementDialogIsOpen: false,
+      animationTime: 1
     };
 
     this.registerDispatcherCallbacks();
@@ -480,26 +483,45 @@ class OverlayEditor extends React.Component {
     this._dispatcher.Dispatch("CREATE_LAYER", elementName, elementConfig, addToSelection);
   }
 
+  onSidepanelResized = delta => {
+    this.setState(ps => ({ sidepanelWidth: Math.max(300, ps.sidepanelWidth - delta) }));
+  }
+
+  onAnimationTimeChanged = animationTime => {
+    this.setState({ animationTime: animationTime });
+  }
+
   render() {
 
     return (
-      <div className="app-container" onDragOver={this.onDragOver} onDrop={this.onDrop}>
+      <div className="app-wrapper" onDragOver={this.onDragOver} onDrop={this.onDrop}>
         <Alert isOpen={this.state.alertText != null} onClose={() => this.setState({ alertText: null })} icon="error">
           <p>{this.state.alertText}</p>
         </Alert>
         <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref="dataTransferManager" />
-        <div className="app-wrapper">
-          <div className="layer-list-container">
-            <LayerList title={this.props.title} layers={this.state.layers} elements={this.state.elements} fontLoader={this._fontLoader} canAddExternalElements={this.props.onAddExternalElement != null} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
+        <div className="sidepanel-wrapper" style={{ width: this.state.sidepanelWidth + "px" }}>
+          <div className="layer-list-wrapper">
+            <LayerList
+              animationTime={this.state.animationTime}
+              title={this.props.title}
+              layers={this.state.layers}
+              elements={this.state.elements}
+              fontLoader={this._fontLoader}
+              canAddExternalElements={this.props.onAddExternalElement != null}
+              selectedLayerIds={this.state.selectedLayerIds}
+              dispatcher={this._dispatcher} />
           </div>
-          <div className="active-layer-editor-container">
+          <div className="active-layer-editor-wrapper">
             <ActiveLayerEditor layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
           </div>
         </div>
-        <div className="stage-wrapper">
-          <StageManager stageWidth={this.props.width} stageHeight={this.props.height} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
-            <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} />
-          </StageManager>
+        <ResizeBar width="5px" onResized={this.onSidepanelResized} />
+        <div className="rightside-wrapper">
+          <div className="stage-wrapper">
+            <StageManager stageWidth={this.props.width} stageHeight={this.props.height} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
+              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} />
+            </StageManager>
+          </div>
         </div>
       </div>
     );

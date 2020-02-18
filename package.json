@@ -4,7 +4,8 @@
   "description": "A system to build modular overlays.",
   "scripts": {
     "build": "webpack --config build.webpack.js",
-    "build-dist": "webpack --config build-dist.webpack.js"
+    "build-dist": "webpack --config build-dist.webpack.js",
+    "test": "static -p 8991 test/"
   },
   "author": "MikeSci",
   "license": "Apache 2.0",
@@ -29,6 +30,7 @@
     "lodash": "^4.17.15",
     "memoize-one": "^5.1.1",
     "node-sass": "^4.12.0",
+    "node-static": "^0.7.11",
     "react": "^16.8.6",
     "react-color": "^2.17.3",
     "react-dom": "^16.8.6",
