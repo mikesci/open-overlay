@@ -6,12 +6,14 @@ export default class Resizer extends React.Component {
     static GUTTER_STATE_MOVE = { top: true, left: true, bottom: true, right: true };
     static GUTTER_STATE_BOXSELECT = { top: false, left: false, bottom: false, right: false };
 
+    _containerRef;
     _stageContainer;
     _stage;
     _container;
 
     constructor(props) {
         super(props);
+        this._containerRef = React.createRef();
         // props.handleSize
         // props.selectedRects
         // props.onRectChanged
@@ -48,8 +50,8 @@ export default class Resizer extends React.Component {
     }
     
     componentDidMount() {
-        this._stage = this.refs.container.parentNode.querySelector(".stage");
-        this.refs.container.addEventListener("mousedown", this.onContainerMouseDown);
+        this._stage = this._containerRef.current.parentNode.querySelector(".stage");
+        this._containerRef.current.addEventListener("mousedown", this.onContainerMouseDown);
     }
 
     onContainerMouseDown = evt => {
@@ -65,7 +67,7 @@ export default class Resizer extends React.Component {
 
         // set the container to our chosen cursor so it's static
         let cursor = evt.target.getAttribute("data-cursor");
-        this.refs.container.style["cursor"] = cursor;
+        this._containerRef.current.style["cursor"] = cursor;
         let gutterState;
         if (!edge) {
             gutterState = Resizer.GUTTER_STATE_BOXSELECT;
@@ -251,7 +253,7 @@ export default class Resizer extends React.Component {
 
         window.removeEventListener("mousemove", this.onMouseMove);
         window.removeEventListener("mouseup", this.onMouseUp);
-        this.refs.container.style["cursor"] = "";
+        this._containerRef.current.style["cursor"] = "";
         this.setState({
             hasMoved: false,
             boxSelectRect: null,
@@ -300,7 +302,7 @@ export default class Resizer extends React.Component {
 
     render() {
         return (
-            <div className="resizer-container" ref="container">
+            <div className="resizer-container" ref={this._containerRef}>
                 {this.renderSelectorBoxes()}
             </div>
         );

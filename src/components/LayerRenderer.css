@@ -1,1 +1,2 @@
-.layer-container { position: absolute; }
+.layer-container { position: absolute; /*overflow: hidden;*/ }
+.layer-container-inner { width: 100%; height: 100%; box-sizing: content-box; }

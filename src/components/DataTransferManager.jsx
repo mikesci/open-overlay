@@ -4,11 +4,13 @@ import { Toaster, Toast, Icon, Position, ProgressBar, Classes, Intent } from "@b
 
 export default class DataTransferManager extends React.Component {
 
+    _toasterRef;
+
     constructor(props) {
         super(props);
-
         // props.uploadUrl
         // props.onCreateLayer
+        this._toasterRef = React.createRef();
 
         this.state = {
             uploads: []
@@ -61,7 +63,7 @@ export default class DataTransferManager extends React.Component {
         if (dataTransfer.files.length > 0) {
             // ensure we have an upload URL
             if (!this.props.uploadUrl) {
-                this.refs.toaster.show({ message: "Uploading files is not enabled.  Sorry." });
+                this._toasterRef.current.show({ message: "Uploading files is not enabled.  Sorry." });
                 return;
             }
 
@@ -72,7 +74,7 @@ export default class DataTransferManager extends React.Component {
 
                 // if we don't recognize the content type of the file, show a toast and skip
                 if (!contentTypeHandler) {
-                    this.refs.toaster.show({ message: `${file.name}: Unsupported file type '${file.type}'.` });
+                    this._toasterRef.current.show({ message: `${file.name}: Unsupported file type '${file.type}'.` });
                     continue;
                 }
 
@@ -192,7 +194,7 @@ export default class DataTransferManager extends React.Component {
 
     render() {
         return (
-            <Toaster position={Position.BOTTOM} ref="toaster">
+            <Toaster position={Position.BOTTOM} ref={this._toasterRef}>
                 {this.state.uploads.map(upload => (
                     <Toast
                         key={upload.filename}

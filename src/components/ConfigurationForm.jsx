@@ -1,6 +1,7 @@
 import React from "react";
-import { FormGroup, InputGroup, TextArea, Switch, HTMLSelect, RadioGroup, Radio, Slider, Collapse, Button, Popover } from "@blueprintjs/core";
+import { FormGroup, InputGroup, TextArea, Switch, HTMLSelect, RadioGroup, Radio, Slider, Collapse, Button, Popover, ButtonGroup } from "@blueprintjs/core";
 import FontStyleEditor from "./FontStyleEditor.jsx";
+import AnimationEditor from "./AnimationEditor.jsx";
 import CollapsableGroup from "./CollapsableGroup.jsx";
 import VerticalAlignEditor from "./VerticalAlignEditor.jsx";
 import { SketchPicker } from 'react-color'
@@ -72,6 +73,14 @@ export default class ConfigurationForm extends React.Component {
     }
   }
 
+  onAnimationChanged = (param, value, createUndoEntry) => {
+    if (this.props.onParameterValuesChanged) {
+      let obj = {};
+      obj[param.name] = value;
+      this.props.onParameterValuesChanged(obj, createUndoEntry);
+    }
+  }
+  
   onTextboxFocus = evt => {
     if (this.props.onParameterValuesChanged) {
       evt.target.setAttribute("original-value", evt.target.value);
@@ -93,6 +102,14 @@ export default class ConfigurationForm extends React.Component {
     if (this.props.onParameterValuesChanged) {
       let obj = {};
       obj[evt.target.getAttribute("data-param")] = evt.target.value;
+      this.props.onParameterValuesChanged(obj, true); // always store the undo history
+    }
+  }
+
+  onButtonGroupChanged = (parameterName, value) => {
+    if (this.props.onParameterValuesChanged) {
+      let obj = {};
+      obj[parameterName] = value;
       this.props.onParameterValuesChanged(obj, true); // always store the undo history
     }
   }
@@ -186,8 +203,18 @@ export default class ConfigurationForm extends React.Component {
             {parameter.options.map(option => (<Radio label={option.label} value={option.value} data-param={parameter.name} key={option.value} />))}
           </RadioGroup>
         );
+        case "buttongroup":
+          return (
+            <ButtonGroup>
+              {parameter.options.map(option => (
+                <Button text={option.label} key={option.value} active={value == option.value} onClick={() => this.onButtonGroupChanged(parameter.name, option.value)} />
+              ))}
+            </ButtonGroup>
+          );
       case "slider":
         return (<Slider value={value} onChange={this.getOnSliderChangedCallback(parameter.name)} onRelease={this.getOnSliderReleasedCallback(parameter.name)} min={parameter.min || 0} max={parameter.max || 100} stepSize={parameter.step} labelStepSize={parameter.labelStepSize || ((parameter.max || 100) / 2)} />);
+      case "animation":
+        return (<AnimationEditor value={value} param={parameter} onChange={this.onAnimationChanged} />);
       case "textarea":
         return (<TextArea value={value} onChange={this.onFieldChanged} onFocus={this.onTextboxFocus} onBlur={this.onTextboxBlur} data-param={parameter.name} fill={true} growVertically={true} />);
       case "text":

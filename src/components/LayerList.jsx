@@ -28,6 +28,7 @@ class EffectItem extends React.PureComponent {
   }
 
   onDeleteClick = () => {
+    console.log({ effectName: this.props.effectName });
     this.props.dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
   }
 
@@ -92,11 +93,11 @@ class Layer extends React.Component {
   }
 
   onLayerLabelChanged = value => {
-    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { label: value });
+    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { label: value }, true);
   }
 
   onToggleVisibility = value => {
-    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { hidden: !this.props.layer.hidden });
+    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { hidden: !this.props.layer.hidden }, true);
   }
 
   onDelete = () => {
@@ -128,12 +129,14 @@ class Layer extends React.Component {
           isEditing={this.state.isEditingLabel}
           onConfirm={() => this.setState({ isEditingLabel: false })}
           onCancel={() => this.setState({ isEditingLabel: false })} />
-          <div className="buttons">
-            <AnchorButton minimal={true} icon={this.props.layer.hidden ? "eye-off" : "eye-open"} className="hideable" title="Toggle Visibility" onClick={evt => { evt.stopPropagation(); this.onToggleVisibility(); }} />
-            <AnchorButton minimal={true} icon="edit" className="hideable" title="Edit Label" onClick={evt => { evt.stopPropagation(); this.setState({ isEditingLabel: true })}} />
-            <AnchorButton minimal={true} icon="trash" className="hideable" title="Delete" onClick={evt => { evt.stopPropagation(); this.onDelete(); }} />
-          </div>
     </span>;
+
+    let leftButtons = <Button icon="eye-open" intent={this.props.layer.hidden ? Intent.DANGER : Intent.SUCCESS} title="Toggle Visibility" onClick={this.onToggleVisibility} />;
+
+    let rightButtons = <>
+      <Button icon="edit" title="Edit Label" onClick={evt => { this.setState({ isEditingLabel: true })}} />
+      <Button icon="trash" title="Delete" onClick={this.onDelete} />
+    </>;
 
     let configForm = null;
     if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
@@ -146,8 +149,8 @@ class Layer extends React.Component {
 
     let effectsForms = null;
     if (this.props.layer.effects) {
-      effectsForms = Object.entries(this.props.layer.effects).map(pair => (
-        <EffectItem dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={pair[0]} config={pair[1]} animationTime={this.props.animationTime} />
+      effectsForms = Object.entries(this.props.layer.effects).map(([effectName, effectConfig]) => (
+        <EffectItem key={effectName} dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={effectName} config={effectConfig} animationTime={this.props.animationTime} />
       ));
     }
 
@@ -155,6 +158,8 @@ class Layer extends React.Component {
       <div className={"layer " + (this.props.isDragging ? "is-dragging" : null)} data-index={this.props.index}>
         <CollapsableLayer
           label={editableTextLabel}
+          leftButtons={leftButtons}
+          rightButtons={rightButtons}
           onToggle={this.onCollapsableToggled}
           islocked={this.state.isEditingLabel}
           intent={this.props.isSelected ? Intent.PRIMARY : null}

@@ -12,6 +12,6 @@
     z-index: 1;
     background: #111 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAWCAYAAAArdgcFAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAIBJREFUeNq01EsKwCAMBFBNV73/YUsLJU2ggkj90MwMzE4eEoxZVdObbN2tW1rLZT1HB4QFF5wCF5wCuyks2C8tLNjHLSy4fi1weIaH4BEehns4BP7CYXCLQ+Eah8MFp8AWzdWXC4Wth7Bg6y0seGX9f8MzPASP8DDcwyGw5xFgACKHOSst2JgZAAAAAElFTkSuQmCC');
 }
-.stage-container .stage { flex: 0 0 auto; position: relative; overflow: visible;  z-index: 1; }
+.stage-container .stage { flex: 0 0 auto; position: relative; overflow: visible;  z-index: 1; background-size: contain; background-position: center center; background-repeat: no-repeat; }
 .stage-container .stage > * { height: 100%; width: 100%; background: rgba(0, 0, 0, 0.5); }
 .stage-container .zoom-container { position: absolute; top: 10px; right: 10px; z-index: 10002; }

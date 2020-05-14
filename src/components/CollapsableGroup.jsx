@@ -1,5 +1,5 @@
 import React from "react";
-import { Collapse, Button } from "@blueprintjs/core";
+import { Collapse, Button, ButtonGroup } from "@blueprintjs/core";
 import "./CollapsableGroup.css";
 
 export default class CollapsableGroup extends React.Component {
@@ -44,7 +44,11 @@ export default class CollapsableGroup extends React.Component {
 
         return (
             <div className="group" {...passThroughProps}>
-                <Button icon={icon} onClick={this.onToggle} alignText="left" style={style} fill={true} intent={intent} active={active} draggable={draggable} onDragStart={onDragStart} onDragEnd={onDragEnd}>{label}</Button>
+                <ButtonGroup>
+                    {this.props.leftButtons}
+                    <Button icon={icon} onClick={this.onToggle} alignText="left" style={style} fill={true} intent={intent} active={active} draggable={draggable} onDragStart={onDragStart} onDragEnd={onDragEnd}>{label}</Button>
+                    {this.props.rightButtons}
+                </ButtonGroup>
                 {collapse}
             </div>
         );

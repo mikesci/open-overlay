@@ -37,25 +37,32 @@ export default class ElementMenuPopover extends React.PureComponent {
     }
   
     render() {
+      let menuEntries = [];
+      for(let [name, element] of Object.entries(this.props.elements)) {
+        if (element.manifest.hideInMenu) { continue; }
+        menuEntries.push(
+          <MenuItem
+            key={name}
+            text={element.manifest.name}
+            onContextMenu={evt => this.onElementMenuItemContextMenu(evt, name)}
+            onClick={evt => this.onElementMenuItemClick(evt, name)}
+          />
+        );
+      }
+
+      if (this.props.canAddExternalElements) {
+        menuEntries.push(<MenuDivider key="divider" />);
+        menuEntries.push(
+          <MenuItem key="add" icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
+            <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
+          </MenuItem>
+        );
+      }
+
       return (
         <Popover position={Position.RIGHT_BOTTOM} interactionKind={PopoverInteractionKind.CLICK} boundary={"window"} isOpen={this.state.isMenuLockedOpen ? true : undefined}>
           {this.props.children}
-          <Menu>
-            {Object.entries(this.props.elements).map(pair => (
-              <MenuItem
-                key={pair[0]}
-                text={pair[1].manifest.name}
-                onContextMenu={evt => this.onElementMenuItemContextMenu(evt, pair[0])}
-                onClick={evt => this.onElementMenuItemClick(evt, pair[0])}
-              />
-            ))}
-            {this.props.canAddExternalElements ? [
-              <MenuDivider key="divider" />,
-              <MenuItem key="add" icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
-                <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
-              </MenuItem>
-             ] : null}
-          </Menu>
+          <Menu>{menuEntries}</Menu>
         </Popover>
       );
     }

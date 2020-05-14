@@ -9,6 +9,9 @@ export default class StageManager extends React.Component {
     
     static RESIZE_HANDLE_SIZE = 10;
     
+    _stageContainerRef;
+    _zoomContainerRef;
+
     _bodyDrag;
 
     constructor(props) {
@@ -20,6 +23,9 @@ export default class StageManager extends React.Component {
         // props.onSelectedLayerIdChanged
         // props.onSelectedLayerRectChanged
 
+        this._stageContainerRef = React.createRef();
+        this._zoomContainerRef = React.createRef();
+
         this.state = {
             zoom: ZoomSelector.ZOOM_AUTOFIT_VALUE,
             autoFitZoom: 1,
@@ -28,16 +34,16 @@ export default class StageManager extends React.Component {
     }
 
     componentDidMount() {
-        this.refs.stageContainer.addEventListener("wheel", this.onWheel);
-        this.refs.stageContainer.addEventListener("mousedown", this.onMouseDown);
-        this.refs.stageContainer.addEventListener("contextmenu", this.onContextMenu);
+        this._stageContainerRef.current.addEventListener("wheel", this.onWheel);
+        this._stageContainerRef.current.addEventListener("mousedown", this.onMouseDown);
+        this._stageContainerRef.current.addEventListener("contextmenu", this.onContextMenu);
         document.body.addEventListener("mouseup", this.onBodyMouseUp);
         document.body.addEventListener("mousemove", this.onBodyMouseMove);
         document.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("resize", this.onWindowResized);
 
         // don't pass mousedowns further down the DOM
-        this.refs.zoomContainer.addEventListener("mousedown", evt => { evt.stopPropagation(); });
+        this._zoomContainerRef.current.addEventListener("mousedown", evt => { evt.stopPropagation(); });
 
         this.updateAutoFit();
     }
@@ -104,17 +110,19 @@ export default class StageManager extends React.Component {
 
     updateAutoFit = () => {
         // calculate auto-fit
-        let rect = this.refs.stageContainer.getBoundingClientRect();
-        if (rect.height > 0 && rect.width > 0) {
-            let ratio = this.props.stageHeight / this.props.stageWidth;
-            let scale;
-            if (rect.height / rect.width < ratio)
-                scale = rect.height / this.props.stageHeight;
-            else
-                scale = rect.width / this.props.stageWidth;
+        if (this._stageContainerRef.current) {
+            let rect = this._stageContainerRef.current.getBoundingClientRect();
+            if (rect.height > 0 && rect.width > 0) {
+                let ratio = this.props.stageHeight / this.props.stageWidth;
+                let scale;
+                if (rect.height / rect.width < ratio)
+                    scale = rect.height / this.props.stageHeight;
+                else
+                    scale = rect.width / this.props.stageWidth;
 
-            if (this.state.autoFitZoom != scale) {
-                this.setState({ autoFitZoom: scale });
+                if (this.state.autoFitZoom != scale) {
+                    this.setState({ autoFitZoom: scale });
+                }
             }
         }
     }
@@ -143,7 +151,7 @@ export default class StageManager extends React.Component {
     }
 
     onSetResizeCursor = cursor => {
-        this.refs.stageContainer.style.cursor = cursor;
+        this._stageContainerRef.current.style.cursor = cursor;
     }
 
     onSelectAtCoords = (x, y, right, bottom, multiSelect) => {
@@ -245,14 +253,15 @@ export default class StageManager extends React.Component {
         let stageStyle = {
             width: this.props.stageWidth + "px",
             height: this.props.stageHeight + "px",
-            transform: `scale(${zoomValue}) translate(${this.state.panning.x}px, ${this.state.panning.y}px)`
+            transform: `scale(${zoomValue}) translate(${this.state.panning.x}px, ${this.state.panning.y}px)`,
+            backgroundImage: (this.props.backgroundImage ? `url(${this.props.backgroundImage})` : null)
         };
         return (
-            <div className="stage-container" ref="stageContainer">
-                <div className="zoom-container" ref="zoomContainer">
+            <div className="stage-container" ref={this._stageContainerRef}>
+                <div className="zoom-container" ref={this._zoomContainerRef}>
                     <ZoomSelector zoom={this.state.zoom} autoFitZoom={this.state.autoFitZoom} onZoomChanged={this.onZoomChanged} />    
                 </div>
-                <div className="stage" style={stageStyle} ref="stage">
+                <div className="stage" style={stageStyle}>
                     {this.props.children}
                 </div>
                 {this.props.hideResizer ? null : (

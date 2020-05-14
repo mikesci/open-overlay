@@ -20,6 +20,7 @@ import SerializationHelper from "./shared/SerializationHelper.js";
 
 class OverlayEditor extends React.Component {
 
+  _dataTransferManagerRef;
   _undoManager;
   _dispatcher;
   _fontLoader;
@@ -36,6 +37,8 @@ class OverlayEditor extends React.Component {
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
     this._fontLoader = new FontLoader();
+
+    this._dataTransferManagerRef = React.createRef();
 
     let maxLayerId = 0;
     if (this.props.layers && this.props.layers.length > 0) {
@@ -58,9 +61,7 @@ class OverlayEditor extends React.Component {
       console.log({ data, layers });
       if (!layers)
         layers = SerializationHelper.stringToModel(data);
-    } else {
-      layers = [];
-    }
+    } 
 
     this.state = {
       sidepanelWidth: 350,
@@ -180,17 +181,19 @@ class OverlayEditor extends React.Component {
     this._dispatcher.Register("UPDATE_LAYER_CONFIG", (id, newValues, commit) => {
       this.setState(prevState => {
         let layers = [...prevState.layers];
-        let layer = layers.find(r => r.id == id);
-        if (layer) {
+        let layerIndex = layers.findIndex(r => r.id == id);
+        if (layerIndex > -1) {
+          let layer = {...layers[layerIndex]};
           for(let [key, value] of Object.entries(newValues)) {
             if (key == "config") // special case for .config
               layer.config = Object.assign(layer.config, value);
             else
               layer[key] = value;
           }
+          layers[layerIndex] = layer;
         }
         if (commit) { this.onLayersChanged(layers); }
-        return { layers: layers };
+        return { layers };
       });
     });
 
@@ -334,8 +337,10 @@ class OverlayEditor extends React.Component {
 
   onWindowKeyDown = evt => {
 
+    let ctrlKey = (evt.ctrlKey || evt.metaKey);
+
     // disable browser zooming
-    if (evt.ctrlKey && (evt.key == "+" || evt.key == "-" || evt.key == "0")) {
+    if (ctrlKey && (evt.key == "+" || evt.key == "-" || evt.key == "0")) {
       evt.preventDefault();
       evt.stopPropagation();
     }
@@ -344,8 +349,8 @@ class OverlayEditor extends React.Component {
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
 
     // if we're not in a field that has it's own undo, provide undo support
-    if (evt.key == "z" && evt.ctrlKey && this._undoManager.canUndo()) { this.onRestoreUndo(false); return; }
-    else if (evt.key == "y" && evt.ctrlKey && this._undoManager.canRedo()) { this.onRestoreUndo(true); return; }
+    if (evt.key == "z" && ctrlKey && this._undoManager.canUndo()) { this.onRestoreUndo(false); return; }
+    else if (evt.key == "y" && ctrlKey && this._undoManager.canRedo()) { this.onRestoreUndo(true); return; }
 
     // handle layer-specific keys
     if (this.state.selectedLayerIds.length > 0) { // when multiple layers are selected
@@ -357,7 +362,7 @@ class OverlayEditor extends React.Component {
       } else if (evt.key == "Delete") {
         evt.preventDefault();
         this._dispatcher.Dispatch("DELETE_LAYERS", this.state.selectedLayerIds);
-      } else if (evt.key == "c" && evt.ctrlKey) {
+      } else if (evt.key == "c" && ctrlKey) {
         evt.preventDefault();
         this._dispatcher.Dispatch("COPY_LAYERS", selectedLayers);
       } else if (evt.key == "c") { // center all
@@ -434,25 +439,25 @@ class OverlayEditor extends React.Component {
       } else if (evt.key == "ArrowRight") {
         evt.preventDefault();
         selectedLayers.forEach((layer, index) => {
-          let newValues = (evt.ctrlKey ? { left: 1920 - layer.width } : { left: layer.left + (evt.shiftKey ? 1 : 5) });
+          let newValues = (ctrlKey ? { left: 1920 - layer.width } : { left: layer.left + (evt.shiftKey ? 1 : 5) });
           this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
         });
       } else if (evt.key == "ArrowLeft") {
         evt.preventDefault();
         selectedLayers.forEach((layer, index) => {
-          let newValues = (evt.ctrlKey ? { left: 0 } : { left: layer.left - (evt.shiftKey ? 1 : 5) });
+          let newValues = (ctrlKey ? { left: 0 } : { left: layer.left - (evt.shiftKey ? 1 : 5) });
           this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
         });
       } else if (evt.key == "ArrowDown") {
         evt.preventDefault();
         selectedLayers.forEach((layer, index) => {
-          let newValues = (evt.ctrlKey ? { top: 1080 - layer.height } : { top: layer.top + (evt.shiftKey ? 1 : 5) });
+          let newValues = (ctrlKey ? { top: 1080 - layer.height } : { top: layer.top + (evt.shiftKey ? 1 : 5) });
           this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
         });
       } else if (evt.key == "ArrowUp") {
         evt.preventDefault();
         selectedLayers.forEach((layer, index) => {
-          let newValues = (evt.ctrlKey ? { top: 0 } : { top: layer.top - (evt.shiftKey ? 1 : 5) });
+          let newValues = (ctrlKey ? { top: 0 } : { top: layer.top - (evt.shiftKey ? 1 : 5) });
           this._dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layer.id, newValues, (index == selectedLayers.length - 1));
         });
       }
@@ -482,7 +487,7 @@ class OverlayEditor extends React.Component {
     // pass through input elements
     if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
     evt.preventDefault();
-    this.refs.dataTransferManager.handleDataTransfer(evt.clipboardData);
+    this._dataTransferManagerRef.current.handleDataTransfer(evt.clipboardData);
   }
 
   onDragOver = evt => {
@@ -492,7 +497,7 @@ class OverlayEditor extends React.Component {
 
   onDrop = evt => {
     evt.preventDefault();
-    this.refs.dataTransferManager.handleDataTransfer(evt.dataTransfer);
+    this._dataTransferManagerRef.current.handleDataTransfer(evt.dataTransfer);
   }
 
   onCreateLayerFromDataTransfer = (elementName, elementConfig, addToSelection) => {
@@ -514,7 +519,7 @@ class OverlayEditor extends React.Component {
         <Alert isOpen={this.state.alertText != null} onClose={() => this.setState({ alertText: null })} icon="error">
           <p>{this.state.alertText}</p>
         </Alert>
-        <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref="dataTransferManager" />
+        <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref={this._dataTransferManagerRef} />
         <div className="sidepanel-wrapper" style={{ width: this.state.sidepanelWidth + "px" }}>
           <div className="layer-list-wrapper">
             <LayerList
@@ -534,8 +539,15 @@ class OverlayEditor extends React.Component {
         <ResizeBar width="5px" onResized={this.onSidepanelResized} />
         <div className="rightside-wrapper">
           <div className="stage-wrapper">
-            <StageManager stageWidth={this.props.width} stageHeight={this.props.height} layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher}>
-              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} />
+            <StageManager
+              stageWidth={this.props.width}
+              stageHeight={this.props.height}
+              layers={this.state.layers}
+              elements={this.state.elements}
+              selectedLayerIds={this.state.selectedLayerIds}
+              dispatcher={this._dispatcher}
+              backgroundImage={this.props.backgroundImage}>
+              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={1000} hidden={this.props.hidden} />
             </StageManager>
           </div>
         </div>

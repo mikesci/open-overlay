@@ -40,6 +40,17 @@ class KnockoutElement extends React.Component {
     _lastRect;
 
     componentDidMount() {
+        /*
+        this.props.scriptContext.emit(this.props.layer.id, "set-knockout", null);
+        this.props.scriptContext.on("whatever", (data) => {
+
+        });
+
+        on("whatever", () => {
+            console.log
+        });
+        */
+
         this._knockoutId = this.props.onRegisterKnockout();
         this.props.onUpdateKnockout(this._knockoutId, this.buildPathString(this.props.layer, this.props.radius));
         this._lastRect = {
@@ -172,7 +183,7 @@ class ImageElement extends React.Component {
         description: "A customizable image.",
         width: 400,
         height: 400,
-        preserveAspect: false,
+        preserveAspect: true,
         parameters: [
             { "name": "url", "displayName": "Url", "type": "text" },
             { "name": "fit", "displayName": "Fit", "type": "select", "defaultValue": "cover", "options": [
@@ -237,38 +248,41 @@ class VideoElement extends React.Component {
         ]
     };
 
+    _vidRef;
+
     constructor(props) {
         super(props);
+        this._vidRef = React.createRef();
         this.state = {
             preloaded: false
         };
     }
 
-    shouldComponentUpdate(nextProps) {
-        if (this.props.playing != nextProps.playing) {
-            if (nextProps.playing)
-                this.refs.vid.play();
+    componentDidUpdate(prevProps) {
+        let newShouldPlay = this.props.playing && !(this.props.container && this.props.container.hidden) && !this.props.hidden;
+        let oldShouldPlay = prevProps.playing && !(prevProps.container && prevProps.container.hidden) && !prevProps.hidden;
+
+        if (newShouldPlay != oldShouldPlay) {
+            this._vidRef.current.currentTime = 0;
+            if (newShouldPlay)
+                this._vidRef.current.play();
             else
-                this.refs.vid.pause();
+                this._vidRef.current.pause();
         }
 
-        if (this.props.url != nextProps.url) {
-            this.refs.vid.load();
+        if (prevProps.url != this.props.url) {
+            this._vidRef.current.load();
         }
 
-        return true;
-    }
-
-    componentDidUpdate() {
-        this.refs.vid.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
+        this._vidRef.current.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
     }
 
     onLoadedData = evt => {
         this.setState({ preloaded: true });
         if (this.props.playing) {
-            this.refs.vid.play().catch((err) => {
+            this._vidRef.current.play().catch((err) => {
                 // videos can fail to play if the user doesn't interact with the document.
-                // not a big deal, but we'll log to the console
+                // not a big deal for the renderer, but we'll log to the console
                 console.log(err.message);
             });
         }
@@ -284,7 +298,7 @@ class VideoElement extends React.Component {
         };
         
         return (
-            <video ref="vid" onLoadedData={this.onLoadedData} loop={this.props.loop} style={style}>
+            <video ref={this._vidRef} onLoadedData={this.onLoadedData} loop={this.props.loop} style={style}>
                 <source src={this.props.url} />
             </video>
         );
@@ -305,8 +319,11 @@ class AudioElement extends React.Component {
         ]
     };
 
+    _audioRef;
+
     constructor(props) {
         super(props);
+        this._audioRef = React.createRef();
         this.state = {
             preloaded: false
         };
@@ -314,27 +331,27 @@ class AudioElement extends React.Component {
 
     shouldComponentUpdate(nextProps) {
         if (this.props.playing != nextProps.playing) {
-            if (nextProps.playing)
-                this.refs.audio.play();
+            if (nextProps.playing || nextProps.playing == undefined)
+                this._audioRef.current.play();
             else
-                this.refs.audio.pause();
+                this._audioRef.current.pause();
         }
 
         if (this.props.url != nextProps.url) {
-            this.refs.audio.load();
+            this._audioRef.current.load();
         }
 
         return true;
     }
 
     componentDidUpdate() {
-        this.refs.audio.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
+        this._audioRef.current.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
     }
 
     onLoadedData = evt => {
         this.setState({ preloaded: true });
         if (this.props.playing) {
-            this.refs.audio.play().catch((err) => {
+            this._audioRef.current.play().catch((err) => {
                 // videos can fail to play if the user doesn't interact with the document.
                 // not a big deal, but we'll log to the console
                 console.log(err.message);
@@ -344,7 +361,7 @@ class AudioElement extends React.Component {
   
     render() {
         return (
-            <audio ref="audio" onLoadedData={this.onLoadedData} loop={this.props.loop}>
+            <audio ref={this._audioRef} onLoadedData={this.onLoadedData} loop={this.props.loop}>
                 <source src={this.props.url} />
             </audio>
         );
@@ -393,8 +410,12 @@ class YoutubeElement extends React.Component {
         playing: []
     };
 
+    _targetRef;
+
     constructor(props) {
         super(props);
+
+        this._targetRef = React.createRef();
 
         if (!window.onYouTubeIframeAPIReadyPromise) {
             window.onYouTubeIframeAPIReadyPromise = new Promise(resolve => {
@@ -411,7 +432,7 @@ class YoutubeElement extends React.Component {
     componentDidMount() {
         let self = this;
         window.onYouTubeIframeAPIReadyPromise.then(() => {
-            let player = new YT.Player(this.refs.target, {
+            let player = new YT.Player(this._targetRef.current, {
                 width: "100%",
                 height: "100%",
                 playerVars: { 'controls': 0, 'modestbranding': 1 },
@@ -486,7 +507,7 @@ class YoutubeElement extends React.Component {
         return (
             <>
                 <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }} />
-                <div style={{ overflow: "hidden", height: "100%", width: "100%", display: (this.props.url != null && this.props.url.length > 0 ? "block" : "none") }}><div ref="target"></div></div>
+                <div style={{ overflow: "hidden", height: "100%", width: "100%", display: (this.props.url != null && this.props.url.length > 0 ? "block" : "none") }}><div ref={this._targetRef}></div></div>
             </>
         );
     }

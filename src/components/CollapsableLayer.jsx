@@ -1,5 +1,5 @@
 import React from "react";
-import { Collapse, Button } from "@blueprintjs/core";
+import { Collapse, Button, ButtonGroup } from "@blueprintjs/core";
 import "./CollapsableLayer.css";
 
 export default class CollapsableLayer extends React.Component {
@@ -21,7 +21,7 @@ export default class CollapsableLayer extends React.Component {
     }
 
     render() {
-        let {intent, label, islocked, active, disabled, draggable, onDragStart, onDragEnd, collapsed, ...passThroughProps} = this.props;
+        let {intent, label, islocked, active, disabled, draggable, onDragStart, onDragEnd, collapsed, leftButtons, rightButtons, ...passThroughProps} = this.props;
 
         let collapse = null;
         if (this.props.children) {
@@ -44,7 +44,11 @@ export default class CollapsableLayer extends React.Component {
 
         return (
             <div className="collapsable-layer" {...passThroughProps}>
-                <Button icon={icon} onClick={this.onToggle} alignText="left" style={style} fill={true} intent={intent} active={active} draggable={draggable} onDragStart={onDragStart} onDragEnd={onDragEnd}>{label}</Button>
+                <ButtonGroup fill={true}>
+                    {leftButtons}
+                    <Button icon={icon} onClick={this.onToggle} alignText="left" style={style} fill={true} intent={intent} active={active} draggable={draggable} onDragStart={onDragStart} onDragEnd={onDragEnd}>{label}</Button>
+                    {rightButtons}
+                </ButtonGroup>
                 {collapse}
             </div>
         );

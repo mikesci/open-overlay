@@ -15,6 +15,8 @@ class OverlayRenderer extends React.Component {
     // props.width
     // props.height
     // props.layers
+    // props.zIndex
+    // props.hidden
 
     this._fontLoader = new FontLoader();
 
@@ -28,32 +30,39 @@ class OverlayRenderer extends React.Component {
       // if that failed, we can parse with the new method
       if (!layers)
         layers = SerializationHelper.stringToModel(data);
-    } else {
-      layers = [];
     }
 
     this.state = {
       loaded: false,
       layers: layers,
-      elements: Elements.Builtin
+      elements: {} // will be loaded shortly
     };
 
     this.loadElementsFromLayers();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.layers != prevProps.layers) {
+      this.setState({ layers: this.props.layers });
+    }
   }
 
   loadElementsFromLayers = async () => {
     let externalElements = await ExternalElementHelper.LoadFromLayers(this.state.layers, this.state.elements);
     this.setState({
       loaded: true,
-      elements: {...Elements.Builtin, ...externalElements}
+      elements: {...Elements.Builtin, ...this.props.elements, ...externalElements}
     })
   }
 
   render() {
     if (!this.state.loaded) { return null; }
 
+    // default the z-index to 10000
+    let zIndex = this.props.zIndex || 10000;
+
     return (
-      <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} />
+      <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={zIndex} hidden={this.props.hidden} />
     );
   }
 }
