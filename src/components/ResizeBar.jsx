@@ -87,7 +87,6 @@ export default class ResizeBar extends React.Component {
     
     render() {
         let style = {
-            background: "rgba(0,0,0,0.3)",
             width: this.props.width,
             height: this.props.height,
             cursor: (this._vertical ? "ew-resize" : "ns-resize")

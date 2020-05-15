@@ -1,2 +1,16 @@
-.active-layer-editor { padding: 10px 10px 0 10px; }
-.active-layer-editor .bp3-label { font-size: 0.9em; margin-left: 9px; }
+.active-layer-editor { padding: 0; display: flex; align-items: center; }
+.active-layer-editor > .bp3-form-group { margin-bottom: 0 !important; align-items: center !important; }
+.active-layer-editor > .bp3-form-group > .bp3-label { margin: 0 9px !important; }
+.active-layer-editor .layer-coordinate-inputs { flex: 1 1 auto; display: flex; justify-content: flex-end; }
+.active-layer-editor .layer-coordinate-inputs .bp3-form-group { margin-bottom: 0 !important; align-items: center !important; }
+.active-layer-editor .layer-coordinate-inputs .bp3-input { width: 52px; height: 25px; }
+.active-layer-editor .layer-coordinate-inputs .bp3-label { font-size: 0.9em; margin: 0 9px !important; }
+.active-layer-editor .effect-list-button .bp3-button-text { width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.layer-animation-list { padding: 5px; width: 400px; }
+.layer-animation-list .layer-animation-item { background: rgba(0,0,0,0.1);}
+.layer-animation-list .layer-animation-item > .effect-name { background: rgba(0,0,0,0.2); padding: 5px; display: flex; justify-content: space-between; align-items: center; }
+.layer-animation-list .layer-animation-item > .effect-name .buttons { display: flex; }
+.layer-animation-list .layer-animation-item > .effect-name > .buttons > a { min-height: 20px; min-width: 20px; }
+.layer-animation-list .layer-animation-item > .configuration-form { margin: 5px 5px 0 5px; }
+.layer-animation-list .layer-animation-item > .configuration-form > .bp3-form-group { margin-bottom: 5px; }

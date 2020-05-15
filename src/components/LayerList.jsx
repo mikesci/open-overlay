@@ -4,7 +4,6 @@ import CollapsableLayer from "./CollapsableLayer.jsx";
 import ConfigurationForm from "./ConfigurationForm.jsx";
 import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
-import ElementMenuPopover from "./ElementMenuPopover.jsx";
 import EffectMenuPopover from "./EffectMenuPopover.jsx";
 import { effects } from "../shared/effects.js";
 import "./LayerList.css";
@@ -15,12 +14,9 @@ class EffectItem extends React.PureComponent {
     super(props);
     // props.dispatcher
     // props.effectName
+    // props.effect
     // props.config
     // props.onConfigChanged
-
-    this.state = {
-      effect: effects[this.props.effectName]
-    };
   }
 
   onParameterValuesChanged = (values, createUndoHistory) => {
@@ -28,35 +24,22 @@ class EffectItem extends React.PureComponent {
   }
 
   onDeleteClick = () => {
-    console.log({ effectName: this.props.effectName });
     this.props.dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
   }
 
-  getInterpolatedConfig = () => {
-    // this.props.layer
-    // this.props.config
-    // this.props.animationTime
-
-    // COME BACK HERE LATER
-
-  }
-
   render() {
-    if (!this.state.effect) { return <div>Effect {this.props.effectName} not found</div>; }
-
-
     // interpolate config form values based on animationTime
 
     return (
         <div className="effect-item">
           <div className="effect-name">
-            {this.state.effect.displayName}
+            {this.props.effect.displayName}
             <div className="buttons">
               <AnchorButton minimal={true} icon="trash" onClick={this.onDeleteClick} />
             </div>
           </div>
           <ConfigurationForm
-            parameters={this.state.effect.parameters}
+            parameters={this.props.effect.parameters}
             parameterValues={this.props.config}
             onParameterValuesChanged={this.onParameterValuesChanged} />
         </div>
@@ -109,10 +92,6 @@ class Layer extends React.Component {
     this.props.dispatcher.Dispatch("SELECT_LAYER", this.props.layer.id);
   }
 
-  onAddEffect = () => {
-
-  }
-
   onDragStart = evt => {
     if (!this.props.onDragStart) { evt.preventDefault(); return; }
     this.props.onDragStart(evt, this.props.layer.id);
@@ -147,11 +126,20 @@ class Layer extends React.Component {
         onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
     }
 
-    let effectsForms = null;
+    let effectsForms = [];
     if (this.props.layer.effects) {
-      effectsForms = Object.entries(this.props.layer.effects).map(([effectName, effectConfig]) => (
-        <EffectItem key={effectName} dispatcher={this.props.dispatcher} layer={this.props.layer} effectName={effectName} config={effectConfig} animationTime={this.props.animationTime} />
-      ));
+      for(let [effectName, effectConfig] of Object.entries(this.props.layer.effects)) {
+        let effect = effects[effectName];
+        if (effect.type != "animation") {
+          effectsForms.push(<EffectItem
+            key={effectName}
+            dispatcher={this.props.dispatcher}
+            layer={this.props.layer}
+            effectName={effectName}
+            effect={effect}
+            config={effectConfig} />);
+        }
+      }
     }
 
     return (
@@ -171,15 +159,13 @@ class Layer extends React.Component {
           {configForm}
           {effectsForms}
           <EffectMenuPopover dispatcher={this.props.dispatcher} layer={this.props.layer}>
-            <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Effect" />
+            <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Property" />
           </EffectMenuPopover>
         </CollapsableLayer>
       </div>
     );
   }
 }
-
-
 
 export default class LayerList extends React.Component {
 
@@ -322,18 +308,8 @@ export default class LayerList extends React.Component {
     if (this.state.draggedLayerIndex == this.props.layers.length) { layerList.push(this.renderDraggedLayer()); }
 
     return (
-      <div className="layer-list">
-        <div className="layer-list-header">
-          <div className="left">{this.props.title || "Layers"}</div>
-          <div className="right">
-            <ElementMenuPopover dispatcher={this.props.dispatcher} elements={this.props.elements} canAddExternalElements={this.props.canAddExternalElements}>
-              <Button icon="plus" intent={Intent.PRIMARY} />
-            </ElementMenuPopover>
-          </div>
-        </div>
-        <div className="layer-list-layers" onDragOver={this.onDragOver} onDrop={this.onDrop}>
-          {layerList}
-        </div>
+      <div className="layer-list-layers" onDragOver={this.onDragOver} onDrop={this.onDrop}>
+        {layerList}
       </div>
     );
   }

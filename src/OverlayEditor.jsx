@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert } from "@blueprintjs/core";
+import { Alert, InputGroup, Button } from "@blueprintjs/core";
 import ClipboardHelper from "./shared/ClipboardHelper.js";
 import Dispatcher from "./shared/dispatcher.js";
 import UndoManager from "./shared/UndoManager.js";
@@ -14,9 +14,9 @@ import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import Elements from "./components/Elements.jsx";
 import { effects } from "./shared/effects.js";
 import cloneDeep from "lodash/cloneDeep";
+import ElementMenuPopover from "./components/ElementMenuPopover.jsx";
+import ScriptPanel from "./components/ScriptPanel.jsx";
 import "./OverlayEditor.css";
-import ResizeBar from "./components/ResizeBar.jsx";
-import SerializationHelper from "./shared/SerializationHelper.js";
 
 class OverlayEditor extends React.Component {
 
@@ -30,9 +30,15 @@ class OverlayEditor extends React.Component {
     // props.width
     // props.height
     // props.title
-    // props.layers
     // props.elements
+    // props.layers
     // props.onLayersChanged
+    // props.name
+    // props.onNameChanged
+    // props.script
+    // props.onScriptChanged
+
+    // ALSO: remove support for window hash monitoring.  that should be controlled outside of this component
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
@@ -40,39 +46,31 @@ class OverlayEditor extends React.Component {
 
     this._dataTransferManagerRef = React.createRef();
 
-    let maxLayerId = 0;
-    if (this.props.layers && this.props.layers.length > 0) {
-      maxLayerId = this.props.layers.map(r => r.id).reduce((p,c) => (c > p ? c : p)) + 1;
-    }
-
     let elements = Elements.Builtin;
     if (this.props.elements) {
       elements = {...elements, ...this.props.elements};
     }
 
-    let layers = this.props.layers;
-    if (!layers && window.location.hash.length > 1) // try to load layers from the window
-    {
-      let data = decodeURIComponent(window.location.hash.substring(1));
-      // try to parse as JSON for legacy support
-      try { layers = JSON.parse(data); }
-      catch { console.log("failed parsing json data"); }
-      // if that failed, we can parse with the new method
-      console.log({ data, layers });
-      if (!layers)
-        layers = SerializationHelper.stringToModel(data);
-    } 
-
     this.state = {
-      sidepanelWidth: 350,
+      addExternalElementDialogIsOpen: false,
+      scriptPanelIsOpen: false,
       alertText: null,
-      maxLayerId: maxLayerId, // get maximum id and add one
+      rendererPhase: "static",
       selectedLayerIds: [],
       elements: elements,
-      layers: layers,
-      addExternalElementDialogIsOpen: false,
-      animationTime: 1
+      maxLayerId: 0,
+      name: this.props.name,
+      script: this.props.script,
+      layers: [...this.props.layers]
     };
+
+    if (this.props.layers) {
+      // pull in the max layer id
+      if (this.props.layers && this.props.layers.length > 0) {
+        let maxLayerId = this.props.layers.map(r => r.id).reduce((p,c) => (c > p ? c : p)) + 1;
+        Object.assign(this.state, { maxLayerId: maxLayerId });
+      }
+    }
 
     this.registerDispatcherCallbacks();
 
@@ -82,7 +80,7 @@ class OverlayEditor extends React.Component {
   }
 
   loadElementsFromLayers = async () => {
-    let externalElements = await ExternalElementHelper.LoadFromLayers(this.props.layers, this.state.elements);
+    let externalElements = await ExternalElementHelper.LoadFromLayers(this.state.layers, this.state.elements);
     this.setState(ps => ({
       elements: {...ps.elements, ...externalElements}
     }));
@@ -246,26 +244,31 @@ class OverlayEditor extends React.Component {
     });
 
     this._dispatcher.Register("ADD_EFFECT", (id, effectName) => {
+      // ensure the effect is valid
+      let effect = effects[effectName];
+      if (!effect) { return null; }
       this.setState(prevState => {
         let layers = [...prevState.layers];
-        let layer = layers.find(r => r.id == id);
-        if (!layer) { return null; }
+        let layerIndex = layers.findIndex(r => r.id == id);
+        if (layerIndex == -1) { return null; }
+        let layer = {...layers[layerIndex]}; // take a copy of the layer
         if (!layer.effects) { layer.effects = {}; }
-        if (layer.effects[effectName]) { return null; }
-        let effect = effects[effectName];
-        if (!effect) { return null; }
+        if (layer.effects[effectName]) { return null; } // disallow re-adding an effect.  shouldn't happen though.
+        let effects = (layer.effects ? {...layer.effects} : {}); // ensure we have an effects object
+        // load in the effects initial values
         let initialValues = {};
         for(let parameter of effect.parameters) {
           if (parameter.defaultValue != null) { initialValues[parameter.name] = parameter.defaultValue; }
         }
-        layer.effects[effectName] = initialValues;
+        effects[effectName] = initialValues;
+        layer.effects = effects;
+        layers[layerIndex] = layer;
         this.onLayersChanged(layers);
         return { layers: layers };
       });
     });
 
     this._dispatcher.Register("UPDATE_EFFECT", (id, effectName, values, createUndoHistory) => {
-      //this.props.dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
       this.setState(prevState => {
         let layers = [...prevState.layers];
         let layerIndex = layers.findIndex(r => r.id == id);
@@ -325,6 +328,13 @@ class OverlayEditor extends React.Component {
     window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("wheel", this.onWindowWheel);
     document.removeEventListener("paste", this.onPaste);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.overlay != prevProps.overlay) {
+      // load the overlay in
+      
+    }
   }
 
   onWindowWheel = evt => {
@@ -504,12 +514,31 @@ class OverlayEditor extends React.Component {
     this._dispatcher.Dispatch("CREATE_LAYER", elementName, elementConfig, addToSelection);
   }
 
-  onSidepanelResized = delta => {
-    this.setState(ps => ({ sidepanelWidth: Math.max(300, ps.sidepanelWidth - delta) }));
-  }
-
   onAnimationTimeChanged = animationTime => {
     this.setState({ animationTime: animationTime });
+  }
+
+  onNameChanged = (evt) => {
+    let name = evt.target.value;
+    this.setState({ name });
+    if (this.props.onNameChanged) { this.props.onNameChanged(name); }
+  }
+
+  onSetRendererPhase = (phase) => {
+    // toggle renderer phase
+    if (this.state.rendererPhase == phase) {
+      this.setState({ rendererPhase: "static"}, () => {
+        requestAnimationFrame(() => {
+          this.setState({ rendererPhase: phase });
+        });
+      });
+    } else {
+      this.setState({ rendererPhase: phase });
+    }
+  }
+
+  onScriptPanelToggle = () => {
+    this.setState(ps => ({ scriptPanelIsOpen: !ps.scriptPanelIsOpen }));
   }
 
   render() {
@@ -522,22 +551,39 @@ class OverlayEditor extends React.Component {
         <DataTransferManager uploadUrl={this.props.uploadUrl} onCreateLayer={this.onCreateLayerFromDataTransfer} ref={this._dataTransferManagerRef} />
         <div className="sidepanel-wrapper" style={{ width: this.state.sidepanelWidth + "px" }}>
           <div className="layer-list-wrapper">
-            <LayerList
-              animationTime={this.state.animationTime}
-              title={this.props.title}
-              layers={this.state.layers}
-              elements={this.state.elements}
-              fontLoader={this._fontLoader}
-              canAddExternalElements={this.props.onAddExternalElement != null}
-              selectedLayerIds={this.state.selectedLayerIds}
-              dispatcher={this._dispatcher} />
-          </div>
-          <div className="active-layer-editor-wrapper">
-            <ActiveLayerEditor layers={this.state.layers} elements={this.state.elements} selectedLayerIds={this.state.selectedLayerIds} dispatcher={this._dispatcher} />
+            <div className="layer-list">
+              <div className="layer-list-header">
+                <div className="left">
+                  <InputGroup value={this.state.name} onChange={this.onNameChanged} />
+                </div>
+                <div className="right">
+                  <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} />
+                </div>
+                <div className="right">
+                  <ElementMenuPopover dispatcher={this._dispatcher} elements={this.state.elements} canAddExternalElements={false}>
+                    <Button icon="plus" intent="primary" />
+                  </ElementMenuPopover>
+                </div>
+              </div>
+              <LayerList
+                layers={this.state.layers}
+                elements={this.state.elements}
+                fontLoader={this._fontLoader}
+                selectedLayerIds={this.state.selectedLayerIds}
+                dispatcher={this._dispatcher} />
+            </div>
           </div>
         </div>
-        <ResizeBar width="5px" onResized={this.onSidepanelResized} />
+        <ScriptPanel isOpen={this.state.scriptPanelIsOpen} />
         <div className="rightside-wrapper">
+          <div className="top-toolbar">
+            <ActiveLayerEditor
+              layers={this.state.layers}
+              elements={this.state.elements}
+              selectedLayerIds={this.state.selectedLayerIds}
+              dispatcher={this._dispatcher}
+              onSetRendererPhase={this.onSetRendererPhase} />
+          </div>
           <div className="stage-wrapper">
             <StageManager
               stageWidth={this.props.width}
@@ -547,7 +593,7 @@ class OverlayEditor extends React.Component {
               selectedLayerIds={this.state.selectedLayerIds}
               dispatcher={this._dispatcher}
               backgroundImage={this.props.backgroundImage}>
-              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={1000} hidden={this.props.hidden} />
+              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={1000} hidden={this.props.hidden} forcePhase={this.state.rendererPhase} />
             </StageManager>
           </div>
         </div>

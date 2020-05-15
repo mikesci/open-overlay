@@ -3,8 +3,6 @@ import { effects } from "../shared/effects.js";
 import "./LayerRenderer.css";
 import AnimationHelper from "../shared/AnimationHelper.js";
 import ScriptingContext from "./ScriptingContext.js";
-import cloneDeep from "lodash/cloneDeep";
-import memoize from "memoize-one";
 
 function transformsListToString(list) {
   let finalTransform = {};
@@ -67,7 +65,8 @@ const DISPLAY_PHASE = {
   ENTERING: "entering",
   VISIBLE: "visible",
   EXITING: "exiting",
-  HIDDEN: "hidden"
+  HIDDEN: "hidden",
+  STATIC: "static"
 };
 
 class Layer extends React.PureComponent {
@@ -80,6 +79,7 @@ class Layer extends React.PureComponent {
     // props.layer
     // props.element
     // props.index
+    // props.forcePhase
     // props.zIndex
 
     this._layerScriptingContext = this.props.scriptingContext.createLayerContext(props.layer);
@@ -97,11 +97,21 @@ class Layer extends React.PureComponent {
 
   componentDidUpdate(prevProps) {
 
+    let computedEffects = this.state.computedEffects;
     if (prevProps.layer != this.props.layer || prevProps.hidden != this.props.hidden || prevProps.zIndex != this.props.zIndex) {
-      // recompute effects
-      let computedEffects = this.computeEffects(this.props.layer, this.props.zIndex, this.props.hidden);
+      // recompute effects if needed
+      computedEffects = this.computeEffects();
+      this.setState({ computedEffects });
+    }
 
-      // handle phase changes
+    // handle forced phase changes.  this disables automatic phase changes
+    if (prevProps.forcePhase != this.props.forcePhase) {
+      this.setState({ phase: this.props.forcePhase });
+      return;
+    }
+
+    // handle phase changes automatically
+    if (prevProps.layer != this.props.layer || prevProps.hidden != this.props.hidden) {
       let prevLayer = prevProps.layer || {};
       let newLayer = this.props.layer || {};
 
@@ -130,8 +140,6 @@ class Layer extends React.PureComponent {
           }
         }
       }
-
-      this.setState({ computedEffects });
     }
   }
 
@@ -139,7 +147,10 @@ class Layer extends React.PureComponent {
     this.props.scriptingContext.clearLayerContext(this._layerScriptingContext);
   }
 
-  computeEffects = (layer, zIndex, hidden) => {
+  computeEffects = () => {
+    let layer = this.props.layer;
+    let zIndex = this.props.zIndex;
+
     let position = {
       top: layer.top + "px",
       left: layer.left + "px",
@@ -271,6 +282,7 @@ export default class LayerRenderer extends React.Component {
     // props.elements
     // props.fontLoader
     // props.zIndex
+    // props.forcePhase
 
     this._scriptingContext = new ScriptingContext({
       onLayersUpdated: () => { this.forceUpdate() }
@@ -372,6 +384,7 @@ export default class LayerRenderer extends React.Component {
           key={layer.id}
           hidden={this.props.hidden}
           layer={layer}
+          forcePhase={this.props.forcePhase}
           Element={Element}
           zIndex={(this.props.zIndex || 0) - index}
           scriptingContext={this._scriptingContext}

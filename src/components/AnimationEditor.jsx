@@ -17,16 +17,26 @@ export default class AnimationEditor extends React.Component {
 
     getStateFromProps(value) {
         let sourceValue = value || {};
+
+        let newValue = {
+            "duration": sourceValue.duration,
+            "timing": sourceValue.timing,
+            "delay": sourceValue.delay,
+            "iterations": sourceValue.iterations,
+            "direction": sourceValue.direction,
+            "fill": sourceValue.fill
+        };
+
+        if (newValue.duration == undefined) { newValue.duration = this.props.param.defaultValue.duration; }
+        if (newValue.timing == undefined) { newValue.timing = this.props.param.defaultValue.timing; }
+        if (newValue.delay == undefined) { newValue.delay = this.props.param.defaultValue.delay; }
+        if (newValue.iterations == undefined) { newValue.iterations = this.props.param.defaultValue.iterations; }
+        if (newValue.direction == undefined) { newValue.direction = this.props.param.defaultValue.direction; }
+        if (newValue.fill == undefined) { newValue.fill = this.props.param.defaultValue.fill; }
+
         return {
             initialValue: value,
-            value: {
-                "duration": sourceValue["duration"] || this.props.param.defaultValue.duration,
-                "timing": sourceValue["timing"] || this.props.param.defaultValue.timing,
-                "delay": sourceValue["delay"] || this.props.param.defaultValue.delay,
-                "iterations": sourceValue["iterations"] || this.props.param.defaultValue.iterations,
-                "direction": sourceValue["direction"] || this.props.param.defaultValue.direction,
-                "fill": sourceValue["fill"] || this.props.param.defaultValue.fill
-            }
+            value: newValue
         };
     }
 

@@ -1,4 +1,3 @@
-import ColorHelper from "./ColorHelper.js";
 
 const categories = {
     "General": [
@@ -26,31 +25,35 @@ const categories = {
     ],
     "3D": [
         "theaterProjection"
-    ],
-    "Animations - Entry": [
-        "animSlideUp",
-        "animSlideDown",
-        "animSlideLeft",
-        "animSlideRight",
-        "animFadeIn",
-        "animScaleIn",
-        "animBlurIn",
-        "animCustomEntry",
-    ],
-    "Animations - Exit": [
-        "animSlideUpExit",
-        "animSlideDownExit",
-        "animSlideLeftExit",
-        "animSlideRightExit",
-        "animScaleOutExit",
-        "animFadeOutExit",
-        "animBlurOutExit",
-        "animCustomExit",
-    ],
-    "Animations - Standard": [
-        "animCustomStandard"
-    ],
+    ]
 };
+
+const entryAnimations = [
+    "animSlideUp",
+    "animSlideDown",
+    "animSlideLeft",
+    "animSlideRight",
+    "animFadeIn",
+    "animScaleIn",
+    "animBlurIn",
+    "animCustomEntry"
+];
+
+const exitAnimations = [
+    "animSlideUpExit",
+    "animSlideDownExit",
+    "animSlideLeftExit",
+    "animSlideRightExit",
+    "animScaleOutExit",
+    "animFadeOutExit",
+    "animBlurOutExit",
+    "animCustomExit"
+];
+
+const standardAnimations = [
+    "animCustomStandard",
+    "animRotateStandard"
+];
 
 
 const effects = {
@@ -287,7 +290,7 @@ const effects = {
     "animSlideUp": {
         type: "animation",
         animationType: "entrance",
-        displayName: "Slide From Bottom",
+        displayName: "Slide Up",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -302,7 +305,7 @@ const effects = {
     "animSlideDown": {
         type: "animation",
         animationType: "entrance",
-        displayName: "Slide From Top",
+        displayName: "Slide Down",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -317,7 +320,7 @@ const effects = {
     "animSlideLeft": {
         type: "animation",
         animationType: "entrance",
-        displayName: "Slide From Right",
+        displayName: "Slide Left",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -332,7 +335,7 @@ const effects = {
     "animSlideRight": {
         type: "animation",
         animationType: "entrance",
-        displayName: "Slide From Left",
+        displayName: "Slide Right",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -414,7 +417,7 @@ const effects = {
     "animSlideUpExit": {
         type: "animation",
         animationType: "exit",
-        displayName: "Slide To Top",
+        displayName: "Slide Up",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -429,7 +432,7 @@ const effects = {
     "animSlideDownExit": {
         type: "animation",
         animationType: "exit",
-        displayName: "Slide To Bottom",
+        displayName: "Slide Down",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -444,7 +447,7 @@ const effects = {
     "animSlideLeftExit": {
         type: "animation",
         animationType: "exit",
-        displayName: "Slide To Left",
+        displayName: "Slide Left",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -459,7 +462,7 @@ const effects = {
     "animSlideRightExit": {
         type: "animation",
         animationType: "exit",
-        displayName: "Slide To Right",
+        displayName: "Slide Right",
         parameters: [
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
@@ -560,9 +563,29 @@ const effects = {
             });
         }
     },
+    "animRotateStandard": {
+        type: "animation",
+        animationType: "standard",
+        displayName: "Rotate",
+        parameters: [
+            { "name": "degrees", "type": "number", "displayName": "Degrees", "defaultValue": 360 },
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "2000", delay: "0", iterations: "infinite" } }
+        ],
+        apply: (animations, config) => {
+            let degrees = config.degrees || 15;
+            animations.push({
+                name: "openoverlay-anim-rotate-standard-" + degrees,
+                keyframes: `@keyframes openoverlay-anim-rotate-standard-${degrees} { from { transform: rotate(0); } to { transform: rotate(${degrees}deg); } }`,
+                ...config.animation
+            });
+        }
+    },
 };
 
 export {
     categories,
+    entryAnimations,
+    exitAnimations,
+    standardAnimations,
     effects
 };

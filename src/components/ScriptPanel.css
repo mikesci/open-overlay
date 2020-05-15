@@ -1,0 +1,4 @@
+.script-wrapper { display: flex; flex-direction: column; }
+.script-wrapper .editor { flex: 1 1 auto; margin: 5px; }
+.script-wrapper .button-bar { margin: 0 5px; display: flex; flex-direction: row; justify-content: space-between; }
+.script-wrapper .button-bar button { }

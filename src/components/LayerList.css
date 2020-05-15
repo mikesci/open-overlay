@@ -1,8 +1,8 @@
 .layer-list { height: 100%; display: flex; flex-direction: column; }
-.layer-list .layer-list-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 10px 0 10px; }
+.layer-list .layer-list-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 5px 0 5px; }
 .layer-list .layer-list-header .left { flex: 1 1 auto; }
-.layer-list .layer-list-header .right { text-align: right; }
-.layer-list > .layer-list-layers { margin: 10px; overflow-y: auto; }
+.layer-list .layer-list-header .right { text-align: right; margin-left: 5px; }
+.layer-list > .layer-list-layers { margin: 5px; overflow-y: auto; }
 
 .layer-label { display: flex; justify-content: space-between; align-items: center; }
 .layer-label .buttons { display: flex; }
