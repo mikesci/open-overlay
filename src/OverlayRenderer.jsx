@@ -4,11 +4,13 @@ import FontLoader from "./shared/FontLoader.js";
 import Elements from "./components/Elements.jsx";
 import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import SerializationHelper from "./shared/SerializationHelper.js";
+import ScriptingContext from "./shared/ScriptingContext.js";
 //import "./OverlayRenderer.scss";
 
 class OverlayRenderer extends React.Component {
 
   _fontLoader;
+  _scriptingContext;
 
   constructor(props) {
     super(props);
@@ -17,6 +19,7 @@ class OverlayRenderer extends React.Component {
     // props.layers
     // props.zIndex
     // props.hidden
+    // props.script
 
     this._fontLoader = new FontLoader();
 
@@ -32,18 +35,38 @@ class OverlayRenderer extends React.Component {
         layers = SerializationHelper.stringToModel(data);
     }
 
+    this._scriptingContext = new ScriptingContext({
+      layers: layers,
+      onLayersUpdated: (layers) => { 
+        this.setState({ layers });
+      }
+    });
+
     this.state = {
       loaded: false,
       layers: layers,
-      elements: {} // will be loaded shortly
+      elements: {} // will be loaded shortly, asynchronously
     };
 
     this.loadElementsFromLayers();
   }
 
+  componentDidMount() {
+    if (this.props.script) {
+      try
+      {
+        this._scriptingContext.execute(this.props.script);
+      }
+      catch (ex) {
+        console.log({ error: "Overlay Script Exception", exception: ex });
+      }
+    }
+  }
+
   componentDidUpdate(prevProps) {
     if (this.props.layers != prevProps.layers) {
       this.setState({ layers: this.props.layers });
+      this._scriptingContext.setLayers(this.props.layers);
     }
   }
 
@@ -61,8 +84,10 @@ class OverlayRenderer extends React.Component {
     // default the z-index to 10000
     let zIndex = this.props.zIndex || 10000;
 
+    //let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.state.layers);
+
     return (
-      <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={zIndex} hidden={this.props.hidden} />
+      <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={zIndex} hidden={this.props.hidden} scriptingContext={this._scriptingContext} />
     );
   }
 }

@@ -16,6 +16,7 @@ import { effects } from "./shared/effects.js";
 import cloneDeep from "lodash/cloneDeep";
 import ElementMenuPopover from "./components/ElementMenuPopover.jsx";
 import ScriptPanel from "./components/ScriptPanel.jsx";
+import ScriptingContext from "./shared/ScriptingContext.js";
 import "./OverlayEditor.css";
 
 class OverlayEditor extends React.Component {
@@ -24,6 +25,7 @@ class OverlayEditor extends React.Component {
   _undoManager;
   _dispatcher;
   _fontLoader;
+  _scriptingContext;
 
   constructor(props) {
     super(props);
@@ -37,12 +39,16 @@ class OverlayEditor extends React.Component {
     // props.onNameChanged
     // props.script
     // props.onScriptChanged
-
-    // ALSO: remove support for window hash monitoring.  that should be controlled outside of this component
+    // props.backgroundImages
 
     this._dispatcher = new Dispatcher();
     this._undoManager = new UndoManager();
     this._fontLoader = new FontLoader();
+    this._scriptingContext = new ScriptingContext({
+      onLayersUpdated: (layers) => { 
+        this.setState({ layers });
+      }
+    });
 
     this._dataTransferManagerRef = React.createRef();
 
@@ -592,7 +598,7 @@ class OverlayEditor extends React.Component {
               elements={this.state.elements}
               selectedLayerIds={this.state.selectedLayerIds}
               dispatcher={this._dispatcher}
-              backgroundImage={this.props.backgroundImage}>
+              backgroundImages={this.props.backgroundImages}>
               <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={1000} hidden={this.props.hidden} forcePhase={this.state.rendererPhase} />
             </StageManager>
           </div>

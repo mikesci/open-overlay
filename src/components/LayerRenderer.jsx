@@ -2,7 +2,7 @@ import React from "react";
 import { effects } from "../shared/effects.js";
 import "./LayerRenderer.css";
 import AnimationHelper from "../shared/AnimationHelper.js";
-import ScriptingContext from "./ScriptingContext.js";
+import ScriptingContext from "../shared/ScriptingContext.js";
 
 function transformsListToString(list) {
   let finalTransform = {};
@@ -71,7 +71,6 @@ const DISPLAY_PHASE = {
 
 class Layer extends React.PureComponent {
 
-  _layerScriptingContext;
   _phaseChangeTimeout;
 
   constructor(props) {
@@ -81,8 +80,7 @@ class Layer extends React.PureComponent {
     // props.index
     // props.forcePhase
     // props.zIndex
-
-    this._layerScriptingContext = this.props.scriptingContext.createLayerContext(props.layer);
+    // props.scriptingContext
 
     this.state = {
       isExiting: false,
@@ -141,10 +139,6 @@ class Layer extends React.PureComponent {
         }
       }
     }
-  }
-
-  componentWillUnmount() {
-    this.props.scriptingContext.clearLayerContext(this._layerScriptingContext);
   }
 
   computeEffects = () => {
@@ -239,6 +233,10 @@ class Layer extends React.PureComponent {
     };
   }
 
+  emit = (eventName, eventArgs) => {
+    this.props.scriptingContext.emitToOtherLayers(eventName, eventArgs, this.props.layer);
+  }
+
   render() {
 
     // immediately return, render nothing
@@ -261,7 +259,7 @@ class Layer extends React.PureComponent {
             {...this.props.layer.config}
             layer={this.props.layer}
             hidden={this.props.hidden}
-            scriptingContext={this._layerScriptingContext}
+            emit={this.emit}
             onRegisterKnockout={this.props.onRegisterKnockout}
             onUpdateKnockout={this.props.onUpdateKnockout}
             onRemoveKnockout={this.props.onRemoveKnockout} />
@@ -284,9 +282,7 @@ export default class LayerRenderer extends React.Component {
     // props.zIndex
     // props.forcePhase
 
-    this._scriptingContext = new ScriptingContext({
-      onLayersUpdated: () => { this.forceUpdate() }
-    });
+    
 
     this.state = {
       isLoadingFonts: false,
@@ -300,9 +296,6 @@ export default class LayerRenderer extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.layers != this.props.layers) {
-      // replace layer state with props layers
-      this._scriptingContext.setLayers(this.props.layers);
-
       // and ensure that we have all the fonts loaded
       this.ensureFonts();
     }
@@ -372,7 +365,7 @@ export default class LayerRenderer extends React.Component {
     // render nothing if we're loading fonts
     if (this.state.isLoadingFonts) { return null; }
 
-    let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.props.layers);
+    let layers = this.props.layers;
 
     let renderedLayers = layers.map((layer, index) => {
 
@@ -387,7 +380,7 @@ export default class LayerRenderer extends React.Component {
           forcePhase={this.props.forcePhase}
           Element={Element}
           zIndex={(this.props.zIndex || 0) - index}
-          scriptingContext={this._scriptingContext}
+          scriptingContext={this.props.scriptingContext}
           onRegisterKnockout={this.onRegisterKnockout}
           onRemoveKnockout={this.onRemoveKnockout}
           onUpdateKnockout={this.onUpdateKnockout} />

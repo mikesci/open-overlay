@@ -196,7 +196,8 @@ export default class ConfigurationForm extends React.Component {
       case "checkbox":
         return (<Switch checked={value} onChange={this.onCheckboxChanged} data-param={parameter.name} label={parameter.compact != false ? parameter.displayName : null} />);
       case "select":
-        return (<HTMLSelect value={value} onChange={this.onSelectChanged} data-param={parameter.name} options={parameter.options} />);
+        let options = (typeof parameter.options === "function" ? parameter.options() : parameter.options);
+        return (<HTMLSelect value={value} onChange={this.onSelectChanged} data-param={parameter.name} options={options} />);
       case "radiogroup":
         return (
           <RadioGroup selectedValue={value} onChange={this.onRadioGroupChanged}>

@@ -1,9 +1,8 @@
 import React from "react";
 import ZoomSelector from "./ZoomSelector.jsx";
+import BackgroundSelector from "./BackgroundSelector.jsx";
 import Resizer from "./Resizer.jsx";
 import "./StageManager.css";
-import { LAYOUT_HIERARCHY } from "@blueprintjs/icons/lib/esm/generated/iconContents";
-import memoize from "memoize-one";
 
 export default class StageManager extends React.Component {
     
@@ -29,7 +28,8 @@ export default class StageManager extends React.Component {
         this.state = {
             zoom: ZoomSelector.ZOOM_AUTOFIT_VALUE,
             autoFitZoom: 1,
-            panning: { x: 0, y: 0 }
+            panning: { x: 0, y: 0 },
+            backgroundImage: null
         };
     }
 
@@ -213,6 +213,10 @@ export default class StageManager extends React.Component {
         }
     }
 
+    onBackgroundImageChanged = (backgroundImage) => {
+        this.setState({ backgroundImage });
+    }
+
     render() {
 
         let preserveAspect = true;
@@ -249,17 +253,23 @@ export default class StageManager extends React.Component {
             boundingBox.height = boundingBox.bottom - boundingBox.top;
         }
 
+        let backgroundImageUrl;
+        if (this.props.backgroundImages && this.state.backgroundImage)
+            backgroundImageUrl = this.props.backgroundImages[this.state.backgroundImage];
+
         let zoomValue = this.getZoomValue();
         let stageStyle = {
             width: this.props.stageWidth + "px",
             height: this.props.stageHeight + "px",
             transform: `scale(${zoomValue}) translate(${this.state.panning.x}px, ${this.state.panning.y}px)`,
-            backgroundImage: (this.props.backgroundImage ? `url(${this.props.backgroundImage})` : null)
+            backgroundImage: (backgroundImageUrl ? `url(${backgroundImageUrl})` : null)
         };
+
         return (
             <div className="stage-container" ref={this._stageContainerRef}>
-                <div className="zoom-container" ref={this._zoomContainerRef}>
-                    <ZoomSelector zoom={this.state.zoom} autoFitZoom={this.state.autoFitZoom} onZoomChanged={this.onZoomChanged} />    
+                <div className="stage-view-container" ref={this._zoomContainerRef}>
+                    <ZoomSelector zoom={this.state.zoom} autoFitZoom={this.state.autoFitZoom} onZoomChanged={this.onZoomChanged} />
+                    <BackgroundSelector backgroundImages={this.props.backgroundImages} backgroundImage={this.state.backgroundImage} onBackgroundImageChanged={this.onBackgroundImageChanged} />
                 </div>
                 <div className="stage" style={stageStyle}>
                     {this.props.children}
