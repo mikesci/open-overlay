@@ -66,7 +66,8 @@ class OverlayRenderer extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.layers != prevProps.layers) {
       this.setState({ layers: this.props.layers });
-      this._scriptingContext.setLayers(this.props.layers);
+      // we might need to reset the layers on the scripting context...
+      //this._scriptingContext.setLayers(this.props.layers);
     }
   }
 

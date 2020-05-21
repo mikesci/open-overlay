@@ -22,10 +22,13 @@
 export default class ScriptingContext {
 
     _onLayersUpdated;
-    _hasModifiedLayers;
+    _hasModifiedLayers = false;
     _layers;
 
     _eventHandlers = {};
+
+    _interceptedTimeouts = [];
+    _interceptedIntervals = [];
 
     constructor(opts) {
         this._onLayersUpdated = opts.onLayersUpdated;
@@ -52,16 +55,35 @@ export default class ScriptingContext {
     }
 
     getLayers = () => {
-        return this._layers;
+        return this._layers || [];
     }
 
-    setLayers = (layers) => {
-        this._hasModifiedLayers = false;
-        this._layers = layers;
+    getLastExecutionError = () => {
+        return this._lastExecutionError;
     }
 
     findLayerIndexByLabel = (label) => {
         return this._layers.findIndex(r => r.label == label);
+    }
+
+    reset = () => {
+        
+        // remove all event handlers
+        this._eventHandlers = [];
+
+        // clear all timeouts
+        for(let timeout of this._interceptedTimeouts) { clearTimeout(timeout); }
+        this._interceptedTimeouts = [];
+
+        // clear all intervals
+        for(let interval of this._interceptedIntervals) { clearInterval(interval); }
+        this._interceptedIntervals = [];
+
+        this._hasModifiedLayers = false;
+
+        this._layers = [];
+
+        this._onLayersUpdated(this._layers);
     }
 
     // WITH LAYER FILTER: on("event-name", "layer 1", (args) => {})
@@ -98,14 +120,48 @@ export default class ScriptingContext {
         this._onLayersUpdated(layers);
     }
 
-    execute = (script) => {
-        // clear event handlers every time a script is executed
-        this._eventHandlers = [];
+    validateScript = (script) => {
+        try {
+            window.Function(`return function(on, setLayerProps, setLayerConfig) { ${script} }`)();
+            return null;
+        }
+        catch (ex) {
+            return ex;
+        }
+    }
+
+    setTimeoutOverride = (callback, delay) => {
+        let timeout = setTimeout(callback, delay);
+        this._interceptedTimeouts.push(timeout);
+        return timeout;
+    }
+
+    setIntervalOverride = (callback, period) => {
+        let interval = setInterval(callback, period);
+        this._interceptedIntervals.push(interval);
+        return interval;
+    }
+
+    execute = (layers, script) => {
         
-        window.Function(`return function(on, setLayerProps, setLayerConfig) { ${script} }`)()(
-            this.on,
-            this.setLayerProps,
-            this.setLayerConfig
-        );
+        this._layers = layers;
+
+        this._lastExecutionError = null;
+
+        try
+        {
+            window.Function(`return function(on, setLayerProps, setLayerConfig, setTimeout, setInterval) { ${script} }`)()(
+                this.on,
+                this.setLayerProps,
+                this.setLayerConfig,
+                this.setTimeoutOverride,
+                this.setIntervalOverride
+            );
+            return true;
+        }
+        catch (ex) {
+            this._lastExecutionError = ex;
+            return false;
+        }
     }
 };

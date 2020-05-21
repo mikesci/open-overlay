@@ -281,7 +281,7 @@ export default class LayerRenderer extends React.Component {
     // props.fontLoader
     // props.zIndex
     // props.forcePhase
-
+    // props.scriptingContext
     
 
     this.state = {

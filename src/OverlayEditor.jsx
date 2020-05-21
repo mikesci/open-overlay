@@ -45,9 +45,7 @@ class OverlayEditor extends React.Component {
     this._undoManager = new UndoManager();
     this._fontLoader = new FontLoader();
     this._scriptingContext = new ScriptingContext({
-      onLayersUpdated: (layers) => { 
-        this.setState({ layers });
-      }
+      onLayersUpdated: (layers) => { this.forceUpdate(); }
     });
 
     this._dataTransferManagerRef = React.createRef();
@@ -60,6 +58,7 @@ class OverlayEditor extends React.Component {
     this.state = {
       addExternalElementDialogIsOpen: false,
       scriptPanelIsOpen: false,
+      isScriptExecuting: false,
       alertText: null,
       rendererPhase: "static",
       selectedLayerIds: [],
@@ -547,7 +546,24 @@ class OverlayEditor extends React.Component {
     this.setState(ps => ({ scriptPanelIsOpen: !ps.scriptPanelIsOpen }));
   }
 
+  onScriptChanged = (script) => {
+    this.setState({ script });
+    if (this.props.onScriptChanged)
+      this.props.onScriptChanged(script);
+  }
+
+  onScriptExecutingChanged = (isScriptExecuting) => {
+    if (!isScriptExecuting)
+      this._scriptingContext.reset(); // clear scripting context when no longer executing
+    else
+      this._scriptingContext.execute(this.state.layers, this.state.script);
+
+    this.setState({ isScriptExecuting });
+  }
+
   render() {
+
+    let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.state.layers);
 
     return (
       <div className="app-wrapper" onDragOver={this.onDragOver} onDrop={this.onDrop}>
@@ -562,9 +578,7 @@ class OverlayEditor extends React.Component {
                 <div className="left">
                   <InputGroup value={this.state.name} onChange={this.onNameChanged} />
                 </div>
-                <div className="right">
-                  <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} />
-                </div>
+                {this.renderScriptButton()}
                 <div className="right">
                   <ElementMenuPopover dispatcher={this._dispatcher} elements={this.state.elements} canAddExternalElements={false}>
                     <Button icon="plus" intent="primary" />
@@ -580,7 +594,7 @@ class OverlayEditor extends React.Component {
             </div>
           </div>
         </div>
-        <ScriptPanel isOpen={this.state.scriptPanelIsOpen} />
+        {this.renderScriptPanel()}
         <div className="rightside-wrapper">
           <div className="top-toolbar">
             <ActiveLayerEditor
@@ -594,16 +608,47 @@ class OverlayEditor extends React.Component {
             <StageManager
               stageWidth={this.props.width}
               stageHeight={this.props.height}
-              layers={this.state.layers}
+              layers={layers}
               elements={this.state.elements}
               selectedLayerIds={this.state.selectedLayerIds}
               dispatcher={this._dispatcher}
               backgroundImages={this.props.backgroundImages}>
-              <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={1000} hidden={this.props.hidden} forcePhase={this.state.rendererPhase} />
+              <LayerRenderer
+                elements={this.state.elements}
+                layers={layers}
+                fontLoader={this._fontLoader}
+                zIndex={1000}
+                hidden={this.props.hidden}
+                forcePhase={this.state.rendererPhase}
+                scriptingContext={this._scriptingContext} />
             </StageManager>
           </div>
         </div>
       </div>
+    );
+  }
+
+  renderScriptButton() {
+    if (!this.props.onScriptChanged) { return null; }
+    return (
+      <div className="right">
+        <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} />
+      </div>
+    );
+  }
+
+  renderScriptPanel() {
+    // the script panel is only visible if onScriptChanged is provided
+    if (!this.props.onScriptChanged) { return null; }
+
+    return (
+      <ScriptPanel
+        isOpen={this.state.scriptPanelIsOpen}
+        layers={this.state.layers}
+        scriptingContext={this._scriptingContext}
+        script={this.props.script}
+        onScriptChanged={this.onScriptChanged}
+        onExecutingChanged={this.onScriptExecutingChanged} />
     );
   }
 }
