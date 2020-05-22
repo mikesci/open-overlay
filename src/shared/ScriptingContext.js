@@ -66,6 +66,19 @@ export default class ScriptingContext {
         return this._layers.findIndex(r => r.label == label);
     }
 
+    matchLayerObject = (layer, layerFilterObject) => {
+        for(let [prop, val] of Object.entries(layerFilterObject)) {
+            if (layer[prop] != val) { return false; }
+        }
+        return true;
+    }
+
+    matchLayerLabel = (layer, layerFilterString) => {
+        return (layer.label == layerFilterString);
+    }
+
+    matchLayerAll = () => { return true; }
+
     reset = () => {
         
         // remove all event handlers
@@ -86,18 +99,7 @@ export default class ScriptingContext {
         this._onLayersUpdated(this._layers);
     }
 
-    // WITH LAYER FILTER: on("event-name", "layer 1", (args) => {})
-    // WITHOUT:           on("event-name", null,      (args) => {})
-    on = (eventName, layerFilter, callback) => {
-        let handlers = this._eventHandlers[eventName];
-        if (!handlers) {
-            handlers = [];
-            this._eventHandlers[eventName] = handlers;
-        }
-
-        handlers.push({ layerFilter, callback });
-    }
-
+    /*
     setLayerProps = (layerTitle, props) => {
         let layerIndex = this.findLayerIndexByLabel(layerTitle);
         if (layerIndex == -1) { return; }
@@ -119,6 +121,7 @@ export default class ScriptingContext {
         this._hasModifiedLayers = true;
         this._onLayersUpdated(layers);
     }
+    */
 
     validateScript = (script) => {
         try {
@@ -128,6 +131,55 @@ export default class ScriptingContext {
         catch (ex) {
             return ex;
         }
+    }
+
+    // WITH LAYER FILTER: on("event-name", "layer 1", (args) => {})
+    // WITHOUT:           on("event-name", null,      (args) => {})
+    on = (eventName, layerFilter, callback) => {
+        let handlers = this._eventHandlers[eventName];
+        if (!handlers) {
+            handlers = [];
+            this._eventHandlers[eventName] = handlers;
+        }
+
+        handlers.push({ layerFilter, callback });
+    }
+
+    set = (layerFilter, callbackFnOrObject) => {
+        // if we have no layers, get outta here
+        if (!this._layers) { return; }
+
+        // determine our layer match function
+        let matchFn = (typeof layerFilter === "object" ? this.matchLayerObject : (layerFilter == "*" ? this.matchLayerAll : this.matchLayerLabel));
+
+        // find out if our parameter is a callback or a function
+        let isCallback = (typeof callbackFnOrObject === "function" ? true : false);
+
+        // iterate
+        for(let i = 0; i < this._layers.length; i++) {
+            
+            // skip layers that don't match
+            if (!matchFn(this._layers[i], layerFilter)) { continue; }
+
+            let layer = {...this._layers[i]};
+
+            let result = (isCallback ? callbackFnOrObject(layer) : callbackFnOrObject);
+            
+            // apply the changes to the layer if we had a return value
+            if (result) {
+                for(let [prop, val] of Object.entries(result)) {
+                    if (prop == "config")
+                        Object.assign(layer.config, val);
+                    else
+                        layer[prop] = val;
+                }
+            }
+
+            this._layers[i] = layer;
+        }
+
+        this._hasModifiedLayers = true;
+        this._onLayersUpdated(this._layers);
     }
 
     setTimeoutOverride = (callback, delay) => {
@@ -150,10 +202,9 @@ export default class ScriptingContext {
 
         try
         {
-            window.Function(`return function(on, setLayerProps, setLayerConfig, setTimeout, setInterval) { ${script} }`)()(
+            window.Function(`return function(on, set, setTimeout, setInterval) { ${script} }`)()(
                 this.on,
-                this.setLayerProps,
-                this.setLayerConfig,
+                this.set,
                 this.setTimeoutOverride,
                 this.setIntervalOverride
             );

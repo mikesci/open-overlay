@@ -556,7 +556,7 @@ class OverlayEditor extends React.Component {
     if (!isScriptExecuting)
       this._scriptingContext.reset(); // clear scripting context when no longer executing
     else
-      this._scriptingContext.execute(this.state.layers, this.state.script);
+      this._scriptingContext.execute(cloneDeep(this.state.layers), this.state.script);
 
     this.setState({ isScriptExecuting });
   }

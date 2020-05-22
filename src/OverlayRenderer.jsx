@@ -23,28 +23,12 @@ class OverlayRenderer extends React.Component {
 
     this._fontLoader = new FontLoader();
 
-    let layers = this.props.layers;
-    if (!layers && window.location.hash.length > 1) // try to load layers from the window
-    {
-      let data = decodeURIComponent(window.location.hash.substring(1));
-      // try to parse as JSON for legacy support
-      try { layers = JSON.parse(data); }
-      catch { }
-      // if that failed, we can parse with the new method
-      if (!layers)
-        layers = SerializationHelper.stringToModel(data);
-    }
-
     this._scriptingContext = new ScriptingContext({
-      layers: layers,
-      onLayersUpdated: (layers) => { 
-        this.setState({ layers });
-      }
+      onLayersUpdated: (layers) => { this.forceUpdate(); }
     });
 
     this.state = {
       loaded: false,
-      layers: layers,
       elements: {} // will be loaded shortly, asynchronously
     };
 
@@ -52,27 +36,27 @@ class OverlayRenderer extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.script) {
-      try
-      {
-        this._scriptingContext.execute(this.props.script);
-      }
-      catch (ex) {
-        console.log({ error: "Overlay Script Exception", exception: ex });
-      }
+    if (this.props.script && !this.props.hidden) {
+      this._scriptingContext.execute(this.props.layers, this.props.script);
     }
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.layers != prevProps.layers) {
       this.setState({ layers: this.props.layers });
-      // we might need to reset the layers on the scripting context...
-      //this._scriptingContext.setLayers(this.props.layers);
+    }
+
+    // execute scripts when the overlay is hidden/shown
+    if (this.props.hidden != prevProps.hidden) {
+      if (this.props.hidden)
+        this._scriptingContext.reset();
+      else
+        this._scriptingContext.execute(this.props.layers, this.props.script);
     }
   }
 
   loadElementsFromLayers = async () => {
-    let externalElements = await ExternalElementHelper.LoadFromLayers(this.state.layers, this.state.elements);
+    let externalElements = await ExternalElementHelper.LoadFromLayers(this.props.layers, this.state.elements);
     this.setState({
       loaded: true,
       elements: {...Elements.Builtin, ...this.props.elements, ...externalElements}
@@ -85,10 +69,17 @@ class OverlayRenderer extends React.Component {
     // default the z-index to 10000
     let zIndex = this.props.zIndex || 10000;
 
-    //let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.state.layers);
+    let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.props.layers);
 
     return (
-      <LayerRenderer elements={this.state.elements} layers={this.state.layers} fontLoader={this._fontLoader} zIndex={zIndex} hidden={this.props.hidden} scriptingContext={this._scriptingContext} />
+      <LayerRenderer
+        elements={this.state.elements}
+        layers={layers}
+        fontLoader={this._fontLoader}
+        zIndex={zIndex}
+        hidden={this.props.hidden}
+        scriptingContext={this._scriptingContext}
+        runScriptsOnShow={true} />
     );
   }
 }

@@ -479,14 +479,19 @@ const effects = {
         animationType: "exit",
         displayName: "Scale Out",
         parameters: [
+            { "name": "amount", "type": "number", "displayName": "Amount", "defaultValue": "10" },
             { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
         ],
         apply: (animations, config) => {
-            animations.push({
-                name: "openoverlay-anim-scale-out-exit",
-                keyframes: "@keyframes openoverlay-anim-scale-out-exit { from { transform: scale(1); opacity: 1; } to { transform: scale(10); opacity: 0; } }",
-                ...config.animation
-            });
+            let amount = (config.amount == undefined ? 10 : parseFloat(config.amount));
+            if (!isNaN(amount)) {
+                let name = `openoverlay-anim-scale-out-exit-${parseInt(amount * 10000)}`;
+                animations.push({
+                    name: name,
+                    keyframes: `@keyframes ${name} { from { transform: scale(1); } to { transform: scale(${amount}); }`,
+                    ...config.animation
+                });
+            }
         }
     },
     "animFadeOutExit": {
