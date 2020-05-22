@@ -311,6 +311,7 @@ export default class LayerRenderer extends React.Component {
     {
       for(let layer of this.props.layers) {
         let Element = this.props.elements[layer.elementName];
+        if (!Element) { continue; }
         for(var parameter of Element.manifest.parameters) {
           if (parameter.type == "font") {
             let font = layer.config[parameter.name];
