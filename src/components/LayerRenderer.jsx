@@ -150,8 +150,13 @@ class Layer extends React.PureComponent {
       left: layer.left + "px",
       height: layer.height + "px",
       width: layer.width + "px",
+      transition: layer.transition,
       zIndex: zIndex
     };
+
+    // if a style is set, override
+    if (layer.style)
+      position = {...position, ...layer.style};
 
     let style = {};
     let transforms = [];
@@ -282,7 +287,7 @@ export default class LayerRenderer extends React.Component {
     // props.zIndex
     // props.forcePhase
     // props.scriptingContext
-    
+    // props.runScriptsOnShow    
 
     this.state = {
       isLoadingFonts: false,
