@@ -1,6 +1,7 @@
 import React from "react";
 import "./ScriptPanel.css";
 import { TextArea, Button, Intent } from "@blueprintjs/core";
+import JavascriptEditor from "./JavascriptEditor.jsx";
 
 let VALIDATION_STATES = {
     NONE: 1,
@@ -9,6 +10,8 @@ let VALIDATION_STATES = {
 };
 
 export default class ScriptPanel extends React.Component {
+
+    Editor;
 
     constructor(props) {
         super(props);
@@ -27,8 +30,7 @@ export default class ScriptPanel extends React.Component {
         };
     }
 
-    onScriptTextChanged = (evt) => {
-        let script = evt.target.value;
+    onScriptTextChanged = (script) => {
 
         // reset the validation state
         if (this.state.validationState != VALIDATION_STATES.NONE)
@@ -90,7 +92,7 @@ export default class ScriptPanel extends React.Component {
 
         return (
             <div className="script-wrapper">
-                <TextArea value={this.props.script} className="editor" onChange={this.onScriptTextChanged} spellCheck={false} />
+                <JavascriptEditor value={this.props.script} className="editor" onValueChange={this.onScriptTextChanged} />
                 <div className="button-bar">
                     <Button icon={validationDisplay.icon} onClick={this.onValidate} intent={validationDisplay.intent} title={this.state.validationError}>{validationDisplay.text}</Button>
                     <Button icon={executionDisplay.icon} onClick={this.onExecute} intent={executionDisplay.intent} title={this.state.executionError}>{executionDisplay.text}</Button>

@@ -57,7 +57,7 @@ class OverlayEditor extends React.Component {
 
     this.state = {
       addExternalElementDialogIsOpen: false,
-      scriptPanelIsOpen: false,
+      scriptPanelIsOpen: (this.props.script ? true : false), // open script panel if we have a script
       isScriptExecuting: false,
       alertText: null,
       rendererPhase: "static",
@@ -632,7 +632,7 @@ class OverlayEditor extends React.Component {
     if (!this.props.onScriptChanged) { return null; }
     return (
       <div className="right">
-        <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} />
+        <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} active={this.state.scriptPanelIsOpen} />
       </div>
     );
   }
