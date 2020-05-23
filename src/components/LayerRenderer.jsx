@@ -103,8 +103,10 @@ class Layer extends React.PureComponent {
     }
 
     // handle forced phase changes.  this disables automatic phase changes
-    if (prevProps.forcePhase != this.props.forcePhase) {
-      this.setState({ phase: this.props.forcePhase });
+    if (prevProps.forcePhase != this.props.forcePhase || prevProps.hidden != this.props.hidden) {
+      this.setState({ 
+        phase: (this.props.hidden ? DISPLAY_PHASE.HIDDEN : this.props.forcePhase)
+      });
       return;
     }
 
