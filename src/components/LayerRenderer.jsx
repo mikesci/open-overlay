@@ -227,7 +227,7 @@ class Layer extends React.PureComponent {
       transform = transformsListToString(transforms);
 
     return {
-      hidden: layer.hidden || this.props.hidden,
+      hidden: this.props.hidden,
       position,
       style,
       transform,
@@ -383,7 +383,7 @@ export default class LayerRenderer extends React.Component {
       return (
         <Layer
           key={layer.id}
-          hidden={this.props.hidden}
+          hidden={layer.hidden || this.props.hidden}
           layer={layer}
           forcePhase={this.props.forcePhase}
           Element={Element}
