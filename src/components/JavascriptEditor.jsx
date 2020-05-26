@@ -19,7 +19,8 @@ export default class JavascriptEditor extends React.PureComponent {
                 style={{
                     fontFamily: 'monospace',
                     fontSize: 12,
-
+                    overflow: "auto",
+                    whiteSpace: "nowrap"
                 }}
                 {...this.props} />
         );

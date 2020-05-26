@@ -35,8 +35,6 @@ export default class ScriptingContext {
     }
 
     emitToOtherLayers = (eventName, eventArgs, sourceLayer) => {
-        console.log(`Emitting ${eventName} from ${sourceLayer.id}`);
-
         let handlers = this._eventHandlers[eventName];
         if (!handlers) { return; }
 
