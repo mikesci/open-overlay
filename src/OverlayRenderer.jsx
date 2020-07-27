@@ -3,8 +3,8 @@ import LayerRenderer from "./components/LayerRenderer.jsx";
 import FontLoader from "./shared/FontLoader.js";
 import Elements from "./components/Elements.jsx";
 import ExternalElementHelper from "./shared/ExternalElementHelper.js";
-import SerializationHelper from "./shared/SerializationHelper.js";
 import ScriptingContext from "./shared/ScriptingContext.js";
+import cloneDeep from "lodash/cloneDeep";
 //import "./OverlayRenderer.scss";
 
 class OverlayRenderer extends React.Component {
@@ -20,11 +20,13 @@ class OverlayRenderer extends React.Component {
     // props.zIndex
     // props.hidden
     // props.script
+    // props.wireframeMode
+    // props.lastUpdated
 
     this._fontLoader = new FontLoader();
 
     this._scriptingContext = new ScriptingContext({
-      onLayersUpdated: (layers) => { this.forceUpdate(); }
+      onUpdated: () => { this.forceUpdate(); }
     });
 
     this.state = {
@@ -37,7 +39,7 @@ class OverlayRenderer extends React.Component {
 
   componentDidMount() {
     if (this.props.script && !this.props.hidden) {
-      this._scriptingContext.execute(this.props.layers, this.props.script);
+      this._scriptingContext.execute(cloneDeep(this.props.layers), this.props.script, this.props.lastUpdated);
     }
   }
 
@@ -47,11 +49,13 @@ class OverlayRenderer extends React.Component {
     }
 
     // execute scripts when the overlay is hidden/shown
-    if (this.props.hidden != prevProps.hidden) {
-      if (this.props.hidden)
-        this._scriptingContext.reset();
-      else
-        this._scriptingContext.execute(this.props.layers, this.props.script);
+    if (this.props.script && this.props.hidden != prevProps.hidden) {
+        if (this.props.hidden) {
+          this._scriptingContext.reset();
+          this.forceUpdate();
+        }
+        else
+          this._scriptingContext.execute(cloneDeep(this.props.layers), this.props.script, this.props.lastUpdated);
     }
   }
 
@@ -69,7 +73,7 @@ class OverlayRenderer extends React.Component {
     // default the z-index to 10000
     let zIndex = this.props.zIndex || 10000;
 
-    let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.props.layers);
+    let layers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.props.layers);
 
     return (
       <LayerRenderer
@@ -79,7 +83,8 @@ class OverlayRenderer extends React.Component {
         zIndex={zIndex}
         hidden={this.props.hidden}
         scriptingContext={this._scriptingContext}
-        runScriptsOnShow={true} />
+        runScriptsOnShow={true}
+        wireframeMode={this.props.wireframeMode} />
     );
   }
 }

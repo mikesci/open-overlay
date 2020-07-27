@@ -27,7 +27,13 @@ export default new class AnimationHelper {
         }
 
         // and add
-        this._stylesheet.insertRule(definition);
+        // this call can fail, so we have to try/catch
+        // squelching for now - is there a reason to bubble up these errors?
+        try
+        {
+            this._stylesheet.insertRule(definition);
+        }
+        catch { }
         this._loadedKeyframes.push(name);
     }
 

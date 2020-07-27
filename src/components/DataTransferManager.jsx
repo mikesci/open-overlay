@@ -80,7 +80,7 @@ export default class DataTransferManager extends React.Component {
 
                 let p = this.handleUploadAsync(file)
                     .then(url => {
-                        items.push({ data: url, contentTypeHandler: contentTypeHandler })
+                        items.push({ data: url, name: file.name, contentTypeHandler: contentTypeHandler })
                     })
                     .catch(() => {});
 
@@ -94,7 +94,7 @@ export default class DataTransferManager extends React.Component {
 
         // now process all of the items
         for(let item of items) {
-            let layers = await item.contentTypeHandler.getLayers(item.data);
+            let layers = await item.contentTypeHandler.getLayers(item.data, item.name);
             let addToSelection = false;
             for(let layer of layers) {
                 this.props.onCreateLayer(layer.elementName, layer.elementConfig, addToSelection);

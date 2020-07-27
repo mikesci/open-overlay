@@ -9,3 +9,6 @@
 .app-wrapper .layer-list-wrapper { flex: 1 1 auto; height: 100%; overflow: hidden; }
 .app-wrapper .active-layer-editor-wrapper { flex: 0 0 auto; }
 .app-wrapper .animation-panel-wrapper { flex: 0 0 auto; }
+
+/* disable focus outlines */
+.app-wrapper *:focus { outline: none; }

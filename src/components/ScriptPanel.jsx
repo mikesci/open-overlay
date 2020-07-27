@@ -1,7 +1,6 @@
 import React from "react";
 import "./ScriptPanel.css";
 import { TextArea, Button, Intent } from "@blueprintjs/core";
-import JavascriptEditor from "./JavascriptEditor.jsx";
 
 let VALIDATION_STATES = {
     NONE: 1,
@@ -30,7 +29,8 @@ export default class ScriptPanel extends React.Component {
         };
     }
 
-    onScriptTextChanged = (script) => {
+    onScriptTextChanged = (evt) => {
+        let script = evt.target.value;
 
         // reset the validation state
         if (this.state.validationState != VALIDATION_STATES.NONE)
@@ -78,7 +78,7 @@ export default class ScriptPanel extends React.Component {
         if (this.state.isExecuting)
             return { intent: Intent.WARNING, icon: "stop", text: "Stop" };
 
-        if (this.props.scriptingContext.getLastExecutionError())
+        if (this.props.scriptingContext.lastExecutionError)
             return { intent: Intent.DANGER, icon: "cross", text: "Error" };
 
         return { intent: Intent.NONE, icon: "play", text: "Execute" };
@@ -92,7 +92,7 @@ export default class ScriptPanel extends React.Component {
 
         return (
             <div className="script-wrapper">
-                <JavascriptEditor value={this.props.script} className="editor" onValueChange={this.onScriptTextChanged} />
+                <TextArea value={this.props.script} className="editor" onChange={this.onScriptTextChanged} />
                 <div className="button-bar">
                     <Button icon={validationDisplay.icon} onClick={this.onValidate} intent={validationDisplay.intent} title={this.state.validationError}>{validationDisplay.text}</Button>
                     <Button icon={executionDisplay.icon} onClick={this.onExecute} intent={executionDisplay.intent} title={this.state.executionError}>{executionDisplay.text}</Button>

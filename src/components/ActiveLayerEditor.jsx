@@ -57,6 +57,7 @@ class EffectListEditor extends React.PureComponent {
         // props.onEffectAdded
         // props.isOpen
         // props.onOpenToggled
+        // props.isPlaying
     }
 
     getEffectName = () => {
@@ -77,7 +78,7 @@ class EffectListEditor extends React.PureComponent {
         return (
             <FormGroup label={this.props.label} inline={true}>
                 <ButtonGroup>
-                    <Button icon="play" onClick={this.props.onPlay} />
+                    <Button icon={this.props.isPlaying ? "stop" : "play"} intent={this.props.isPlaying ? "danger" : "none"} onClick={this.props.isPlaying ? this.props.onPause : this.props.onPlay} />
                     <Popover disabled={this.props.disabled || !this.props.effectList || this.props.effectList.length == 0}
                         isOpen={this.props.isOpen}
                         onInteraction={this.onPopoverInteraction}
@@ -166,12 +167,14 @@ export default class ActiveLayerEditor extends React.Component {
                             if (layer.effects) {
                                 for(let [effectName, effectConfig] of Object.entries(layer.effects)) {
                                     let effect = effects[effectName];
-                                    if (effect.animationType == "entrance")
-                                        newState.entryEffects.push({ name: effectName, effect: effect, config: effectConfig });
-                                    if (effect.animationType == "exit")
-                                        newState.exitEffects.push({ name: effectName, effect: effect, config: effectConfig });
-                                    if (effect.animationType == "standard")
-                                        newState.standardEffects.push({ name: effectName, effect: effect, config: effectConfig });
+                                    if (effect) {
+                                        if (effect.animationType == "entrance")
+                                            newState.entryEffects.push({ name: effectName, effect: effect, config: effectConfig });
+                                        if (effect.animationType == "exit")
+                                            newState.exitEffects.push({ name: effectName, effect: effect, config: effectConfig });
+                                        if (effect.animationType == "standard")
+                                            newState.standardEffects.push({ name: effectName, effect: effect, config: effectConfig });
+                                    }
                                 }
                             }
                             needsUpdate = true;
@@ -262,33 +265,39 @@ export default class ActiveLayerEditor extends React.Component {
                     effectList={this.state.entryEffects}
                     disabled={this.state.disabled}
                     isOpen={this.state.openEffectList == "entry"}
+                    isPlaying={this.props.rendererPhase == "entering"}
                     onOpenToggled={nextOpenState => this.onEffectListOpenToggled("entry", nextOpenState)}
                     onEffectConfigChanged={this.onEffectConfigChanged}
                     onEffectDeleted={this.onEffectDeleted}
                     onEffectAdded={effectName => this.onEffectAdded(effectName, "entry")}
-                    onPlay={() => this.props.onSetRendererPhase("entering")} />
+                    onPlay={() => this.props.onSetRendererPhase("entering")}
+                    onPause={() => this.props.onSetRendererPhase("static")} />
                 <EffectListEditor
                     label="Exit"
                     availableEffects={exitAnimations}
                     effectList={this.state.exitEffects}
                     disabled={this.state.disabled}
                     isOpen={this.state.openEffectList == "exit"}
+                    isPlaying={this.props.rendererPhase == "exiting"}
                     onOpenToggled={nextOpenState => this.onEffectListOpenToggled("exit", nextOpenState)}
                     onEffectConfigChanged={this.onEffectConfigChanged}
                     onEffectDeleted={this.onEffectDeleted}
                     onEffectAdded={effectName => this.onEffectAdded(effectName, "exit")}
-                    onPlay={() => this.props.onSetRendererPhase("exiting")} />
+                    onPlay={() => this.props.onSetRendererPhase("exiting")}
+                    onPause={() => this.props.onSetRendererPhase("static")} />
                 <EffectListEditor
                     label="Standard"
                     availableEffects={standardAnimations}
                     effectList={this.state.standardEffects}
                     disabled={this.state.disabled}
                     isOpen={this.state.openEffectList == "standard"}
+                    isPlaying={this.props.rendererPhase == "visible"}
                     onOpenToggled={nextOpenState => this.onEffectListOpenToggled("standard", nextOpenState)}
                     onEffectConfigChanged={this.onEffectConfigChanged}
                     onEffectDeleted={this.onEffectDeleted}
                     onEffectAdded={effectName => this.onEffectAdded(effectName, "exit")}
-                    onPlay={() => this.props.onSetRendererPhase("visible")} />
+                    onPlay={() => this.props.onSetRendererPhase("visible")}
+                    onPause={() => this.props.onSetRendererPhase("static")} />
                 <div className="layer-coordinate-inputs">
                     <ControlGroup>
                         <FormGroup label="X" inline={true}>

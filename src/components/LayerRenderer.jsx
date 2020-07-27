@@ -2,7 +2,7 @@ import React from "react";
 import { effects } from "../shared/effects.js";
 import "./LayerRenderer.css";
 import AnimationHelper from "../shared/AnimationHelper.js";
-import ScriptingContext from "../shared/ScriptingContext.js";
+import memoize from "memoize-one";
 
 function transformsListToString(list) {
   let finalTransform = {};
@@ -84,83 +84,72 @@ class Layer extends React.PureComponent {
 
     this.state = {
       isExiting: false,
-      phase: DISPLAY_PHASE.HIDDEN,
-      computedEffects: this.computeEffects(this.props.layer, this.props.zIndex, this.props.hidden)
+      phase: (this.props.hidden ? DISPLAY_PHASE.HIDDEN : (this.props.forcePhase ? this.props.forcePhase : DISPLAY_PHASE.ENTERING))
+      //computedEffects: this.computeEffects(this.props.layer, this.props.zIndex, this.props.hidden)
     };
   }
 
   componentDidMount() {
-    this.componentDidUpdate({});
+
   }
 
   componentDidUpdate(prevProps) {
 
-    let computedEffects = this.state.computedEffects;
-    if (prevProps.layer != this.props.layer || prevProps.hidden != this.props.hidden || prevProps.zIndex != this.props.zIndex) {
-      // recompute effects if needed
-      computedEffects = this.computeEffects();
-      this.setState({ computedEffects });
-    }
-
     // handle forced phase changes.  this disables automatic phase changes
-    if (prevProps.forcePhase != this.props.forcePhase || prevProps.hidden != this.props.hidden) {
-      this.setState({ 
-        phase: (this.props.hidden ? DISPLAY_PHASE.HIDDEN : this.props.forcePhase)
-      });
-      return;
+    if (this.props.forcePhase) {
+      if (prevProps.forcePhase != this.props.forcePhase || prevProps.hidden != this.props.hidden) {
+        this.setState({ 
+          phase: (this.props.hidden ? DISPLAY_PHASE.HIDDEN : this.props.forcePhase)
+        });
+        return;
+      }
     }
 
     // handle phase changes automatically
-    if (prevProps.layer != this.props.layer || prevProps.hidden != this.props.hidden) {
-      let prevLayer = prevProps.layer || {};
-      let newLayer = this.props.layer || {};
+    if (prevProps.hidden != this.props.hidden) {
+      // grab the memoized computedEffects
+      let computedEffects = this.computeEffectsMemoized(this.props.layer);
 
-      if (!prevProps.layer || prevLayer.hidden != newLayer.hidden || prevProps.hidden != this.props.hidden) {
-        if (computedEffects.hidden) { // if flipping from visible to hidden
-          if (computedEffects.exitAnimation) {
-            // render the exit animation, and flip to HIDDEN automatically when it's done
-            this.setState({ phase: DISPLAY_PHASE.EXITING }, () => {
-              if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
-              this._phaseChangeTimeout = setTimeout(() => { this.setState({ phase: DISPLAY_PHASE.HIDDEN }); }, computedEffects.exitAnimationDuration);
-            });
-          } else {
-            // otherwise, go directly to hidden
+      if (this.props.hidden) { // if flipping from visible to hidden
+        if (computedEffects.exitAnimation) {
+          // render the exit animation, and flip to HIDDEN automatically when it's done
+          this.setState({ phase: DISPLAY_PHASE.EXITING }, () => {
             if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
-            this.setState({ phase: DISPLAY_PHASE.HIDDEN });
-          }
-        } else { // if flipping from hidden to visible
-          if (computedEffects.entranceAnimation) {
-            this.setState({ phase: DISPLAY_PHASE.ENTERING }, () => {
-              if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
-              this._phaseChangeTimeout = setTimeout(() => { this.setState({ phase: DISPLAY_PHASE.VISIBLE }); }, computedEffects.entranceAnimationDuration);
-            });
-          } else {
+            this._phaseChangeTimeout = setTimeout(() => { this.setState({ phase: DISPLAY_PHASE.HIDDEN }); }, computedEffects.exitAnimationDuration);
+          });
+        } else {
+          // otherwise, go directly to hidden
+          if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
+          this.setState({ phase: DISPLAY_PHASE.HIDDEN });
+        }
+      } else { // if flipping from hidden to visible
+        if (computedEffects.entranceAnimation) {
+          this.setState({ phase: DISPLAY_PHASE.ENTERING }, () => {
             if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
-            this.setState({ phase: DISPLAY_PHASE.VISIBLE });
-          }
+            this._phaseChangeTimeout = setTimeout(() => { this.setState({ phase: DISPLAY_PHASE.VISIBLE }); }, computedEffects.entranceAnimationDuration);
+          });
+        } else {
+          if (this._phaseChangeTimeout) { clearTimeout(this._phaseChangeTimeout); }
+          this.setState({ phase: DISPLAY_PHASE.VISIBLE });
         }
       }
     }
   }
 
-  computeEffects = () => {
-    let layer = this.props.layer;
-    let zIndex = this.props.zIndex;
-
+  computeEffectsMemoized = memoize((layer) => {
     let position = {
       top: layer.top + "px",
       left: layer.left + "px",
       height: layer.height + "px",
       width: layer.width + "px",
-      transition: layer.transition,
-      zIndex: zIndex
+      transition: layer.transition
     };
 
     // if a style is set, override
     if (layer.style)
-      position = {...position, ...layer.style};
+      position = {...position};
 
-    let style = {};
+    let style = {...layer.style};
     let transforms = [];
     let entranceAnimations = [];
     let standardAnimations = [];
@@ -227,7 +216,6 @@ class Layer extends React.PureComponent {
       transform = transformsListToString(transforms);
 
     return {
-      hidden: this.props.hidden,
       position,
       style,
       transform,
@@ -238,7 +226,7 @@ class Layer extends React.PureComponent {
       exitAnimation,
       exitAnimationDuration
     };
-  }
+  });
 
   emit = (eventName, eventArgs) => {
     this.props.scriptingContext.emitToOtherLayers(eventName, eventArgs, this.props.layer);
@@ -249,7 +237,7 @@ class Layer extends React.PureComponent {
     // immediately return, render nothing
     if (this.state.phase == DISPLAY_PHASE.HIDDEN) { return null; }
 
-    let computedEffects = this.state.computedEffects;
+    let computedEffects = this.computeEffectsMemoized(this.props.layer);
 
     let animation;
     switch (this.state.phase) {
@@ -259,18 +247,28 @@ class Layer extends React.PureComponent {
       default: break;
     }
 
+    let element;
+    if (this.props.wireframeMode) {
+      element = <div style={{ height: "100%", width: "100%", border: "1px solid red" }}></div>
+    } else {
+      element =
+        (
+          <div className="layer-container-inner" style={{ ...computedEffects.style, transform: computedEffects.transform }}>
+            <this.props.Element
+              {...this.props.layer.config}
+              layer={this.props.layer}
+              hidden={this.props.hidden}
+              emit={this.emit}
+              onRegisterKnockout={this.props.onRegisterKnockout}
+              onUpdateKnockout={this.props.onUpdateKnockout}
+              onRemoveKnockout={this.props.onRemoveKnockout} />
+          </div>
+        );
+    }
+
     return (
-      <div className="layer-container" data-id={this.props.layer.id} style={{ ...computedEffects.position, animation }}>
-        <div className="layer-container-inner" style={{ ...computedEffects.style, transform: computedEffects.transform }}>
-          <this.props.Element
-            {...this.props.layer.config}
-            layer={this.props.layer}
-            hidden={this.props.hidden}
-            emit={this.emit}
-            onRegisterKnockout={this.props.onRegisterKnockout}
-            onUpdateKnockout={this.props.onUpdateKnockout}
-            onRemoveKnockout={this.props.onRemoveKnockout} />
-        </div>
+      <div className="layer-container" data-id={this.props.layer.id} style={{ ...computedEffects.position, zIndex: this.props.zIndex, animation }}>
+        {element}
       </div>
     );
   }
@@ -289,7 +287,8 @@ export default class LayerRenderer extends React.Component {
     // props.zIndex
     // props.forcePhase
     // props.scriptingContext
-    // props.runScriptsOnShow    
+    // props.runScriptsOnShow
+    // props.wireframeMode
 
     this.state = {
       isLoadingFonts: false,
@@ -384,6 +383,7 @@ export default class LayerRenderer extends React.Component {
         <Layer
           key={layer.id}
           hidden={layer.hidden || this.props.hidden}
+          wireframeMode={this.props.wireframeMode}
           layer={layer}
           forcePhase={this.props.forcePhase}
           Element={Element}

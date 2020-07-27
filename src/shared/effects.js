@@ -7,7 +7,8 @@ const categories = {
         "shadow",
         "blur",
         "opacity",
-        "cornerClip"
+        "cornerClip",
+        "padding"
     ],
     "Color": [
         "brightness",
@@ -29,10 +30,15 @@ const categories = {
 };
 
 const entryAnimations = [
+    "animSlide",
     "animSlideUp",
     "animSlideDown",
     "animSlideLeft",
     "animSlideRight",
+    "animWipeLeftIn",
+    "animWipeRightIn",
+    "animWipeUpIn",
+    "animWipeDownIn",
     "animFadeIn",
     "animScaleIn",
     "animBlurIn",
@@ -40,10 +46,15 @@ const entryAnimations = [
 ];
 
 const exitAnimations = [
+    "animSlide",
     "animSlideUpExit",
     "animSlideDownExit",
     "animSlideLeftExit",
     "animSlideRightExit",
+    "animWipeLeftExit",
+    "animWipeRightExit",
+    "animWipeDownExit",
+    "animWipeUpExit",
     "animScaleOutExit",
     "animFadeOutExit",
     "animBlurOutExit",
@@ -51,10 +62,14 @@ const exitAnimations = [
 ];
 
 const standardAnimations = [
+    "animSlide",
     "animCustomStandard",
     "animRotateStandard"
 ];
 
+function sanitizeName(name) {
+    return name.replace(/[^a-zA-Z0-9\-_]/, "_");
+}
 
 const effects = {
     "backgroundColor": {
@@ -100,7 +115,21 @@ const effects = {
             { "name": "bl", "type": "number", "defaultValue": 15, inline: 25 }
         ],
         apply: (style, config) => {
-            style.borderRadius = `${config.tl ? config.tl : "0"}px ${config.tr ? config.tr : "0"}px ${config.br ? config.br : "0"}px ${config.bl ? config.bl : 0}px`;
+            style.borderRadius = `${config.tl || 0}px ${config.tr || 0}px ${config.br || 0}px ${config.bl || 0}px`;
+        }
+    },
+    "padding": {
+        type: "style",
+        displayName: "Padding",
+        parameters: [
+            { "name": "t", "type": "number", "defaultValue": 0, inline: 25 },
+            { "name": "r", "type": "number", "defaultValue": 0, inline: 25 },
+            { "name": "b", "type": "number", "defaultValue": 0, inline: 25 },
+            { "name": "l", "type": "number", "defaultValue": 0, inline: 25 }
+        ],
+        apply: (style, config) => {
+            style.padding = `${config.t || 0}px ${config.r || 0}px ${config.b || 0}px ${config.l || 0}px`;
+            console.log({oops: `${config.t || 0}px ${config.r || 0}px ${config.b || 0}px ${config.l || 0}px` });
         }
     },
     "shadow": {
@@ -287,6 +316,30 @@ const effects = {
             transforms.push({ rotate: [xAngle, yAngle, 0] });
         }
     },
+    "animSlide": {
+        type: "animation",
+        animationType: "entrance",
+        displayName: "Slide",
+        parameters: [
+            { "name": "startx", "type": "text", "displayName": "Start X", "defaultValue": "-100vh" },
+            { "name": "starty", "type": "text", "displayName": "Start Y", "defaultValue": "0" },
+            { "name": "endx", "type": "text", "displayName": "End X", "defaultValue": "0" },
+            { "name": "endy", "type": "text", "displayName": "End Y", "defaultValue": "0" },
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            let startx = config.startx || "-100vh";
+            let starty = config.starty || "0";
+            let endx = config.endx || "0";
+            let endy = config.endy || "0";
+            let name = sanitizeName(`openoverlay-anim-slide-${startx}${starty}${endx}${endy}`);
+            animations.push({
+                name: name,
+                keyframes: `@keyframes ${name} { from { margin-left: ${startx}; margin-top: ${starty}; } to { margin-left: ${endx}; margin-top: ${endy}; } }`,
+                ...config.animation
+            });
+        }
+    },
     "animSlideUp": {
         type: "animation",
         animationType: "entrance",
@@ -297,7 +350,7 @@ const effects = {
         apply: (animations, config) => {
             animations.push({
                 name: "openoverlay-anim-slide-up",
-                keyframes: "@keyframes openoverlay-anim-slide-up { from { margin-top: 150vh; } to { margin-top: 0; } }",
+                keyframes: `@keyframes openoverlay-anim-slide-up { from { margin-top: 150vh; } to { margin-top: 0; } }`,
                 ...config.animation
             });
         }
@@ -343,6 +396,66 @@ const effects = {
             animations.push({
                 name: "openoverlay-anim-slide-right",
                 keyframes: "@keyframes openoverlay-anim-slide-right { from { margin-left: -150vw; } to { margin-left: 0; } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeLeftIn": {
+        type: "animation",
+        animationType: "entrance",
+        displayName: "Wipe Left",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-left-in",
+                keyframes: "@keyframes openoverlay-anim-wipe-left-in { from { clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%, 100% 0); } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0) } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeRightIn": {
+        type: "animation",
+        animationType: "entrance",
+        displayName: "Wipe Right",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-right-in",
+                keyframes: "@keyframes openoverlay-anim-wipe-right-in { from { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%, 0 0); } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0) } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeUpIn": {
+        type: "animation",
+        animationType: "entrance",
+        displayName: "Wipe Up",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-up-in",
+                keyframes: "@keyframes openoverlay-anim-wipe-up-in { from { clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%, 0 100%); } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0) } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeDownIn": {
+        type: "animation",
+        animationType: "entrance",
+        displayName: "Wipe Down",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-down-in",
+                keyframes: "@keyframes openoverlay-anim-wipe-down-in { from { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0, 0 0); } to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0) } }",
                 ...config.animation
             });
         }
@@ -454,7 +567,7 @@ const effects = {
         apply: (animations, config) => {
             animations.push({
                 name: "openoverlay-anim-slide-left-exit",
-                keyframes: "@keyframes openoverlay-anim-slide-left-exit { from { margin-left: 0; } to { margin-left: -150vh; } }",
+                keyframes: "@keyframes openoverlay-anim-slide-left-exit { from { margin-left: 0; } to { margin-left: -150vw; } }",
                 ...config.animation
             });
         }
@@ -469,7 +582,67 @@ const effects = {
         apply: (animations, config) => {
             animations.push({
                 name: "openoverlay-anim-slide-right-exit",
-                keyframes: "@keyframes openoverlay-anim-slide-right-exit { from { margin-left: 0; } to { margin-left: 150vh; } }",
+                keyframes: "@keyframes openoverlay-anim-slide-right-exit { from { margin-left: 0; } to { margin-left: 150vw; } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeLeftExit": {
+        type: "animation",
+        animationType: "exit",
+        displayName: "Wipe Left",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-left-exit",
+                keyframes: "@keyframes openoverlay-anim-wipe-left-exit { from { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0); } to { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%, 0 0); } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeRightExit": {
+        type: "animation",
+        animationType: "exit",
+        displayName: "Wipe Right",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-right-exit",
+                keyframes: "@keyframes openoverlay-anim-wipe-right-exit { from { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0); } to { clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%, 100% 0); } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeDownExit": {
+        type: "animation",
+        animationType: "exit",
+        displayName: "Wipe Down",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-down-exit",
+                keyframes: "@keyframes openoverlay-anim-wipe-down-exit { from { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0); } to { clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%, 0 100%); } }",
+                ...config.animation
+            });
+        }
+    },
+    "animWipeUpExit": {
+        type: "animation",
+        animationType: "exit",
+        displayName: "Wipe Up",
+        parameters: [
+            { "name": "animation", "type": "animation", "displayName": null, "defaultValue": { duration: "500", delay: "0" } }
+        ],
+        apply: (animations, config) => {
+            animations.push({
+                name: "openoverlay-anim-wipe-up-exit",
+                keyframes: "@keyframes openoverlay-anim-wipe-up-exit { from { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0); } to { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0, 0 0); } }",
                 ...config.animation
             });
         }
@@ -494,6 +667,7 @@ const effects = {
             }
         }
     },
+    
     "animFadeOutExit": {
         type: "animation",
         animationType: "exit",

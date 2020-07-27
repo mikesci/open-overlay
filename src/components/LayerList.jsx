@@ -130,7 +130,7 @@ class Layer extends React.Component {
     if (this.props.layer.effects) {
       for(let [effectName, effectConfig] of Object.entries(this.props.layer.effects)) {
         let effect = effects[effectName];
-        if (effect.type != "animation") {
+        if (effect && effect.type != "animation") {
           effectsForms.push(<EffectItem
             key={effectName}
             dispatcher={this.props.dispatcher}
@@ -140,6 +140,15 @@ class Layer extends React.Component {
             config={effectConfig} />);
         }
       }
+    }
+
+    let effectMenu;
+    if (!this.props.element.manifest.nonVisual) {
+      effectMenu = (
+        <EffectMenuPopover dispatcher={this.props.dispatcher} layer={this.props.layer}>
+          <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Property" />
+        </EffectMenuPopover>
+      );
     }
 
     return (
@@ -158,9 +167,7 @@ class Layer extends React.Component {
           collapsed={this.props.collapsed}>
           {configForm}
           {effectsForms}
-          <EffectMenuPopover dispatcher={this.props.dispatcher} layer={this.props.layer}>
-            <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Property" />
-          </EffectMenuPopover>
+          {effectMenu}
         </CollapsableLayer>
       </div>
     );

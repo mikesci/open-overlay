@@ -7,7 +7,7 @@ const YOUTUBE_URL_REGEX = /.*(?:www\.youtube\.com\/(?:(?:watch\?v=)|(?:embed\/))
 let contentTypeHandlers = [
     {   // image
         match: type => type.match(/image/i),
-        getLayers: async (url) => {
+        getLayers: async (url, name) => {
             // create the image and get its natural dimensions by loading it
             return await new Promise((resolve, reject) => {
                 let img = new Image();
@@ -15,6 +15,7 @@ let contentTypeHandlers = [
                     resolve([{
                         elementName: "image",
                         elementConfig: {
+                            label: name,
                             width: Math.min(img.naturalWidth, 1920),
                             height: Math.min(img.naturalHeight, 1080),
                             config: {
@@ -33,7 +34,7 @@ let contentTypeHandlers = [
     },
     {   // video  
         match: type => type.match(/video/i),
-        getLayers: async (url) => {
+        getLayers: async (url, name) => {
             return await new Promise((resolve, reject) => {
                 // get the video's natural dimensions
                 let vid = document.createElement("video");
@@ -41,6 +42,7 @@ let contentTypeHandlers = [
                     resolve([{
                         elementName: "video",
                         elementConfig: {
+                            label: name,
                             width: Math.min(vid.videoWidth, 1920),
                             height: Math.min(vid.videoHeight, 1080),
                             config: {
@@ -59,10 +61,11 @@ let contentTypeHandlers = [
     },
     {   // audio
         match: type => type.match(/audio/i),
-        getLayers: async (url) => {
+        getLayers: async (url, name) => {
             return [{
                 elementName: "audio",
                 elementConfig: {
+                    label: name,
                     config: {
                         url: url
                     }
@@ -72,7 +75,7 @@ let contentTypeHandlers = [
     },
     {   // youtube
         match: (type, data) => type.match(/text\/html/i) && data.match(YOUTUBE_URL_REGEX),
-        getLayers: async (url) => {
+        getLayers: async (url, name) => {
             // parse out the start parameter, if there is one
             let match = url.match(/(?:star)?t=(\d+)/i);
             let start = (match && match.length == 2 ? match[1] : null);
@@ -80,6 +83,7 @@ let contentTypeHandlers = [
             return [{
                 elementName: "youtube",
                 elementConfig: {
+                    label: name,
                     width: 1280,
                     height: 720,
                     config: {
@@ -92,10 +96,11 @@ let contentTypeHandlers = [
     },
     {   // iframe (any HTML content type)
         match: type => type.match(/text\/html/i),
-        getLayers: async (url) => {
+        getLayers: async (url, name) => {
             return [{
                 elementName: "iframe",
                 elementConfig: {
+                    label: name,
                     width: 1280,
                     height: 720,
                     config: {

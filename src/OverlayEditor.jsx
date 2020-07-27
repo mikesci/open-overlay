@@ -45,7 +45,7 @@ class OverlayEditor extends React.Component {
     this._undoManager = new UndoManager();
     this._fontLoader = new FontLoader();
     this._scriptingContext = new ScriptingContext({
-      onLayersUpdated: (layers) => { this.forceUpdate(); }
+      onUpdated: () => { this.forceUpdate(); }
     });
 
     this._dataTransferManagerRef = React.createRef();
@@ -246,6 +246,21 @@ class OverlayEditor extends React.Component {
         data: layers
       };
       ClipboardHelper.CopyToClipboard(JSON.stringify(copyData));
+    });
+
+    this._dispatcher.Register("UPDATE_EFFECT", (id, effectName, values, createUndoHistory) => {
+      this.setState(prevState => {
+        let layers = [...prevState.layers];
+        let layerIndex = layers.findIndex(r => r.id == id);
+        if (layerIndex == -1 || !layers[layerIndex].effects) { return null; }
+        let layer = cloneDeep(layers[layerIndex]);
+        let effectConfig = layer.effects[effectName];
+        if (!effectConfig) { return null; }
+        Object.assign(effectConfig, values);
+        layers[layerIndex] = layer;
+        if (createUndoHistory) { this.onLayersChanged(layers); }
+        return { layers: layers };
+      });
     });
 
     this._dispatcher.Register("ADD_EFFECT", (id, effectName) => {
@@ -553,17 +568,20 @@ class OverlayEditor extends React.Component {
   }
 
   onScriptExecutingChanged = (isScriptExecuting) => {
-    if (!isScriptExecuting)
+    if (!isScriptExecuting) {
       this._scriptingContext.reset(); // clear scripting context when no longer executing
+      // reset() doesn't trigger an onUpdated, so force update to bring back the old layer context
+      this.forceUpdate();
+    }
     else
-      this._scriptingContext.execute(cloneDeep(this.state.layers), this.state.script);
+      this._scriptingContext.execute(cloneDeep(this.state.layers), this.state.script, Date.now());
 
     this.setState({ isScriptExecuting });
   }
 
   render() {
 
-    let layers = (this._scriptingContext.hasModifiedLayers() ? this._scriptingContext.getLayers() : this.state.layers);
+    let layers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.state.layers);
 
     return (
       <div className="app-wrapper" onDragOver={this.onDragOver} onDrop={this.onDrop}>
@@ -602,6 +620,7 @@ class OverlayEditor extends React.Component {
               elements={this.state.elements}
               selectedLayerIds={this.state.selectedLayerIds}
               dispatcher={this._dispatcher}
+              rendererPhase={this.state.rendererPhase}
               onSetRendererPhase={this.onSetRendererPhase} />
           </div>
           <div className="stage-wrapper">

@@ -141,20 +141,6 @@ export default new class ExternalElementHelper {
         }
     }
 
-    /*
-    _setManifestDefaults(manifest) {
-        if (!manifest.name) { manifest.name = "(no name)"; }
-        if (!manifest.author) { manifest.author = "Unknown"; }
-        if (!manifest.description) { manifest.description = ""; }
-        if (!manifest.nonVisual && !manifest.width) { manifest.width = 1920; }
-        if (!manifest.nonVisual && !manifest.height) { manifest.width = 1080; }
-        if (manifest.nonVisual && manifest.width) { manifest.width = null; }
-        if (manifest.nonVisual && manifest.height) { manifest.height = null; }
-        if (!manifest.parameters) { manifest.parameters = []; }
-        return manifest;
-    }
-    */
-
     _isModuleUrl(url) { return url.endsWith(".js"); }
 
     _importFromUrl(url) { return fetch(url).then(r => r.text()).then(r => eval(r)); }
