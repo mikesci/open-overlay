@@ -117,6 +117,7 @@ class TextElement extends React.Component {
         parameters: [
             { "name": "text", "displayName": "Text", "type": "textarea", "defaultValue": "text" },
             { "name": "font", "displayName": "Font", "type": "font", "defaultValue": { "fontFamily": "Arial", "fontSize": "144pt", "color": "rgba(255,255,255,1)" } },
+            { "name": "wrap", "displayName": "Wrapping", "type": "checkbox", "defaultValue": false },
             { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" }
         ]
     };
@@ -147,7 +148,7 @@ class TextElement extends React.Component {
                 width: "100%",
                 overflow: "hidden",
                 display: "flex",
-                whiteSpace: "pre",
+                whiteSpace: (this.props.wrap ? "pre-wrap" : "pre"),
                 alignItems: this.valignToAlignItems(this.props.valign),
                 justifyContent: this.textAlignToJustifyContent(this.props.font.textAlign)
             });

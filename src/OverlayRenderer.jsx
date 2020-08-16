@@ -71,7 +71,7 @@ class OverlayRenderer extends React.Component {
     if (!this.state.loaded) { return null; }
 
     // default the z-index to 10000
-    let zIndex = this.props.zIndex || 10000;
+    let zIndex = (this.props.zIndex == null ? 10000 : this.props.zIndex);
 
     let layers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.props.layers);
 
