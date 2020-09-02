@@ -14,11 +14,7 @@ class RectangleElement extends React.Component {
             "backgroundColor": { "color": "#fff" }
         }
     };
-
-    componentDidMount() {
-        this.props.emit("test-it", { wetestedit: "yeahwedid" });
-    }
-  
+    
     render() {
         let style = Object.assign({}, { height: "100%", width: "100%" });
         return (
