@@ -97,9 +97,9 @@ Open Overlay supports limited scripting at the overlay level. These scripts will
 
 **Function**|**Description**|**Example**|**Explanation**
 -----|-----|-----|-----
-`on(name, handler)`|Subscribes to an event emitted by another layer within the overlay.|`overlay.on("twitch-chat", event => { console.log("<" + event.user.display-name + "> " + event.message); });`|Logs twitch chat messages
-`on(name, layerName, handler)`|Subscribes to an event emitted by one layer within the overlay.|`overlay.on("twitch-chat", "Twitch Chat Listener 1", event => { console.log("<" + event.user.display-name + "> " + event.message); });`| 
-`setLayer(layerName, props)`|Sets layer properties such as position or any user-specified data|`overlay.setLayer("Text 1", { top: 20 });`|Shifts the `Text 1` layer 20 pixels from the top of the frame
+`on(name, handler)`|Subscribes to an event emitted by any layer.|`overlay.on("twitch-chat", event => { console.log("<" + event.user.display-name + "> " + event.message); });`|Logs twitch chat messages
+`on(name, layerName, handler)`|Subscribes to an event emitted by the layer named *layerName*.|`overlay.on("twitch-chat", "Twitch Chat Listener 1", event => { console.log("<" + event.user.display-name + "> " + event.message); });`| 
+`setLayer(layerName, props)`|Sets layer properties such as position or any user-specified data|`overlay.setLayer("Text 1", { top: 20 });`|Moves the `Text 1` layer 20 pixels from the top of the frame
 `clone(layerName)`|Makes a deep copy of the specified layer|`overlay.addLayer(overlay.clone("Text 1"));`|Copies the `Text 1` layer and inserts it into the overlay
 `addLayer(layer)`|Inserts the given layer object (not name) into the overlay|See above| 
 `removeLayer(layerName)`|Removes the given layer from the overlay|`overlay.removeLayer("Text 1");`|Removes the `Text 1` layer from the overlay
