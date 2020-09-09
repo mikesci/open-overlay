@@ -3,12 +3,16 @@ const path = require('path');
 module.exports = {
     mode: "development",
     entry: {
-        'OverlayEditor': './src/OverlayEditor.jsx',
-        'OverlayRenderer': './src/OverlayRenderer.jsx'
+        "OverlayEditor": [ "./src/OverlayEditor.jsx" ],
+        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ],
+        "OverlayConverter": [ "./src/OverlayConverter.js" ]
     },
+    performance: { hints: false },
     output: {
         path: path.resolve(__dirname, './test'),
-        filename: '[name].js'
+        filename: "[name].js",
+        library: "[name]",
+        libraryTarget: "umd"
     },
     optimization: { minimize: false },
     externals: {
@@ -48,15 +52,15 @@ module.exports = {
             {
                 test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
                 use: [
-                  {
-                    loader: 'file-loader',
-                    options: {
-                      name: '[name].[ext]',
-                      outputPath: 'fonts/'
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name].[ext]',
+                            outputPath: 'fonts/'
+                        }
                     }
-                  }
                 ]
-              }
+            }
         ]
     }
 }

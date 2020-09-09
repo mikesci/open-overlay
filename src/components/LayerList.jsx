@@ -6,6 +6,7 @@ import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import EffectMenuPopover from "./EffectMenuPopover.jsx";
 import { effects } from "../shared/effects.js";
+import Dispatcher from "../shared/dispatcher.js";
 import "./LayerList.css";
 
 class EffectItem extends React.PureComponent {
@@ -20,11 +21,11 @@ class EffectItem extends React.PureComponent {
   }
 
   onParameterValuesChanged = (values, createUndoHistory) => {
-    this.props.dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
+    Dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
   }
 
   onDeleteClick = () => {
-    this.props.dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
+    Dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
   }
 
   render() {
@@ -58,11 +59,11 @@ class Layer extends React.Component {
   }
 
   componentDidMount() {
-    this.props.dispatcher.Register("EDIT_LAYER_NAME", this.onEditLayerName);
+    Dispatcher.Register("EDIT_LAYER_NAME", this.onEditLayerName);
   }
 
   componentWillUnmount() {
-    this.props.dispatcher.Unregister("EDIT_LAYER_NAME", this.onEditLayerName)
+    Dispatcher.Unregister("EDIT_LAYER_NAME", this.onEditLayerName)
   }
 
   onEditLayerName = id => {
@@ -72,24 +73,24 @@ class Layer extends React.Component {
   }
 
   onConfigFormParameterValuesChanged = (values, createUndoHistory) => {
-    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { config: values }, createUndoHistory);
+    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { config: values }, createUndoHistory);
   }
 
   onLayerLabelChanged = value => {
-    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { label: value }, true);
+    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { label: value }, true);
   }
 
   onToggleVisibility = value => {
-    this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { hidden: !this.props.layer.hidden }, true);
+    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { hidden: !this.props.layer.hidden }, true);
   }
 
   onDelete = () => {
-    this.props.dispatcher.Dispatch("DELETE_LAYERS", [ this.props.layer.id ]);
+    Dispatcher.Dispatch("DELETE_LAYERS", [ this.props.layer.id ]);
   }
 
   onCollapsableToggled = isOpen => {
     // emit a select event whenever the collapsable is toggled?
-    this.props.dispatcher.Dispatch("SELECT_LAYER", this.props.layer.id);
+    Dispatcher.Dispatch("SELECT_LAYER", this.props.layer.id);
   }
 
   onDragStart = evt => {
@@ -120,7 +121,6 @@ class Layer extends React.Component {
     let configForm = null;
     if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
       configForm = (<ConfigurationForm
-        fontLoader={this.props.fontLoader}
         parameters={this.props.element.manifest.parameters}
         parameterValues={this.props.layer.config}
         onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
@@ -133,7 +133,7 @@ class Layer extends React.Component {
         if (effect && effect.type != "animation") {
           effectsForms.push(<EffectItem
             key={effectName}
-            dispatcher={this.props.dispatcher}
+            dispatcher={Dispatcher}
             layer={this.props.layer}
             effectName={effectName}
             effect={effect}
@@ -145,7 +145,7 @@ class Layer extends React.Component {
     let effectMenu;
     if (!this.props.element.manifest.nonVisual) {
       effectMenu = (
-        <EffectMenuPopover dispatcher={this.props.dispatcher} layer={this.props.layer}>
+        <EffectMenuPopover dispatcher={Dispatcher} layer={this.props.layer}>
           <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Property" />
         </EffectMenuPopover>
       );
@@ -256,7 +256,7 @@ export default class LayerList extends React.Component {
     let id = parseInt(evt.dataTransfer.getData(DragAndDropTypes.LAYER));
 
     // dispatch the move message
-    this.props.dispatcher.Dispatch("MOVE_LAYER", id, this.state.draggedLayerIndex);
+    Dispatcher.Dispatch("MOVE_LAYER", id, this.state.draggedLayerIndex);
 
     // clear the positioner
     this.setState({ draggedLayerIndex: null, draggedLayerId: null });
@@ -270,7 +270,7 @@ export default class LayerList extends React.Component {
     return (<Layer
       key={layer.id}
       index={this.state.draggedLayerIndex}
-      dispatcher={this.props.dispatcher}
+      dispatcher={Dispatcher}
       layer={layer}
       element={element}
       isSelected={false}
@@ -299,10 +299,9 @@ export default class LayerList extends React.Component {
         layerList.push(<Layer
           key={layer.id}
           index={index}
-          dispatcher={this.props.dispatcher}
+          dispatcher={Dispatcher}
           layer={layer}
           element={element}
-          fontLoader={this.props.fontLoader}
           isSelected={this.props.selectedLayerIds.includes(layer.id)}
           onDragStart={this.onLayerDragStart}
           onDragEnd={this.onLayerDragEnd}

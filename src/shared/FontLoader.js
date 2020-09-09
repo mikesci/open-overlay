@@ -1,18 +1,12 @@
 import BuiltinFontSource from "./BuiltinFontSource.js";
 import GoogleFontSource from "./GoogleFontSource.js";
 
-export default class FontLoader {
+export default new class FontLoader {
 
     _loadedFonts = [];
     _loadPromises = {};
     _fontSources = [ BuiltinFontSource, GoogleFontSource ];
     _fontNames;
-
-    constructor(fontSources) {
-        if (fontSources && fontSources.length > 0) {
-            fontSources.forEach(fontSource => this._fontSources.push(fontSource));
-        }
-    }
 
     GetFontNames = () => {
         // lazy load font names
@@ -31,7 +25,6 @@ export default class FontLoader {
 
     /// returns a Promise if a font is being loaded or null if it's already loaded
     LoadFont = name => {
-
         // ensure this font has not yet been loaded
         if (this._loadedFonts.includes(name)) { return null; }
 

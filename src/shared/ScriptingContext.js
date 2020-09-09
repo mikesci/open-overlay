@@ -1,25 +1,5 @@
-import { cloneDeep, merge } from "lodash";
-
-// quick reference for scripting functions
-
-// listen for "event-name" on a layer titled "layer 1"
-// A: on("event-name", "layer 1", (eventArgs) => { ... })
-
-// listen for "event-name" on any layer
-// A: on("event-name", (eventArgs) => { ... })
-
-// set the props on "layer 1" - props are position (top, left, width, height, rotation)
-// A: setLayerProps("layer 1", { top: 10 })
-
-// set the config on a layer - config are element-specific fields
-// A: setLayerConfig("layer 1", { text: "new text here" })
-
-
-/* 
-// emit a custom event "custom-event"
-// A: emit("custom-event", { arg1, arg2 });
-// B: self().emit("custom-event", args)
-*/
+import cloneDeep from "lodash/cloneDeep";
+import merge from "lodash/merge";
 
 function layerFilterToMatchFunction(layerFilter) {
     if (!layerFilter) { return null; }
@@ -52,13 +32,13 @@ class OverlayContext {
 
     constructor(layers, lastUpdated, onUpdated) {
         this._eventHandlers = {};
-        this._layers = layers;
+        this._layers = layers || [];
         this._lastUpdated = lastUpdated;
         this._onUpdated = onUpdated;
         this._hasModifiedLayers = false;
         
         // get the max layer id
-        this._maxLayerId = layers.reduce((a,c) => (c.id > a ? c.id : a), 0);
+        this._maxLayerId = this._layers.reduce((a,c) => (c.id > a ? c.id : a), 0);
     }
 
     emitToOtherLayers = (eventName, eventArgs, sourceLayer) => {
@@ -224,7 +204,7 @@ export default class ScriptingContext {
     _interceptedIntervals = [];
 
     get lastExecutionError() { return this._lastExecutionError; }
-    get hasModifiedLayers() { return (this._overlayContext && this._overlayContext.hasModifiedLayers); }
+    get hasModifiedLayers() { return (this._overlayContext != null && this._overlayContext.hasModifiedLayers == true); }
     get layers() { return (!this._overlayContext ? [] : this._overlayContext.layers); }
 
     constructor(opts) {
@@ -273,9 +253,8 @@ export default class ScriptingContext {
         return interval;
     }
 
-    execute = (layers, script, lastUpdated) => {
-
-        this._overlayContext = new OverlayContext(layers, lastUpdated, this._onUpdated);
+    execute = (overlay) => {
+        this._overlayContext = new OverlayContext(cloneDeep(overlay.layers), Date.now(), this._onUpdated);
 
         try
         {

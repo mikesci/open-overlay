@@ -199,8 +199,18 @@ class ImageElement extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            source: this.getSource(),
             preloaded: false
         };
+    }
+
+    getSource = () => {
+        if (!this.props.url) { return ""; }
+        if (this.props.assets && this.props.url.startsWith("asset:")) {
+            let assetKey = this.props.url.substr(6);
+            return this.props.assets[assetKey] || "";
+        }
+        return this.props.url;
     }
 
     componentDidMount() {
@@ -209,7 +219,7 @@ class ImageElement extends React.Component {
             img.addEventListener("load", resolve);
             img.addEventListener("error", resolve);
             img.addEventListener("abort", resolve);
-            img.src = this.props.url;
+            img.src = this.state.source;
         }).then(() => {
             this.setState({ preloaded: true });
         })
@@ -222,7 +232,7 @@ class ImageElement extends React.Component {
         if (!this.state.preloaded) { return null; }
 
         return (
-            <img src={this.props.url} style={{ "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset }} />
+            <img src={this.state.source} style={{ "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset }} />
         );
     }
 }
@@ -255,8 +265,18 @@ class VideoElement extends React.Component {
         super(props);
         this._vidRef = React.createRef();
         this.state = {
+            source: this.getSource(),
             preloaded: false
         };
+    }
+
+    getSource = () => {
+        if (!this.props.url) { return ""; }
+        if (this.props.assets && this.props.url.startsWith("asset:")) {
+            let assetKey = this.props.url.substr(6);
+            return this.props.assets[assetKey] || "";
+        }
+        return this.props.url;
     }
 
     componentDidUpdate(prevProps) {
@@ -300,7 +320,7 @@ class VideoElement extends React.Component {
         
         return (
             <video ref={this._vidRef} onLoadedData={this.onLoadedData} loop={this.props.loop} style={style}>
-                <source src={this.props.url} />
+                <source src={this.state.source} />
             </video>
         );
     }
@@ -326,8 +346,18 @@ class AudioElement extends React.Component {
         super(props);
         this._audioRef = React.createRef();
         this.state = {
+            source: this.getSource(),
             preloaded: false
         };
+    }
+
+    getSource = () => {
+        if (!this.props.url) { return ""; }
+        if (this.props.assets && this.props.url.startsWith("asset:")) {
+            let assetKey = this.props.url.substr(6);
+            return this.props.assets[assetKey] || "";
+        }
+        return this.props.url;
     }
 
     shouldComponentUpdate(nextProps) {
@@ -363,7 +393,7 @@ class AudioElement extends React.Component {
     render() {
         return (
             <audio ref={this._audioRef} onLoadedData={this.onLoadedData} loop={this.props.loop}>
-                <source src={this.props.url} />
+                <source src={this.state.source} />
             </audio>
         );
     }
@@ -374,8 +404,8 @@ class IFrameElement extends React.Component {
         name: "Iframe",
         author: "SCI",
         description: "A customizable iframe.",
-        width: 400,
-        height: 400,
+        width: 1280,
+        height: 720,
         preserveAspect: false,
         parameters: [
             { "name": "url", "type": "text", "displayName": "Url" }

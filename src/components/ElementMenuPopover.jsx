@@ -1,6 +1,6 @@
 import React from "react";
 import { Popover, Position, Intent, PopoverInteractionKind, Menu, MenuItem, MenuDivider, ContextMenu } from "@blueprintjs/core";
-import AddExternalElementForm from "./AddExternalElementForm.jsx";
+import Dispatcher from "../shared/dispatcher.js";
 
 export default class ElementMenuPopover extends React.PureComponent {
 
@@ -12,11 +12,11 @@ export default class ElementMenuPopover extends React.PureComponent {
     }
   
     onRemoveExternalElement = element => {
-      this.props.dispatcher.Dispatch("REMOVE_EXTERNAL_ELEMENT", element);
+      Dispatcher.Dispatch("REMOVE_EXTERNAL_ELEMENT", element);
     }
   
     onElementMenuItemClick = (evt, elementName) => {
-      this.props.dispatcher.Dispatch("CREATE_LAYER", elementName);
+      Dispatcher.Dispatch("CREATE_LAYERS", [{ elementName }]);
     }
   
     onElementMenuItemContextMenu = (evt, elementName) => {
@@ -47,15 +47,6 @@ export default class ElementMenuPopover extends React.PureComponent {
             onContextMenu={evt => this.onElementMenuItemContextMenu(evt, name)}
             onClick={evt => this.onElementMenuItemClick(evt, name)}
           />
-        );
-      }
-
-      if (this.props.canAddExternalElements) {
-        menuEntries.push(<MenuDivider key="divider" />);
-        menuEntries.push(
-          <MenuItem key="add" icon="add" text="Add external element..." popoverProps={{ openOnTargetFocus: false, isOpen: (this.state.isMenuLockedOpen ? true : undefined) }}>
-            <AddExternalElementForm dispatcher={this.props.dispatcher} onSetLock={locked => this.setState({ isMenuLockedOpen: locked })} />
-          </MenuItem>
         );
       }
 

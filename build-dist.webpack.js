@@ -3,18 +3,18 @@ const path = require('path');
 module.exports = {
     mode: "production",
     entry: {
-        'OverlayEditor': './src/OverlayEditor.jsx',
-        'OverlayRenderer': './src/OverlayRenderer.jsx'
+        "OverlayEditor": [ "./src/OverlayEditor.jsx" ],
+        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ],
+        "OverlayConverter": [ "./src/OverlayConverter.js" ]
     },
+    performance: { hints: false },
     output: {
         path: path.resolve(__dirname, './dist'),
-        filename: '[name].js'
+        filename: "[name].js",
+        library: "[name]",
+        libraryTarget: "umd"
     },
     optimization: { minimize: true },
-    externals: {
-        "react": "React",
-        "react-dom": "ReactDOM"
-    },
     module: {
         rules: [
             {
@@ -56,7 +56,7 @@ module.exports = {
                     }
                   }
                 ]
-              }
+            }
         ]
     }
 }

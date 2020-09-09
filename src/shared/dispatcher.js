@@ -1,5 +1,5 @@
 
-export default class Dispatcher {
+export default new class Dispatcher {
 
     _callbacks = {};
 

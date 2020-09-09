@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, ButtonGroup, InputGroup, ControlGroup, Popover, HTMLSelect } from "@blueprintjs/core";
 import { SketchPicker } from 'react-color';
+import FontLoader from "../shared/FontLoader.js";
 import './FontStyleEditor.css';
 
 export default class FontStyleEditor extends React.Component {
@@ -11,7 +12,6 @@ export default class FontStyleEditor extends React.Component {
 
     constructor(props) {
         super(props);
-        // props.fontLoader
         this.state = this.getStateFromProps(this.props.value);
     }
 
@@ -172,7 +172,7 @@ export default class FontStyleEditor extends React.Component {
 
     render() {
 
-        let fontNames = (this.props.fontLoader ? this.props.fontLoader.GetFontNames() : []);
+        let fontNames = FontLoader.GetFontNames();
 
         return (
             <div className="font-style-editor">

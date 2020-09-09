@@ -1,85 +1,67 @@
 import React from "react";
 import LayerRenderer from "./components/LayerRenderer.jsx";
-import FontLoader from "./shared/FontLoader.js";
 import Elements from "./components/Elements.jsx";
-import ExternalElementHelper from "./shared/ExternalElementHelper.js";
 import ScriptingContext from "./shared/ScriptingContext.js";
-import cloneDeep from "lodash/cloneDeep";
-//import "./OverlayRenderer.scss";
 
 class OverlayRenderer extends React.Component {
 
-  _fontLoader;
-  _scriptingContext;
+  _scriptingContext = new ScriptingContext({ onUpdated: () => { this.forceUpdate(); } });
 
   constructor(props) {
     super(props);
-    // props.width
-    // props.height
-    // props.layers
+    // props.id
+    // props.overlay
     // props.zIndex
     // props.hidden
-    // props.script
     // props.wireframeMode
-    // props.lastUpdated
+    // props.elements
+    // props.elementProps
 
-    this._fontLoader = new FontLoader();
+    // if an id is not provided, generate one
+    let id = (this.props.id || Math.random().toString());
 
-    this._scriptingContext = new ScriptingContext({
-      onUpdated: () => { this.forceUpdate(); }
-    });
+    // merge elements
+    let elements = {...Elements.Builtin};
+    if (this.props.elements) { Object.assign(elements, this.props.elements); }
 
     this.state = {
-      loaded: false,
-      elements: {} // will be loaded shortly, asynchronously
+      id,
+      elements
     };
-
-    this.loadElementsFromLayers();
   }
 
   componentDidMount() {
     if (this.props.script && !this.props.hidden) {
-      this._scriptingContext.execute(cloneDeep(this.props.layers), this.props.script, this.props.lastUpdated);
+      this._scriptingContext.execute(this.props.overlay);
     }
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.layers != prevProps.layers) {
-      this.setState({ layers: this.props.layers });
-    }
-
     // execute scripts when the overlay is hidden/shown
-    if (this.props.script && this.props.hidden != prevProps.hidden) {
+    if (this.props.overlay.script && this.props.hidden != prevProps.hidden) {
         if (this.props.hidden) {
           this._scriptingContext.reset();
           this.forceUpdate();
         }
-        else
-          this._scriptingContext.execute(cloneDeep(this.props.layers), this.props.script, this.props.lastUpdated);
+        else {
+          this._scriptingContext.execute(this.props.overlay);
+        }
     }
   }
 
-  loadElementsFromLayers = async () => {
-    let externalElements = await ExternalElementHelper.LoadFromLayers(this.props.layers, this.state.elements);
-    this.setState({
-      loaded: true,
-      elements: {...Elements.Builtin, ...this.props.elements, ...externalElements}
-    })
-  }
-
   render() {
-    if (!this.state.loaded) { return null; }
-
     // default the z-index to 10000
     let zIndex = (this.props.zIndex == null ? 10000 : this.props.zIndex);
 
-    let layers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.props.layers);
+    // use the script context's layers if it has them
+    let layers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.props.overlay.layers);
 
     return (
       <LayerRenderer
+        id={this.state.id}
         elements={this.state.elements}
+        elementProps={{ assets: this.props.overlay.assets, ...(this.props.elementProps || {})}}
         layers={layers}
-        fontLoader={this._fontLoader}
         zIndex={zIndex}
         hidden={this.props.hidden}
         scriptingContext={this._scriptingContext}
@@ -88,8 +70,5 @@ class OverlayRenderer extends React.Component {
     );
   }
 }
-
-// export to window to allow this to be consumed in the browser easily
-window.OverlayRenderer = OverlayRenderer;
 
 export default OverlayRenderer;

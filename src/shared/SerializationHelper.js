@@ -1,7 +1,3 @@
-//import { json } from "express";
-
-//import bson from "bson";
-
 export default new class SerializationHelper {
 
     modelToString = (model) => {

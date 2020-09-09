@@ -3,6 +3,7 @@ import { effects } from "../shared/effects.js";
 import "./LayerRenderer.css";
 import AnimationHelper from "../shared/AnimationHelper.js";
 import memoize from "memoize-one";
+import FontLoader from "../shared/FontLoader.js";
 
 function transformsListToString(list) {
   let finalTransform = {};
@@ -77,6 +78,7 @@ class Layer extends React.PureComponent {
     super(props);
     // props.layer
     // props.element
+    // props.elementProps
     // props.index
     // props.forcePhase
     // props.zIndex
@@ -247,6 +249,8 @@ class Layer extends React.PureComponent {
       default: break;
     }
 
+    let elementProps = this.props.elementProps || {};
+
     let element;
     if (this.props.wireframeMode) {
       element = <div style={{ height: "100%", width: "100%", border: "1px solid red" }}></div>
@@ -255,6 +259,7 @@ class Layer extends React.PureComponent {
         (
           <div className="layer-container-inner" style={{ ...computedEffects.style, transform: computedEffects.transform }}>
             <this.props.Element
+              {...elementProps}
               {...this.props.layer.config}
               layer={this.props.layer}
               hidden={this.props.hidden}
@@ -283,12 +288,12 @@ export default class LayerRenderer extends React.Component {
     super(props);
     // props.layers
     // props.elements
-    // props.fontLoader
     // props.zIndex
     // props.forcePhase
     // props.scriptingContext
     // props.runScriptsOnShow
     // props.wireframeMode
+    // props.elementProps
 
     this.state = {
       isLoadingFonts: false,
@@ -308,20 +313,17 @@ export default class LayerRenderer extends React.Component {
   }
 
   ensureFonts = () => {
-    if (this.props.fontLoader)
-    {
-      for(let layer of this.props.layers) {
-        let Element = this.props.elements[layer.elementName];
-        if (!Element) { continue; }
-        for(var parameter of Element.manifest.parameters) {
-          if (parameter.type == "font") {
-            let font = layer.config[parameter.name];
-            if (font && font.fontFamily) {
-              let fontPromise = this.props.fontLoader.LoadFont(font.fontFamily); // this returns null if it's already loaded
-              if (fontPromise) {
-                this.setState({ isLoadingFonts: true })
-                fontPromise.then(() => { this.setState({ isLoadingFonts: false }); });
-              }
+    for(let layer of this.props.layers) {
+      let Element = this.props.elements[layer.elementName];
+      if (!Element) { continue; }
+      for(var parameter of Element.manifest.parameters) {
+        if (parameter.type == "font") {
+          let font = layer.config[parameter.name];
+          if (font && font.fontFamily) {
+            let fontPromise = FontLoader.LoadFont(font.fontFamily); // this returns null if it's already loaded
+            if (fontPromise) {
+              this.setState({ isLoadingFonts: true })
+              fontPromise.then(() => { this.setState({ isLoadingFonts: false }); });
             }
           }
         }
@@ -359,7 +361,7 @@ export default class LayerRenderer extends React.Component {
     return (
       <svg style={{ position: "absolute", top: "-99999px" }} viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <clipPath id="knockoutClippath">
+          <clipPath id={"knockoutClippath_" + this.props.id}>
             <path d={"M-10000 -10000 L10000 -10000 L10000 10000 L-10000 10000 L-10000 -10000 " + knockouts.join(" ") + "Z"} />
           </clipPath>
         </defs>
@@ -379,15 +381,20 @@ export default class LayerRenderer extends React.Component {
       let Element = this.props.elements[layer.elementName];
       if (!Element) { return null; } // don't render anything if we don't recognize the element
 
+      let hidden = layer.hidden || this.props.hidden;
+
+      let zIndex = (this.props.zIndex || 0) - index;
+
       return (
         <Layer
           key={layer.id}
-          hidden={layer.hidden || this.props.hidden}
-          wireframeMode={this.props.wireframeMode}
+          hidden={hidden}
           layer={layer}
-          forcePhase={this.props.forcePhase}
           Element={Element}
-          zIndex={(this.props.zIndex || 0) - index}
+          zIndex={zIndex}
+          wireframeMode={this.props.wireframeMode}
+          forcePhase={this.props.forcePhase}
+          elementProps={this.props.elementProps}
           scriptingContext={this.props.scriptingContext}
           onRegisterKnockout={this.onRegisterKnockout}
           onRemoveKnockout={this.onRemoveKnockout}
@@ -397,8 +404,11 @@ export default class LayerRenderer extends React.Component {
 
     let knockouts = Object.values(this.state.knockouts);
 
+    let style = { zIndex: this.props.zIndex };
+    if (knockouts.length > 0) { style.clipPath = "url(#knockoutClippath_" + this.props.id + ")"; }
+
     return (
-      <div className="knockout-wrapper" style={knockouts.length > 0 ? { "clipPath": "url(#knockoutClippath)" } : null}>
+      <div className="knockout-wrapper" style={style}>
         {knockouts.length > 0 ? this.renderKnockouts(knockouts) : null}
         {renderedLayers}
       </div>

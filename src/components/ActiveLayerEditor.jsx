@@ -2,6 +2,7 @@ import React from "react";
 import { FormGroup, ControlGroup, InputGroup, ButtonGroup, Button, Popover, Menu, MenuItem, AnchorButton, PopoverInteractionKind } from "@blueprintjs/core";
 import ConfigurationForm from "./ConfigurationForm.jsx";
 import { entryAnimations, exitAnimations, standardAnimations, effects } from "../shared/effects.js";
+import Dispatcher from "../shared/dispatcher.js";
 import './ActiveLayerEditor.css';
 
 class LayerAnimationItem extends React.PureComponent {
@@ -230,20 +231,20 @@ export default class ActiveLayerEditor extends React.Component {
         let obj = {};
         obj[name] = value;
         //obj[name] = parseFloat(value);
-        this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.state.selectedLayerId, obj, createUndo);
+        Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.state.selectedLayerId, obj, createUndo);
         return true;
     }
 
     onEffectConfigChanged = (effectName, effectConfig, createUndoHistory) => {
-        this.props.dispatcher.Dispatch("UPDATE_EFFECT", this.state.selectedLayerId, effectName, effectConfig, createUndoHistory);
+        Dispatcher.Dispatch("UPDATE_EFFECT", this.state.selectedLayerId, effectName, effectConfig, createUndoHistory);
     }
 
     onEffectDeleted = (effectName) => {
-        this.props.dispatcher.Dispatch("DELETE_EFFECT", this.state.selectedLayerId, effectName);
+        Dispatcher.Dispatch("DELETE_EFFECT", this.state.selectedLayerId, effectName);
     }
 
     onEffectAdded = (effectName, effectListName) => {
-        this.props.dispatcher.Dispatch("ADD_EFFECT", this.state.selectedLayerId, effectName);
+        Dispatcher.Dispatch("ADD_EFFECT", this.state.selectedLayerId, effectName);
         this.setState({ openEffectList: effectListName });
     }
 

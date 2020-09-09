@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= t.overlay.name %></title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+    html, body { overflow: hidden; height: 100%; width: 100%; padding: 0; margin: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@16.13.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="<%= t.rendererModuleUrl %>" crossorigin></script>
+    <script id="overlay-definition">
+        window._overlay = <%= JSON.stringify(t.overlay) %>;
+    </script>
+    <script>
+        window.addEventListener("load", function() {
+                ReactDOM.render(
+                    React.createElement(OverlayRenderer.default, { overlay: window._overlay }),     
+                document.querySelector("#root")
+            );
+        });
+    </script>
+</body>
+</html>

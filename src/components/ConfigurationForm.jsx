@@ -15,6 +15,21 @@ export default class ConfigurationForm extends React.Component {
     // props.parameters
     // props.parameterValues
     // props.onParameterValuesChanged
+
+    this.state = {
+      optionsLists: {}
+    };
+  }
+
+  componentDidMount() {
+    // load options lists from any parameters with a functional options element
+    for(let parameter of this.props.parameters) {
+      if (parameter.options && typeof parameter.options === "function") {
+        Promise.resolve(parameter.options()).then(options => {
+          this.setState(ps => ({ optionsLists: { ...ps.optionsLists, [parameter.name]: options } }));
+        });
+      }
+    }
   }
 
   onStyleChanged = (param, value) => {
@@ -183,7 +198,7 @@ export default class ConfigurationForm extends React.Component {
 
     switch (parameter.type) {
       case "font":
-        return (<FontStyleEditor value={value} onChange={this.onFontChanged} param={parameter} fontLoader={this.props.fontLoader} />);
+        return (<FontStyleEditor value={value} onChange={this.onFontChanged} param={parameter} />);
       case "valign":
         return (<VerticalAlignEditor value={value} param={parameter} onChange={this.onVerticalAlignChanged} />);
       case "color":
@@ -196,7 +211,8 @@ export default class ConfigurationForm extends React.Component {
       case "checkbox":
         return (<Switch checked={value} onChange={this.onCheckboxChanged} data-param={parameter.name} label={parameter.compact != false ? parameter.displayName : null} />);
       case "select":
-        let options = (typeof parameter.options === "function" ? parameter.options() : parameter.options);
+        let options = parameter.options;
+        if (typeof options === "function") { options = this.state.optionsLists[parameter.name] || []; }
         return (<HTMLSelect value={value} onChange={this.onSelectChanged} data-param={parameter.name} options={options} />);
       case "radiogroup":
         return (

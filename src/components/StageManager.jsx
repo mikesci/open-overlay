@@ -2,6 +2,7 @@ import React from "react";
 import ZoomSelector from "./ZoomSelector.jsx";
 import BackgroundSelector from "./BackgroundSelector.jsx";
 import Resizer from "./Resizer.jsx";
+import Dispatcher from "../shared/dispatcher.js";
 import "./StageManager.css";
 
 export default class StageManager extends React.Component {
@@ -72,7 +73,7 @@ export default class StageManager extends React.Component {
         let layerContainer = evt.target.closest(".layer-container");
         if (layerContainer) {
             let id = parseInt(layerContainer.getAttribute("data-id"));
-            this.props.dispatcher.Dispatch("SELECT_LAYER", id);
+            Dispatcher.Dispatch("SELECT_LAYER", id);
             return;
         }
 
@@ -147,7 +148,7 @@ export default class StageManager extends React.Component {
     }
 
     onSelectedRectChanged = (layerId, rect, createUndo) => {
-        this.props.dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layerId, rect, createUndo);
+        Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", layerId, rect, createUndo);
     }
 
     onSetResizeCursor = cursor => {
@@ -168,29 +169,29 @@ export default class StageManager extends React.Component {
             });
 
             if (possibleLayers.length == 0) {
-                this.props.dispatcher.Dispatch("SELECT_LAYER", null);
+                Dispatcher.Dispatch("SELECT_LAYER", null);
                 return;
             }
             
             if (this.props.selectedLayerIds.length == 0) {
-                this.props.dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
+                Dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
                 return;
             }
     
             if (possibleLayers.length == 1 || multiSelect) {
-                this.props.dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
+                Dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
                 return;
             }
     
             // only when NOT multiSelecting
             let index = possibleLayers.findIndex(r => this.props.selectedLayerIds.includes(r.id));
             if (index == -1) {
-                this.props.dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
+                Dispatcher.Dispatch("SELECT_LAYER", possibleLayers[0].id, multiSelect);
                 return;
             }
     
             index = (index + 1) % possibleLayers.length;
-            this.props.dispatcher.Dispatch("SELECT_LAYER", possibleLayers[index].id, multiSelect);
+            Dispatcher.Dispatch("SELECT_LAYER", possibleLayers[index].id, multiSelect);
         } else {
             // if this a box select, pick all the layers that fall inside the box
             let possibleLayers = this.props.layers.filter(layer => {
@@ -205,10 +206,10 @@ export default class StageManager extends React.Component {
 
             // if not multi-selecting, deselect everything first
             if (!multiSelect)
-                this.props.dispatcher.Dispatch("SELECT_LAYER", null, false);
+            Dispatcher.Dispatch("SELECT_LAYER", null, false);
 
             for(let layer of possibleLayers) {
-                this.props.dispatcher.Dispatch("SELECT_LAYER", layer.id, true);
+                Dispatcher.Dispatch("SELECT_LAYER", layer.id, true);
             }
         }
     }
