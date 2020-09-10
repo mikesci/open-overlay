@@ -1,7 +1,7 @@
 # Open Overlay
 An open source, react-based overlay builder for livestreaming.
 
-The public implementation of this package is available at https://openoverlay.org and the corresponding GitHub page can be found [here](https://github.com/mikesci/open-overlay-web).
+The public implementation of this package is available at https://openoverlay.org.
 
 ## What's this then?
 
@@ -11,31 +11,38 @@ This package contains the core designer component used in the system above.
   - Handles building an entire overlay.  Expects the following props:
     - width - the width of the output stage
     - height - the height of the output stage
-    - layers - an array of Layers (more below)
-    - elements - an object containing the Elements to be made available in the editor (more below)
-    - uploadUrl - the url to a file upload handler.  required for file uploads.
-    - onLayersChanged - a method called whenever layer data changes permanently
+    - overlay - the overlay object (more below)
+    - elements - an object containing additional Elements to be made available in the editor (more below)
+    - disableBuiltinElements - disables the default, built-in Elements
+    - onOverlayChanged - called when the overlay object changes
+    - onUpload - called when a file is going to be uploaded.  providing this value disables the inline uploader.
   
-## Layers
-An overlay is not much more than a collection of layers.  Each layer references a single element.  More about elements below.
+## Overlay Object
 
-The structure for a layer is as follows:
+The structure for an overlay is as follows:
 ```
-layer = {
-  id: 1, // A unique numeric id for each layer.  The editor will determine the maximum id in use and increment it for new layers.
-  elementName: "image", // the name of the Element
-  top: 0, //
-  left: 0, //
-  width: 640, //
-  height: 480, // the position and dimensions of the layer, relative to the top left of the stage
-  config: { // an object containing element-specific configuration values
-    url: "http://path/to/image.png"
+overlay = {
+  layers: [{
+    id: 1, // A unique numeric id for each layer.  The editor will determine the maximum id in use and increment it for new layers.
+    elementName: "image", // the name of the Element
+    top: 0,
+    left: 0,
+    width: 640,
+    height: 480, // the position and dimensions of the layer, relative to the top left of the stage
+    config: { // an object containing element-specific configuration values
+      url: "asset:image.png"
+      assetKey: "image.png"
+    }
+  }],
+  script: "-- script here",
+  assets: { // optional
+    "image.png": "data:image/png;base64,..."
   }
 }
 ```
 
 ## Elements
-Elements are react components that control the rendering of each layer.  They must contain a static field named "manifest".  A simple rectangle element is below.  Many built-in elements are available at https://github.com/mikesci/open-overlay-web/
+Elements are react components that control the rendering of each layer.  They must contain a static field named "manifest".  A built-in rectangle element is below.
 
 ```
 class RectangleElement extends React.Component {
