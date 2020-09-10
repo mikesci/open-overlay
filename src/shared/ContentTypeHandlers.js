@@ -2,7 +2,7 @@
 // Used when dropping & pasting.
 
 const DEFAULT_TIMEOUT_MS = 10000;
-const YOUTUBE_URL_REGEX = /.*(?:www\.youtube\.com\/(?:(?:watch\?v=)|(?:embed\/))|(?:youtu\.be\/))([a-z0-9]+)(?:\?(?:(?:t)|(?:start))=(\d+))?/i;
+const YOUTUBE_URL_REGEX = /.*(?:www\.youtube\.com\/(?:(?:watch\?v=)|(?:embed\/))|(?:youtu\.be\/))([a-z0-9\-]+)(?:\?(?:(?:t)|(?:start))=(\d+))?/i;
 
 let contentTypeHandlers = [
     {   // image
@@ -20,10 +20,9 @@ let contentTypeHandlers = [
                 setTimeout(reject, DEFAULT_TIMEOUT_MS);
             });
         },
-        getLayer: (url, name) => {
+        getLayer: (url) => {
             return {
                 elementName: "image",
-                label: name,
                 config: {
                     url: url,
                     fit: "cover"
@@ -44,14 +43,13 @@ let contentTypeHandlers = [
                 });
                 let source = document.createElement("source");
                 source.src = url;
-                vid.appendChild(source);
+                vid.appendChild(source);+
                 setTimeout(reject, DEFAULT_TIMEOUT_MS);
             });
         },
-        getLayer: (url, name) => {
+        getLayer: (url) => {
             return {
                 elementName: "video",
-                label: name,
                 config: {
                     url: url,
                     fit: "cover"
@@ -61,10 +59,9 @@ let contentTypeHandlers = [
     },
     {   // audio
         match: type => type.match(/audio/i),
-        getLayer: (url, name) => {
+        getLayer: (url) => {
             return {
                 elementName: "audio",
-                label: name,
                 config: {
                     url: url
                 }
@@ -73,14 +70,13 @@ let contentTypeHandlers = [
     },
     {   // youtube
         match: (type, data) => type.match(/text\/html/i) && data && data.match(YOUTUBE_URL_REGEX),
-        getLayer: (url, name) => {
+        getLayer: (url) => {
             // parse out the start parameter, if there is one
             let match = url.match(/(?:star)?t=(\d+)/i);
             let start = (match && match.length == 2 ? match[1] : null);
             // possibly use the youtube api to pull the ideal height/width?
             return {
                 elementName: "youtube",
-                label: name,
                 config: {
                     url,
                     start
@@ -90,12 +86,24 @@ let contentTypeHandlers = [
     },
     {   // iframe (any HTML content type)
         match: type => type.match(/text\/html/i),
-        getLayer: (url, name) => {
+        getLayer: (url) => {
+
+            // special handling for youtube urls
+            const youtubeMatch = url.match(YOUTUBE_URL_REGEX);
+            if (youtubeMatch) {
+                return {
+                    elementName: "youtube",
+                    config: {
+                        url,
+                        start: youtubeMatch[2]
+                    }
+                };
+            }
+
             return {
                 elementName: "iframe",
-                label: name,
                 config: {
-                    url: url
+                    url
                 }
             };
         }

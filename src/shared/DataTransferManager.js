@@ -12,7 +12,7 @@ export default new class DataTransferManager extends EventEmitter {
     get uploads() { return this._uploads; }
 
     handleDataTransfer = async (dataTransfer, onUpload) => {
-        console.log("handling", { dataTransfer, onUpload, items: dataTransfer.items.length, files: dataTransfer.files.length });
+        
         // an array to hold the promises each item/file will create
         let assets = [];
         let transferPromises = [];
@@ -63,7 +63,8 @@ export default new class DataTransferManager extends EventEmitter {
                 transferPromise = onUpload(file, this.onUploadProgress).then(async (url) => {
                     if (!url) { return []; }
                     this.emit("upload-finished", file);
-                    let layer = contentTypeHandler.getLayer(url, file.name);
+                    let layer = contentTypeHandler.getLayer(url);
+                    layer.name = file.name;
                     if (contentTypeHandler.getDimensions) {
                         const dimensions = await contentTypeHandler.getDimensions(url);
                         layer.width = dimensions.width;
@@ -126,7 +127,6 @@ export default new class DataTransferManager extends EventEmitter {
     }
 
     getContentTypeHandler = (contentType, data) => {
-        console.log({ contentType, data });
         return ContentTypeHandlers.find(handler => handler.match(contentType, data));
     }
 

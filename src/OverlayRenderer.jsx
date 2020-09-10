@@ -23,7 +23,7 @@ class OverlayRenderer extends React.Component {
     // merge elements
     let elements = {...Elements.Builtin};
     if (this.props.elements) { Object.assign(elements, this.props.elements); }
-
+    
     this.state = {
       id,
       elements

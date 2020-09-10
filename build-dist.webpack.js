@@ -4,8 +4,7 @@ module.exports = {
     mode: "production",
     entry: {
         "OverlayEditor": [ "./src/OverlayEditor.jsx" ],
-        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ],
-        "OverlayConverter": [ "./src/OverlayConverter.js" ]
+        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ]
     },
     performance: { hints: false },
     output: {

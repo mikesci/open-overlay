@@ -24,6 +24,9 @@ class OverlayEditor extends React.Component {
     constructor(props) {
         super(props);
 
+        // register callbacks
+        this.registerDispatcherCallbacks();
+
         /* props.overlay = {
           name: "Overlay One",
           layers: [],
@@ -48,15 +51,20 @@ class OverlayEditor extends React.Component {
         let elements = (this.props.disableBuiltinElements ? {} : { ...Elements.Builtin });
         if (this.props.elements) { elements = { ...elements, ...this.props.elements }; }
 
+        // pull assets out from the overlay, if they're there
+        let assets;
+        if (overlay.assets) {
+            assets = overlay.assets;
+            delete overlay.assets;
+        }
+
         // create our starting undo point
         this._undoManager.createUndoPoint(overlay);
-
-        // register callbacks
-        this.registerDispatcherCallbacks();
 
         this.state = {
             elements,
             overlay,
+            assets,
             scriptPanelIsOpen: (overlay.script.length > 0 ? true : false), // open script panel if we have a script
             isScriptExecuting: false,
             rendererPhase: "static",
@@ -73,7 +81,7 @@ class OverlayEditor extends React.Component {
             }, () => {
                 if (emitChange) {
                     this._undoManager.createUndoPoint(this.state.overlay);
-                    if (this.props.onOverlayChanged) { this.props.onOverlayChanged(this.state.overlay); }
+                    this.emitOverlayChanged();
                 }
                 resolve();
             });
@@ -94,9 +102,21 @@ class OverlayEditor extends React.Component {
 
     onRestoreUndo(redo) {
         let undoData = this._undoManager.restoreUndoPoint(redo);
-        this.setState(ps => ({ overlay: undoData.overlay }), () => {
-            if (this.props.onOverlayChanged) { this.props.onOverlayChanged(this.state.overlay); }
+        this.setState(ps => ({ overlay: undoData.overlay }), async () => {
+            this.emitOverlayChanged();
         });
+    }
+
+    emitOverlayChanged = () => {
+        if (this.props.onOverlayChanged) {
+            // reduce assets down to just those that are referenced
+            // we still have to keep assets around for undo support.
+            
+            this.props.onOverlayChanged({
+                ...this.state.overlay,
+                assets: this.getReferencedAssets()
+            });
+        }
     }
 
     registerDispatcherCallbacks() {
@@ -122,7 +142,6 @@ class OverlayEditor extends React.Component {
         });
 
         Dispatcher.Register("CREATE_LAYERS", async (requestedLayers) => {
-            console.log({ requestedLayers });
             let parsedLayers = requestedLayers.map(requestedLayer => {
                 // get the element for the layer.  if we can't find it, skip
                 let element = this.state.elements[requestedLayer.elementName];
@@ -236,23 +255,6 @@ class OverlayEditor extends React.Component {
                     let sourceIndex = overlay.layers.findIndex(r => r.id == id);
                     overlay.layers.splice(sourceIndex, 1);
                 }
-                if (overlay.assets) {
-                    // count all the references to assets
-                    // if any asset is at 0 references, delete it
-                    let references = {};
-                    for(const key of Object.keys(overlay.assets)) { references[key] = 0; }
-                    for(const layer of overlay.layers) {
-                        if (layer.assetKey) {
-                            references[layer.assetKey]++;
-                        }
-                    }
-                    // prune any assets that have zero references
-                    for(const [assetKey, count] of Object.entries(references)) {
-                        if (count == 0) {
-                            delete overlay.assets[assetKey];
-                        }
-                    }
-                }
                 return overlay;
             }, true);
         });
@@ -300,10 +302,7 @@ class OverlayEditor extends React.Component {
         });
 
         Dispatcher.Register("CREATE_ASSETS", async (assets) => {
-            await this.updateOverlay(overlay => {
-                overlay.assets = {...(overlay.assets || {}), ...assets};
-                return overlay;
-            }, false);
+            this.setState(ps => ({ assets: {...ps.assets, ...assets}}));
         });;
     }
 
@@ -351,6 +350,25 @@ class OverlayEditor extends React.Component {
                 timeout: 5000
             });
         });
+    }
+
+    getReferencedAssets = () => {
+        if (!this.state.assets) { return; }
+        let assets = {...this.state.assets};
+        // count all the references to assets
+        // if any asset is at 0 references, delete it
+        let references = {};
+        for(const key of Object.keys(assets)) { references[key] = 0; }
+        for(const layer of this.state.overlay.layers) {
+            if (layer.assetKey) {
+                references[layer.assetKey]++;
+            }
+        }
+        // prune any assets that have zero references
+        for(const [assetKey, count] of Object.entries(references)) {
+            if (count == 0) { delete assets[assetKey]; }
+        }
+        return assets;
     }
 
     renderUploadProgress = (file, progress) => {
@@ -551,6 +569,11 @@ class OverlayEditor extends React.Component {
 
     onNameChanged = (evt) => {
         let name = evt.target.value;
+        this.updateOverlay({ name }, false);
+    }
+
+    onNameBlur = (evt) => {
+        let name = evt.target.value;
         this.updateOverlay({ name }, true);
     }
 
@@ -588,7 +611,7 @@ class OverlayEditor extends React.Component {
     }
 
     render() {
-
+        console.log("got repaint");
         let rendererLayers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.state.overlay.layers);
 
         return (
@@ -599,7 +622,7 @@ class OverlayEditor extends React.Component {
                         <div className="layer-list">
                             <div className="layer-list-header">
                                 <div className="left">
-                                    <InputGroup value={this.state.overlay.name} onChange={this.onNameChanged} />
+                                    <InputGroup value={this.state.overlay.name} onChange={this.onNameChanged} onBlur={this.onNameBlur} />
                                 </div>
                                 <div className="right">
                                     <Button icon="manually-entered-data" title="Toggle Script Panel" onClick={this.onScriptPanelToggle} active={this.state.scriptPanelIsOpen} />
@@ -643,7 +666,7 @@ class OverlayEditor extends React.Component {
                             backgroundImages={this.props.backgroundImages}>
                             <LayerRenderer
                                 elements={this.state.elements}
-                                elementProps={{ assets: this.state.overlay.assets }}
+                                elementProps={{ assets: this.state.assets }}
                                 layers={rendererLayers}
                                 zIndex={1000}
                                 hidden={this.props.hidden}

@@ -411,10 +411,19 @@ class IFrameElement extends React.Component {
             { "name": "url", "type": "text", "displayName": "Url" }
         ]
     };
+
+    getSource = () => {
+        if (!this.props.url) { return ""; }
+        if (this.props.assets && this.props.url.startsWith("asset:")) {
+            let assetKey = this.props.url.substr(6);
+            return this.props.assets[assetKey] || "";
+        }
+        return this.props.url;
+    }
   
     render() {
         return (
-            <iframe src={this.props.url} style={{ "border": "0", height: "100%", width: "100%" }}></iframe>
+            <iframe src={this.getSource()} style={{ "border": "0", height: "100%", width: "100%" }}></iframe>
         );
     }
 }
