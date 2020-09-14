@@ -41,17 +41,21 @@ class OverlayContext {
         this._maxLayerId = this._layers.reduce((a,c) => (c.id > a ? c.id : a), 0);
     }
 
-    emitToOtherLayers = (eventName, eventArgs, sourceLayer) => {
+    /* emits an event to all layers in the overlay, except the one specified by the optional sourceLayer argument */
+    // invoked in elements like: this.props.scriptingContext.emit("loaded", null, this.props.layer);
+    emit = (eventName, eventArgs, sourceLayer) => {
 
         let handlers = this._eventHandlers[eventName];
 
         if (!handlers) { return; }
 
         for(let handler of handlers) {
-            
-            // if there is a matchFunction/layerFilter supplied, run it for this source layer
-            // non-matches get skipped
-            if (handler.matchFunction && !handler.matchFunction(sourceLayer, handler.layerFilter)) { continue; }
+            if (sourceLayer) {
+                // if there is a matchFunction/layerFilter supplied, run it for this source layer
+                // non-matches get skipped
+                if (handler.matchFunction && !handler.matchFunction(sourceLayer, handler.layerFilter))
+                    continue;
+            }
 
             // layer filter doesn't exist or matches, so invoke the callback
             handler.callback(eventArgs, sourceLayer);
@@ -202,6 +206,7 @@ export default class ScriptingContext {
     _lastExecutionError;
     _interceptedTimeouts = [];
     _interceptedIntervals = [];
+    _externalScripts = {};
 
     get lastExecutionError() { return this._lastExecutionError; }
     get hasModifiedLayers() { return (this._overlayContext != null && this._overlayContext.hasModifiedLayers == true); }
@@ -211,11 +216,11 @@ export default class ScriptingContext {
         this._onUpdated = opts.onUpdated;
     }
 
-    emitToOtherLayers = (eventName, eventArgs, sourceLayer) => {
+    emit = (eventName, eventArgs, sourceLayer) => {
         // don't emit if we don't have an overlay context
         if (!this._overlayContext) { return; }
 
-        this._overlayContext.emitToOtherLayers(eventName, eventArgs, sourceLayer);
+        this._overlayContext.emit(eventName, eventArgs, sourceLayer);
     }
 
     reset = () => {
@@ -241,6 +246,25 @@ export default class ScriptingContext {
         }
     }
 
+    // called by script elements to expose external scripts to the execute() function
+    loadExternalScript = (key, source) => {
+        this._externalScripts[key] = source;
+    }
+
+    unloadExternalScript = (key) => {
+        delete this._externalScripts[key];
+    }
+
+    getExternalScripts = async () => {
+        let sources = [];
+        for(let [url, source] of Object.entries(this._externalScripts)) {
+            // add the sourceUrl before each script to help with debugging
+            sources.push(`//# sourceURL=${url}`);
+            sources.push(await source);
+        }
+        return sources.join("\r\n");
+    }
+
     setTimeoutOverride = (callback, delay) => {
         let timeout = setTimeout(callback, delay);
         this._interceptedTimeouts.push(timeout);
@@ -259,12 +283,17 @@ export default class ScriptingContext {
         try
         {
             this._lastExecutionError = null;
-
-            window.Function(`return function(overlay, setTimeout, setInterval) { ${script} }`)()(
-                this._overlayContext,
-                this.setTimeoutOverride,
-                this.setIntervalOverride
-            );
+            
+            // pull in external scripts as a string
+            this.getExternalScripts().then(externalScripts => {
+                window.Function(`return function(overlay, executeExternalScripts, setTimeout, setInterval) { ${externalScripts}\r\n ${overlay.script} }`)()(
+                    this._overlayContext,
+                    this.setTimeoutOverride,
+                    this.setIntervalOverride
+                );
+            }).catch(err => {
+                this._lastExecutionError = err;
+            });
 
             return true;
         }

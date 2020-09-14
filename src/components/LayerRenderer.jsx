@@ -234,6 +234,10 @@ class Layer extends React.PureComponent {
     this.props.scriptingContext.emitToOtherLayers(eventName, eventArgs, this.props.layer);
   }
 
+  loadExternalScript = (url) => {
+      this.props.scriptingContext.loadExternalScript(url);
+  }
+
   render() {
 
     // immediately return, render nothing
@@ -263,7 +267,7 @@ class Layer extends React.PureComponent {
               {...this.props.layer.config}
               layer={this.props.layer}
               hidden={this.props.hidden}
-              emit={this.emit}
+              scriptingContext={this.props.scriptingContext}
               onRegisterKnockout={this.props.onRegisterKnockout}
               onUpdateKnockout={this.props.onUpdateKnockout}
               onRemoveKnockout={this.props.onRemoveKnockout} />
@@ -281,7 +285,6 @@ class Layer extends React.PureComponent {
 
 export default class LayerRenderer extends React.Component {
 
-  _scriptingContext;
   _knockoutIdCounter = 0;
 
   constructor(props) {

@@ -1,6 +1,36 @@
 import React from "react";
 
-class RectangleElement extends React.Component {
+class ElementBase extends React.PureComponent {
+    loadExternalScript = (scriptDef) => {
+        if (this.props.scriptingContext)
+            this.props.scriptingContext.loadExternalScript(scriptDef);
+    }
+
+    emit = (eventName, eventArgs) => {
+        if (this.props.scriptingContext && this.props.layer)
+            this.props.scriptingContext.emit(eventName, eventArgs, this.props.layer);
+    }
+
+    isAssetUrl = (url) => {
+        if (!url) { return false; }
+        return url.startsWith("asset:");
+    }
+
+    getAssetSource = (url) => {
+        // url cannot be blank
+        if (!url) { return null; }
+        // assets must be defined
+        if (!this.props.assets) { return null; }
+        // url must start with "asset:"
+        if (!this.isAssetUrl(url)) { return null; }
+        // chop off the asset: portion
+        let assetKey = url.substr(6);
+        // return the asset source from this.props.assets
+        return this.props.assets[assetKey];
+    }
+}
+
+class RectangleElement extends ElementBase {
     static manifest = {
         name: "Rectangle",
         author: "SCI",
@@ -23,7 +53,7 @@ class RectangleElement extends React.Component {
     }
 }
 
-class KnockoutElement extends React.Component {
+class KnockoutElement extends ElementBase {
     static manifest = {
         name: "Knockout",
         author: "SCI",
@@ -40,43 +70,12 @@ class KnockoutElement extends React.Component {
     _lastRect;
 
     componentDidMount() {
-        /*
-        this.props.scriptContext.emit(this.props.layer.id, "set-knockout", null);
-        this.props.scriptContext.on("whatever", (data) => {
-
-        });
-
-        on("whatever", () => {
-            console.log
-        });
-        */
-
         this._knockoutId = this.props.onRegisterKnockout();
         this.props.onUpdateKnockout(this._knockoutId, this.buildPathString(this.props.layer, this.props.radius));
-        this._lastRect = {
-            top: this.props.layer.top,
-            left: this.props.layer.left,
-            width: this.props.layer.width,
-            height: this.props.layer.height,
-            radius: this.props.radius
-        };
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        let needsUpdate = false;
-
-        if (nextProps.layer.top != this._lastRect.top) { needsUpdate = true; this._lastRect.top = nextProps.layer.top; }
-        if (nextProps.layer.left != this._lastRect.left) { needsUpdate = true; this._lastRect.left = nextProps.layer.left; }
-        if (nextProps.layer.width != this._lastRect.width) { needsUpdate = true; this._lastRect.width = nextProps.layer.width; }
-        if (nextProps.layer.height != this._lastRect.height) { needsUpdate = true; this._lastRect.height = nextProps.layer.height; }
-        if (nextProps.radius != this._lastRect.radius) { needsUpdate = true; this._lastRect.radius = nextProps.radius; }
-
-        if (needsUpdate) {
-            this.props.onUpdateKnockout(this._knockoutId, this.buildPathString(nextProps.layer, nextProps.radius));
-        }
-
-        // we'll never need to render anything
-        return false;
+    componentDidUpdate() {
+        this.props.onUpdateKnockout(this._knockoutId, this.buildPathString(this.props.layer, this.props.radius));
     }
 
     componentWillUnmount() {
@@ -102,7 +101,7 @@ class KnockoutElement extends React.Component {
     }
 }
 
-class TextElement extends React.Component {
+class TextElement extends ElementBase {
     static manifest = {
         name: "Text",
         author: "SCI",
@@ -117,10 +116,6 @@ class TextElement extends React.Component {
             { "name": "valign", "displayName": "Vertical Align", "type": "valign", "defaultValue": "flex-start" }
         ]
     };
-
-    constructor(props) {
-        super(props);
-    }
 
     valignToAlignItems = valign => {
         if (valign == "top") { return "flex-start"; }
@@ -154,7 +149,7 @@ class TextElement extends React.Component {
     }
 }
 
-class EllipseElement extends React.Component {
+class EllipseElement extends ElementBase {
     static manifest = {
         name: "Ellipse",
         author: "SCI",
@@ -177,7 +172,7 @@ class EllipseElement extends React.Component {
     }
 }
 
-class ImageElement extends React.Component {
+class ImageElement extends ElementBase {
     static manifest = {
         name: "Image",
         author: "SCI",
@@ -186,7 +181,7 @@ class ImageElement extends React.Component {
         height: 400,
         preserveAspect: true,
         parameters: [
-            { "name": "url", "displayName": "Url", "type": "text" },
+            { "name": "url", "displayName": "Url/Asset", "type": "assetUrl", "accept": "image/*" },
             { "name": "fit", "displayName": "Fit", "type": "select", "defaultValue": "cover", "options": [
                 { label: "Contain", value: "contain" },
                 { label: "Cover", value: "cover" },
@@ -198,46 +193,37 @@ class ImageElement extends React.Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
-            source: this.getSource(),
-            preloaded: false
+            preloaded: this.isAssetUrl(props.url)
         };
-    }
 
-    getSource = () => {
-        if (!this.props.url) { return ""; }
-        if (this.props.assets && this.props.url.startsWith("asset:")) {
-            let assetKey = this.props.url.substr(6);
-            return this.props.assets[assetKey] || "";
+        // if preloaded is false, it means we need to preload asynchronously
+        if (!this.state.preloaded) {
+            new Promise((resolve, reject) => {
+                let img = new Image();
+                img.addEventListener("load", resolve);
+                img.addEventListener("error", resolve);
+                img.addEventListener("abort", resolve);
+                img.src = this.props.url;
+            }).finally(() => {
+                this.setState({ preloaded: true });
+            });
         }
-        return this.props.url;
-    }
-
-    componentDidMount() {
-        new Promise((resolve, reject) => {
-            let img = new Image();
-            img.addEventListener("load", resolve);
-            img.addEventListener("error", resolve);
-            img.addEventListener("abort", resolve);
-            img.src = this.state.source;
-        }).then(() => {
-            this.setState({ preloaded: true });
-        })
-        .catch(err => {
-            this.setState({ preloaded: true });
-        });
     }
   
     render() {
         if (!this.state.preloaded) { return null; }
 
+        const sourceUrl = this.getAssetSource(this.props.url) || this.props.url;
+
         return (
-            <img src={this.state.source} style={{ "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset }} />
+            <img src={sourceUrl} style={{ "height": "100%", "width": "100%", "objectFit": this.props.fit, "objectPosition": this.props.offset }} />
         );
     }
 }
 
-class VideoElement extends React.Component {
+class VideoElement extends ElementBase {
     static manifest = {
         name: "Video",
         author: "SCI",
@@ -246,7 +232,7 @@ class VideoElement extends React.Component {
         height: 720,
         preserveAspect: true,
         parameters: [
-            { "name": "url", "displayName": "Url", "type": "text" },
+            { "name": "url", "displayName": "Url/Asset", "type": "assetUrl", "accept": "video/*" },
             { "name": "playing", "type": "checkbox", "displayName": "Playing", "defaultValue": true },
             { "name": "loop", "type": "checkbox", "displayName": "Loop", "defaultValue": false },
             { "name": "volume", "type": "slider", "displayName": "Volume", "defaultValue": 100 },
@@ -265,18 +251,8 @@ class VideoElement extends React.Component {
         super(props);
         this._vidRef = React.createRef();
         this.state = {
-            source: this.getSource(),
             preloaded: false
         };
-    }
-
-    getSource = () => {
-        if (!this.props.url) { return ""; }
-        if (this.props.assets && this.props.url.startsWith("asset:")) {
-            let assetKey = this.props.url.substr(6);
-            return this.props.assets[assetKey] || "";
-        }
-        return this.props.url;
     }
 
     componentDidUpdate(prevProps) {
@@ -317,23 +293,25 @@ class VideoElement extends React.Component {
             "objectPosition": this.props.offset,
             "opacity": (this.state.preloaded ? 1 : 0)
         };
+
+        const sourceUrl = this.getAssetSource(this.props.url) || this.props.url;
         
         return (
             <video ref={this._vidRef} onLoadedData={this.onLoadedData} loop={this.props.loop} style={style}>
-                <source src={this.state.source} />
+                <source src={sourceUrl} />
             </video>
         );
     }
 }
 
-class AudioElement extends React.Component {
+class AudioElement extends ElementBase {
     static manifest = {
         name: "Audio",
         author: "SCI",
         description: "A customizable audio player.",
         nonVisual: true,
         parameters: [
-            { "name": "url", "displayName": "Url", "type": "text" },
+            { "name": "url", "displayName": "Url/Asset", "type": "assetUrl", "accept": "audio/*" },
             { "name": "playing", "type": "checkbox", "displayName": "Playing", "defaultValue": true },
             { "name": "loop", "type": "checkbox", "displayName": "Loop", "defaultValue": false },
             { "name": "volume", "type": "slider", "displayName": "Volume", "defaultValue": 100 }
@@ -346,37 +324,23 @@ class AudioElement extends React.Component {
         super(props);
         this._audioRef = React.createRef();
         this.state = {
-            source: this.getSource(),
             preloaded: false
         };
     }
 
-    getSource = () => {
-        if (!this.props.url) { return ""; }
-        if (this.props.assets && this.props.url.startsWith("asset:")) {
-            let assetKey = this.props.url.substr(6);
-            return this.props.assets[assetKey] || "";
-        }
-        return this.props.url;
-    }
+    componentDidUpdate(prevProps) {
+        this._audioRef.current.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
 
-    shouldComponentUpdate(nextProps) {
-        if (this.props.playing != nextProps.playing) {
-            if (nextProps.playing || nextProps.playing == undefined)
+        if (this.props.playing != prevProps.playing) {
+            if (this.props.playing || prevProps.playing == undefined)
                 this._audioRef.current.play();
             else
                 this._audioRef.current.pause();
         }
 
-        if (this.props.url != nextProps.url) {
+        if (this.props.url != prevProps.url) {
             this._audioRef.current.load();
         }
-
-        return true;
-    }
-
-    componentDidUpdate() {
-        this._audioRef.current.volume = ((this.props.volume != null ? this.props.volume : 100) / 100);
     }
 
     onLoadedData = evt => {
@@ -391,15 +355,16 @@ class AudioElement extends React.Component {
     }
   
     render() {
+        const sourceUrl = this.getAssetSource(this.props.url) || this.props.url;
         return (
             <audio ref={this._audioRef} onLoadedData={this.onLoadedData} loop={this.props.loop}>
-                <source src={this.state.source} />
+                <source src={sourceUrl} />
             </audio>
         );
     }
 }
 
-class IFrameElement extends React.Component {
+class IFrameElement extends ElementBase {
     static manifest = {
         name: "Iframe",
         author: "SCI",
@@ -408,27 +373,19 @@ class IFrameElement extends React.Component {
         height: 720,
         preserveAspect: false,
         parameters: [
-            { "name": "url", "type": "text", "displayName": "Url" }
+            { "name": "url", "type": "assetUrl", "displayName": "Url/Asset", "accept": "text/html" }
         ]
     };
-
-    getSource = () => {
-        if (!this.props.url) { return ""; }
-        if (this.props.assets && this.props.url.startsWith("asset:")) {
-            let assetKey = this.props.url.substr(6);
-            return this.props.assets[assetKey] || "";
-        }
-        return this.props.url;
-    }
   
     render() {
+        const sourceUrl = this.getAssetSource(this.props.url) || this.props.url;
         return (
-            <iframe src={this.getSource()} style={{ "border": "0", height: "100%", width: "100%" }}></iframe>
+            <iframe src={sourceUrl} style={{ "border": "0", height: "100%", width: "100%" }}></iframe>
         );
     }
 }
 
-class YoutubeElement extends React.Component {
+class YoutubeElement extends ElementBase {
     static manifest = {
         name: "Youtube",
         author: "SCI",
@@ -488,6 +445,10 @@ class YoutubeElement extends React.Component {
         });
     }
 
+    componentDidUpdate(prevProps) {
+        this.updatePlayerState(prevProps, this.props);
+    }
+
     onStateChange = (evt) => {
         let playerState = evt.data;
         if (playerState == 1) { // playing, paused, buffering respectively
@@ -530,11 +491,6 @@ class YoutubeElement extends React.Component {
         }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        this.updatePlayerState(this.props, nextProps);
-        return true;
-    }
-
     getYoutubeUrl = props => {
         if (!props.url) { return ""; }
         let match = props.url.match(YoutubeElement.URL_REGEX);
@@ -553,6 +509,63 @@ class YoutubeElement extends React.Component {
     }
 }
 
+class ScriptElement extends ElementBase {
+    static manifest = {
+        name: "External Script",
+        author: "SCI",
+        description: "An external Javascript resource.",
+        nonVisual: true,
+        parameters: [
+            { "name": "url", "displayName": "Url/Asset", "type": "assetUrl", "accept": "text/javascript" }
+        ]
+    };
+
+    componentDidMount() {
+        // do nothing if we have no scripting context
+        if (!this.props.scriptingContext) { return; }
+        this.loadSource();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // do nothing if we have no scripting context
+        if (!this.props.scriptingContext) { return; }
+
+        // unload the old script if the url changes, and trigger an async reload of the source
+        if (prevProps.url != this.props.url) {
+            this.props.scriptingContext.unloadExternalScript(prevProps.url);
+            this.loadSource();
+        }
+    }
+
+    componentWillUnmount() {
+        // do nothing if we have no scripting context
+        if (!this.props.scriptingContext) { return; }
+
+        if (this.state.source && this.props.url)
+            this.props.scriptingContext.unloadExternalScript(this.props.url);
+    }
+
+    loadSource = () => {
+        const assetSource = this.getAssetSource(this.props.url);
+        if (assetSource) {
+            // decode the asset data
+            if (assetSource.length <= 28) { console.log("Asset data was malformed."); return; }
+            const source = atob(assetSource.substr(28));
+            this.props.scriptingContext.loadExternalScript(this.props.url, Promise.resolve(source));
+        } else {
+            // fetch the data at the url
+            const fetchPromise = fetch(this.props.url).then(response => response.text()).catch(err => {
+                console.log(`Could not fetch ${this.props.url}: ${err}`);
+            });
+            this.props.scriptingContext.loadExternalScript(this.props.url, fetchPromise);
+        }
+    }
+
+    render() {
+        return null;
+    }
+}
+
 export default {
     Builtin: {
         "rectangle": RectangleElement,
@@ -563,6 +576,7 @@ export default {
         "audio": AudioElement,
         "knockout": KnockoutElement,
         "iframe": IFrameElement,
-        "youtube": YoutubeElement
+        "youtube": YoutubeElement,
+        "script": ScriptElement
     }
 };

@@ -12,5 +12,5 @@ function CopyToClipboard(dataString) {
 }
 
 export default {
-    CopyToClipboard: CopyToClipboard
+    CopyToClipboard
 };

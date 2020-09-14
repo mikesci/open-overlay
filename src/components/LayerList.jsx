@@ -123,6 +123,7 @@ class Layer extends React.Component {
       configForm = (<ConfigurationForm
         parameters={this.props.element.manifest.parameters}
         parameterValues={this.props.layer.config}
+        onUpload={this.props.onUpload}
         onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
     }
 
@@ -305,6 +306,7 @@ export default class LayerList extends React.Component {
           isSelected={this.props.selectedLayerIds.includes(layer.id)}
           onDragStart={this.onLayerDragStart}
           onDragEnd={this.onLayerDragEnd}
+          onUpload={this.props.onUpload}
           collapsed={this.state.draggedLayerId == null ? undefined : true}
           animationTime={this.props.animationTime}
           />);

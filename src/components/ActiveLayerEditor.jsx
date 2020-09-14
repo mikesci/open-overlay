@@ -258,6 +258,11 @@ export default class ActiveLayerEditor extends React.Component {
     }
 
     render() {
+        const left = (this.state.disabled ? "" : this.state.left || "0");
+        const top = (this.state.disabled ? "" : this.state.top || "0");
+        const width = (this.state.disabled ? "" : this.state.width || "0");
+        const height = (this.state.disabled ? "" : this.state.height || "0");
+        const rotation = (this.state.disabled ? "" : this.state.rotation || "0");
         return (
             <div className="active-layer-editor">
                 <EffectListEditor
@@ -302,19 +307,19 @@ export default class ActiveLayerEditor extends React.Component {
                 <div className="layer-coordinate-inputs">
                     <ControlGroup>
                         <FormGroup label="X" inline={true}>
-                            <InputGroup value={this.state.left} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="left" readOnly={this.state.disabled} />
+                            <InputGroup value={left} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="left" readOnly={this.state.disabled} />
                         </FormGroup>
                         <FormGroup label="Y" inline={true}>
-                            <InputGroup value={this.state.top} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="top" readOnly={this.state.disabled} />
+                            <InputGroup value={top} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="top" readOnly={this.state.disabled} />
                         </FormGroup>
                         <FormGroup label="W" inline={true}>
-                            <InputGroup value={this.state.width} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="width" readOnly={this.state.disabled} />
+                            <InputGroup value={width} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="width" readOnly={this.state.disabled} />
                         </FormGroup>
                         <FormGroup label="H" inline={true}>
-                            <InputGroup value={this.state.height} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="height" readOnly={this.state.disabled} />
+                            <InputGroup value={height} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="height" readOnly={this.state.disabled} />
                         </FormGroup>
                         <FormGroup label="R" inline={true}>
-                            <InputGroup value={this.state.rotation} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="rotation" readOnly={this.state.disabled} />
+                            <InputGroup value={rotation} onChange={this.onFieldChanged} onFocus={this.onFieldFocused} onBlur={this.onFieldBlurred} data-param="rotation" readOnly={this.state.disabled} />
                         </FormGroup>
                     </ControlGroup>
                 </div>

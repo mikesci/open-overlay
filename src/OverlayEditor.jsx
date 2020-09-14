@@ -114,7 +114,7 @@ class OverlayEditor extends React.Component {
             
             this.props.onOverlayChanged({
                 ...this.state.overlay,
-                assets: this.getReferencedAssets()
+                assets: this.state.assets
             });
         }
     }
@@ -167,7 +167,6 @@ class OverlayEditor extends React.Component {
                     width: requestedLayer.width || element.manifest.width || 0,
                     height: requestedLayer.height || element.manifest.height || 0,
                     effects: requestedLayer.effects || (element.manifest.defaultEffects ? { ...element.manifest.defaultEffects } : null),
-                    assetKey: requestedLayer.assetKey,
                     config: config
                 };
             });
@@ -352,25 +351,6 @@ class OverlayEditor extends React.Component {
         });
     }
 
-    getReferencedAssets = () => {
-        if (!this.state.assets) { return; }
-        let assets = {...this.state.assets};
-        // count all the references to assets
-        // if any asset is at 0 references, delete it
-        let references = {};
-        for(const key of Object.keys(assets)) { references[key] = 0; }
-        for(const layer of this.state.overlay.layers) {
-            if (layer.assetKey) {
-                references[layer.assetKey]++;
-            }
-        }
-        // prune any assets that have zero references
-        for(const [assetKey, count] of Object.entries(references)) {
-            if (count == 0) { delete assets[assetKey]; }
-        }
-        return assets;
-    }
-
     renderUploadProgress = (file, progress) => {
         if (progress < 1)
             return <><ProgressBar intent="primary" stripes={true} value={progress} /><div>{file.name}</div></>;
@@ -547,24 +527,29 @@ class OverlayEditor extends React.Component {
         this.handleDataTransfer(evt.clipboardData);
     }
 
+    onAppWrapperDragOver = (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+        evt.dataTransfer.dropEffect = "none";
+    }
+
     onDragOver = evt => {
         evt.preventDefault();
+        evt.stopPropagation();
         evt.dataTransfer.dropEffect = "copy";
     }
 
     onDrop = evt => {
         evt.preventDefault();
-        this.handleDataTransfer(evt.dataTransfer, this.props.onUpload);
+        evt.stopPropagation();
+        this.handleDataTransfer(evt.dataTransfer);
     }
 
     handleDataTransfer = async (dataTransfer) => {
-        let result = await DataTransferManager.handleDataTransfer(dataTransfer, this.props.onUpload);
+        let layers = await DataTransferManager.handleDataTransfer(dataTransfer, this.onUpload);
 
-        if (result.assets)
-            Dispatcher.Dispatch("CREATE_ASSETS", result.assets);
-
-        if (result.layers)
-            Dispatcher.Dispatch("CREATE_LAYERS", result.layers);
+        if (layers)
+            Dispatcher.Dispatch("CREATE_LAYERS", layers);
     }
 
     onNameChanged = (evt) => {
@@ -610,12 +595,26 @@ class OverlayEditor extends React.Component {
         this.setState({ isScriptExecuting });
     }
 
+    onUpload = (file, onProgress) => {
+        // if onUpload is provided, call it
+        if (this.props.onUpload)
+            return this.props.onUpload(file, onProgress);
+
+        // otherwise, upload to inline assets
+        return DataTransferManager.toBase64(file).then(dataUri => {
+            let url = "asset:" + file.name;
+            this.setState(ps => ({
+                assets: {...ps.assets, [file.name]: dataUri }
+            }));
+            return { url, dataUri };
+        });
+    }
+
     render() {
-        console.log("got repaint");
         let rendererLayers = (this._scriptingContext.hasModifiedLayers ? this._scriptingContext.layers : this.state.overlay.layers);
 
         return (
-            <div className="app-wrapper" onDragOver={this.onDragOver} onDrop={this.onDrop}>
+            <div className="app-wrapper" onDragOver={this.onAppWrapperDragOver}>
                 <AppToaster />
                 <div className="sidepanel-wrapper" style={{ width: this.state.sidepanelWidth + "px" }}>
                     <div className="layer-list-wrapper">
@@ -636,7 +635,8 @@ class OverlayEditor extends React.Component {
                             <LayerList
                                 layers={this.state.overlay.layers}
                                 elements={this.state.elements}
-                                selectedLayerIds={this.state.selectedLayerIds} />
+                                selectedLayerIds={this.state.selectedLayerIds}
+                                onUpload={this.onUpload} />
                         </div>
                     </div>
                 </div>
@@ -656,7 +656,7 @@ class OverlayEditor extends React.Component {
                             rendererPhase={this.state.rendererPhase}
                             onSetRendererPhase={this.onSetRendererPhase} />
                     </div>
-                    <div className="stage-wrapper">
+                    <div className="stage-wrapper" onDragOver={this.onDragOver} onDrop={this.onDrop}>
                         <StageManager
                             stageWidth={this.props.width}
                             stageHeight={this.props.height}

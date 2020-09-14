@@ -1,8 +1,5 @@
 import ContentTypeHandlers from "../shared/ContentTypeHandlers.js";
 import { EventEmitter } from "events";
-import AssetManager from "./AssetManager.js";
-import LabelEditor from "../components/LabelEditor.jsx";
-import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from "constants";
 
 export default new class DataTransferManager extends EventEmitter {
 
@@ -11,14 +8,10 @@ export default new class DataTransferManager extends EventEmitter {
 
     get uploads() { return this._uploads; }
 
-    handleDataTransfer = async (dataTransfer, onUpload) => {
-        
-        // an array to hold the promises each item/file will create
-        let assets = [];
+    handlePasteItems = async (items) => {
         let transferPromises = [];
 
-        // handle text/plain items
-        for(const item of dataTransfer.items) {
+        for(const item of items) {
             // we only process items of type text/plain
             if (item.type != "text/plain") { continue; }
 
@@ -32,6 +25,10 @@ export default new class DataTransferManager extends EventEmitter {
             if (data.startsWith("http")) {
                 let transferPromise = this.fetchContentType(data).then(async (contentType) => {
                     const contentTypeHandler = this.getContentTypeHandler(contentType, data);
+                    if (!contentTypeHandler) {
+                        this.emit("upload-error", {}, `Unsupported file type '${contentType}'.`);
+                        return;
+                    }
                     let layer = contentTypeHandler.getLayer(data);
                     if (contentTypeHandler.getDimensions) {
                         const dimensions = await contentTypeHandler.getDimensions(data);
@@ -44,9 +41,16 @@ export default new class DataTransferManager extends EventEmitter {
             }
         }
 
-        // handle file uploads
-        for(const file of dataTransfer.files) {
+         // wait for all promises to finish.
+        // results should contain [layer, layer, layer]
+        let layers = await Promise.all(transferPromises);
 
+        return layers;
+    }
+
+    handleFileUpload = async (files, onUpload) => {
+        let transferPromises = [];
+        for(const file of files) {
             // ensure we recognize the file type
             let contentTypeHandler = this.getContentTypeHandler(file.type, null);
 
@@ -56,45 +60,39 @@ export default new class DataTransferManager extends EventEmitter {
                 continue;
             }
 
-            // upload through external function if provided
-            let transferPromise;
-            if (onUpload) {
-                this.emit("upload-started", file);
-                transferPromise = onUpload(file, this.onUploadProgress).then(async (url) => {
-                    if (!url) { return []; }
-                    this.emit("upload-finished", file);
-                    let layer = contentTypeHandler.getLayer(url);
-                    layer.name = file.name;
-                    if (contentTypeHandler.getDimensions) {
-                        const dimensions = await contentTypeHandler.getDimensions(url);
-                        layer.width = dimensions.width;
-                        layer.height = dimensions.height;
-                    }
-                    return layer;
-                }).catch(error => {
-                    this.emit("upload-error", file, error);
-                });
-            } else {
-                // otherwise, upload as inline asset
-                this.emit("upload-started", file);
-                transferPromise = this.toBase64(file).then(async (data) => {
-                    this.emit("upload-finished", file);
-                    const assetKey = file.name;
-                    // save to asset list
-                    assets[assetKey] = data;
-                    // generate an asset url
-                    const assetUrl = "asset:" + assetKey;
-                    let layer = contentTypeHandler.getLayer(assetUrl, file.name);
-                    layer.assetKey = assetKey;
-                    if (contentTypeHandler.getDimensions) {
-                        const dimensions = await contentTypeHandler.getDimensions(data);
-                        layer.width = dimensions.width;
-                        layer.height = dimensions.height;
-                    }
-                    return layer;
-                });
-            }
-            
+            this.emit("upload-started", file);
+            const transferPromise = onUpload(file, this.onUploadProgress).then(async (result) => {
+                this.emit("upload-finished", file);
+                if (!result) { throw "Upload result was null."; }
+
+                // onUpload can return a string (just a url) or an object ({ url, dataUri })
+                let url, dataUri;
+                if (typeof result === "string") {
+                    url = result;
+                    dataUri = null;
+                } else {
+                    url = result.url;
+                    dataUri = result.dataUri;
+                }
+
+                // get the layer from the content type handler based on the url
+                let layer = contentTypeHandler.getLayer(url);
+
+                // set the layer's name to be the filename
+                layer.name = file.name;
+                
+                // if the cth supports dimensions, get those
+                if (contentTypeHandler.getDimensions) {
+                    const dimensions = await contentTypeHandler.getDimensions(dataUri || url);
+                    layer.width = dimensions.width;
+                    layer.height = dimensions.height;
+                }
+                
+                return layer;
+            }).catch(error => {
+                this.emit("upload-error", file, error);
+            });
+
             transferPromises.push(transferPromise);
         }
 
@@ -103,7 +101,19 @@ export default new class DataTransferManager extends EventEmitter {
         let layers = await Promise.all(transferPromises);
 
         // return layers and any inline assets
-        return { layers, assets };
+        return layers;
+    }
+
+    handleDataTransfer = async (dataTransfer, onUpload) => {
+        let transferResults;
+
+        if (dataTransfer.items.length > 0)
+            transferResults = await this.handlePasteItems(dataTransfer.items);
+
+        if (dataTransfer.files.length > 0)
+            transferResults = await this.handleFileUpload(dataTransfer.files, onUpload);
+
+        return transferResults;
     }
 
     toBase64 = file => new Promise((resolve, reject) => {
@@ -148,6 +158,7 @@ export default new class DataTransferManager extends EventEmitter {
         else if (/\.mp3$/i.test(url)) { return "audio/mpeg"; }
         else if (/\.wav$/i.test(url)) { return "audio/wav"; }
         else if (/\.ogg$/i.test(url)) { return "audio/ogg"; }
+        else if (/\.js$/i.test(url)) { return "text/javascript"; }
 
         // otherwise try to fetch the content type from the server
         // chances are this will fail because of CORS.  if it does NBD, return an iframe

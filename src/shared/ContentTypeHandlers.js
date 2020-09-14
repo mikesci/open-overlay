@@ -84,6 +84,17 @@ let contentTypeHandlers = [
             };
         }
     },
+    {   // javascript (external scripts)
+        match: type => type.match(/text\/javascript/i),
+        getLayer: (url) => {
+            return {
+                elementName: "script",
+                config: {
+                    url: url
+                }
+            };
+        }
+    },
     {   // iframe (any HTML content type)
         match: type => type.match(/text\/html/i),
         getLayer: (url) => {
