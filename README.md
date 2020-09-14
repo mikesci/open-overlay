@@ -111,7 +111,7 @@ Open Overlay supports limited scripting at the overlay level. These scripts will
 `addLayer(layer)`|Inserts the given layer object (not name) into the overlay|See above| 
 `removeLayer(layerName)`|Removes the given layer from the overlay|`overlay.removeLayer("Text 1");`|Removes the `Text 1` layer from the overlay
 `update()`|Updates any properties modified with `setLayer`| | 
-`emitToOtherLayers(event\_name, args, layer)`|Emits an event to the overlay's event bus from a specified layer|`overlay.emitToOtherLayers("test-event", argumentObject, testLayer);`|Emits a "test-event" with the argument `argumentObject` from the layer stored in the variable `testLayer`.
+`emit(eventName, args, sourceLayer)`|Emits an event to the overlay's event bus from a specified layer. Will be ignored on the layer specified by `sourceLayer`. |`overlay.emit("test-event", argumentObject, testLayer);`|Emits a "test-event" with the argument `argumentObject` from the layer stored in the variable `testLayer`.
 `layers()`|Gets an array of all layers currently in the overlay|`overlay.layers()[0]`|Gets the first layer in the overlay.
 `hasModifiedLayers()`|Check if there are updates to layers in this overlay which have not been committed with a call to `update()`| | 
 `lastUpdated()`|Gets the unix timestamp of the last time `update()` was called or the layer was updated by the user.| | 
