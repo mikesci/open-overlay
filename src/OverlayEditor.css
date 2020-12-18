@@ -1,15 +1,13 @@
-.app-wrapper { width: 100%; height: 100%; display: flex; overflow: hidden; background: #293742; user-select: none; position: relative; }
-.app-wrapper ::-webkit-scrollbar { width: 10px; background: rgba(0,0,0,0.5); }
-.app-wrapper ::-webkit-scrollbar-thumb { width: 10PX; background: #137cbd; }
-.app-wrapper .sidepanel-wrapper {  z-index: 2; height: 100%; display: flex; flex-direction: column; width: 350px; flex: 0 0 350px; }
-.app-wrapper .script-wrapper { width: 450px; display: flex; flex-direction: column; flex: 0 0 450px; }
-.app-wrapper .rightside-wrapper { flex: 1 1 auto; display: flex; flex-direction: column; }
-.app-wrapper .rightside-wrapper .top-toolbar { padding: 5px 0; }
-.app-wrapper .stage-wrapper { flex: 1 1 auto; position: relative; }
-.app-wrapper .layer-list-wrapper { flex: 1 1 auto; height: 100%; overflow: hidden; }
-.app-wrapper .active-layer-editor-wrapper { flex: 0 0 auto; }
-.app-wrapper .animation-panel-wrapper { flex: 0 0 auto; }
-.app-wrapper .app-toaster { position: absolute !important; }
-
-/* disable focus outlines */
-.app-wrapper *:focus { outline: none; }
+/* reusable styles for the editor */
+.normal-tabs { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.normal-tabs .bp3-tab-list { }
+.normal-tabs .bp3-tab-list .bp3-tab { padding: 0 5px 2px 5px; margin-right: 0; color: #ffffff80;  }
+.normal-tabs .bp3-tab-list .bp3-tab .bp3-icon { padding: 0 1px 0 5px }
+.normal-tabs .bp3-tab-list .bp3-tab .title { padding: 0 5px; }
+.normal-tabs .bp3-tab-list .bp3-tab:not([aria-selected="true"]) button { visibility: hidden; }
+.normal-tabs .bp3-tab-list .bp3-tab button { min-height: 20px; height: 20px; vertical-align: text-top; }
+.normal-tabs .bp3-tab-list .bp3-tab button:hover { background: none !important; }
+.normal-tabs .bp3-tab-list .bp3-tab:hover button { visibility: visible; }
+.normal-tabs .bp3-tab-list .bp3-tab[aria-selected="true"] { color: #ffffff; background-color: #00000040; }
+.normal-tabs .bp3-tab-list .bp3-tab:not([aria-disabled="true"]):hover { color: inherit; }
+.normal-tabs .bp3-tab-panel { margin-top: 0; background-color: #00000040; flex: 1 1 auto; overflow: auto; }

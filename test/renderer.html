@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>New Overlay</title>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="bp3-dark">
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@16.13.1/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js" crossorigin></script>
+    <script src="OverlayRenderer.js" crossorigin></script>
+    <script type="text/json" id="overlay-definition" src="overlay.json"></script>
+    <script>
+        window.addEventListener("load", function () {
+            const sourcePromise = new Promise((resolve, reject) => {
+                const overlayDefinitionElement = document.querySelector("#overlay-definition");
+                const src = overlayDefinitionElement.getAttribute("src");
+                if (src) {
+                    fetch(src).then(r => r.json()).then(resolve);
+                } else {
+                    resolve(JSON.parse(overlayDefinitionElement.innerHTML));
+                }
+            });
+            
+            sourcePromise.then(overlay => {
+                ReactDOM.render(
+                    React.createElement(OverlayRenderer.default, { overlay }),
+                    document.querySelector("#root")
+                );
+            });
+        });
+    </script>
+</body>
+
+</html>

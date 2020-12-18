@@ -1,324 +1,131 @@
-import React from "react";
-import { Button, Intent, AnchorButton } from "@blueprintjs/core";
-import CollapsableLayer from "./CollapsableLayer.jsx";
-import ConfigurationForm from "./ConfigurationForm.jsx";
+import React, { useState, useCallback } from "react";
+import { Button, Popover, Menu, MenuItem } from "@blueprintjs/core";
 import LabelEditor from "./LabelEditor.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
-import EffectMenuPopover from "./EffectMenuPopover.jsx";
-import { effects } from "../shared/effects.js";
-import Dispatcher from "../shared/dispatcher.js";
+import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
+import EffectMenuPopover from "./EffectMenuPopover.jsx"
+import { effects } from "./Effects.jsx";
+import ReorderableList from "./ReorderableList.jsx";
 import "./LayerList.css";
 
-class EffectItem extends React.PureComponent {
+const EffectItem = ({ layer, effect, effectName, config, dispatch }) => {
 
-  constructor(props) {
-    super(props);
-    // props.dispatcher
-    // props.effectName
-    // props.effect
-    // props.config
-    // props.onConfigChanged
-  }
+    const onDeleteClick = useCallback(() => {
+        dispatch("DeleteLayerEffect", { id: layer.id, effectName });
+    }, []);
 
-  onParameterValuesChanged = (values, createUndoHistory) => {
-    Dispatcher.Dispatch("UPDATE_EFFECT", this.props.layer.id, this.props.effectName, values, createUndoHistory);
-  }
+    const onToggleVisibility = useCallback(() => {
+        dispatch("UpdateLayerEffect", { id: layer.id, effectName, config: { hidden: !config.hidden }});
+    }, [ layer.id, effectName, config.hidden ]);
 
-  onDeleteClick = () => {
-    Dispatcher.Dispatch("DELETE_EFFECT", this.props.layer.id, this.props.effectName);
-  }
-
-  render() {
-    // interpolate config form values based on animationTime
+    const onDelete = useCallback(() => {
+        dispatch("DeleteLayerEffect", { id: layer.id, effectName });
+    }, [ layer.id, effectName ]);
 
     return (
-        <div className="effect-item">
-          <div className="effect-name">
-            {this.props.effect.displayName}
-            <div className="buttons">
-              <AnchorButton minimal={true} icon="trash" onClick={this.onDeleteClick} />
-            </div>
-          </div>
-          <ConfigurationForm
-            parameters={this.props.effect.parameters}
-            parameterValues={this.props.config}
-            onParameterValuesChanged={this.onParameterValuesChanged} />
+        <div className="effect">
+            <Button icon="eye-open" minimal={true} intent={config.hidden ? "danger" : "success"} title="Show/Hide" onClick={onToggleVisibility} />
+            <div className="label" style={{ opacity: (config.hidden ? 0.5 : 1)}}>{effect.displayName}</div>
+            <Button icon="trash" minimal={true} title="Delete" onClick={onDeleteClick} />
         </div>
     );
-  }
-}
+};
 
-class Layer extends React.Component {
+const Layer = ({ layer, element, isSelected, dispatch }) => {
+    const onLabelChanged = useCallback((label) => {
+        dispatch("UpdateLayers", { layers: [ { id: layer.id, label } ] });
+    }, [ layer.id ]);
 
-  constructor(props) {
-    super(props);
-    // props.isSelected
-    this.state = {
-      isEditingLabel: false
-    };
-  }
+    const onToggleVisibility = useCallback(() => {
+        dispatch("UpdateLayers", { layers: [ { id: layer.id, hidden: !layer.hidden } ] });
+    }, [ layer.id, layer.hidden ]);
 
-  componentDidMount() {
-    Dispatcher.Register("EDIT_LAYER_NAME", this.onEditLayerName);
-  }
+    const onClick = useCallback((evt) => {
+        dispatch("SelectLayer", { id: layer.id, append: (evt.ctrlKey || evt.metaKey), selectBetween: evt.shiftKey });
+    }, [ layer.id ]);
 
-  componentWillUnmount() {
-    Dispatcher.Unregister("EDIT_LAYER_NAME", this.onEditLayerName)
-  }
 
-  onEditLayerName = id => {
-    if (id == this.props.layer.id) {
-      this.setState({ isEditingLabel: true });
-    }
-  }
-
-  onConfigFormParameterValuesChanged = (values, createUndoHistory) => {
-    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { config: values }, createUndoHistory);
-  }
-
-  onLayerLabelChanged = value => {
-    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { label: value }, true);
-  }
-
-  onToggleVisibility = value => {
-    Dispatcher.Dispatch("UPDATE_LAYER_CONFIG", this.props.layer.id, { hidden: !this.props.layer.hidden }, true);
-  }
-
-  onDelete = () => {
-    Dispatcher.Dispatch("DELETE_LAYERS", [ this.props.layer.id ]);
-  }
-
-  onCollapsableToggled = isOpen => {
-    // emit a select event whenever the collapsable is toggled?
-    Dispatcher.Dispatch("SELECT_LAYER", this.props.layer.id);
-  }
-
-  onDragStart = evt => {
-    if (!this.props.onDragStart) { evt.preventDefault(); return; }
-    this.props.onDragStart(evt, this.props.layer.id);
-  }
-
-  render() {
-
-    let editableTextLabel =
-      <span className="layer-label">
-        <LabelEditor
-          selectAllOnFocus={true}
-          value={this.props.layer.label}
-          onChange={this.onLayerLabelChanged}
-          isEditing={this.state.isEditingLabel}
-          onConfirm={() => this.setState({ isEditingLabel: false })}
-          onCancel={() => this.setState({ isEditingLabel: false })} />
-    </span>;
-
-    let leftButtons = <Button icon="eye-open" intent={this.props.layer.hidden ? Intent.DANGER : Intent.SUCCESS} title="Toggle Visibility" onClick={this.onToggleVisibility} />;
-
-    let rightButtons = <>
-      <Button icon="edit" title="Edit Label" onClick={evt => { this.setState({ isEditingLabel: true })}} />
-      <Button icon="trash" title="Delete" onClick={this.onDelete} />
-    </>;
-
-    let configForm = null;
-    if (this.props.element.manifest.parameters != null && this.props.element.manifest.parameters.length > 0) {
-      configForm = (<ConfigurationForm
-        parameters={this.props.element.manifest.parameters}
-        parameterValues={this.props.layer.config}
-        onUpload={this.props.onUpload}
-        onParameterValuesChanged={this.onConfigFormParameterValuesChanged} />);
+    let addEffectButton;
+    if (element.manifest.effectsAllowed != false && !element.manifest.nonVisual) {
+        addEffectButton = (
+            <EffectMenuPopover layer={layer}>
+                <Button icon="plus" minimal={true} title="Add Effect" />
+            </EffectMenuPopover>
+        );
     }
 
-    let effectsForms = [];
-    if (this.props.layer.effects) {
-      for(let [effectName, effectConfig] of Object.entries(this.props.layer.effects)) {
-        let effect = effects[effectName];
-        if (effect && effect.type != "animation") {
-          effectsForms.push(<EffectItem
-            key={effectName}
-            dispatcher={Dispatcher}
-            layer={this.props.layer}
-            effectName={effectName}
-            effect={effect}
-            config={effectConfig} />);
+    let effectsForms;
+    if (element.manifest.effectsAllowed != false && layer.effects) {
+        effectsForms = [];
+        for (const [effectName, effectConfig] of Object.entries(layer.effects)) {
+            const effect = effects[effectName];
+            effectsForms.push(<EffectItem
+                key={effectName}
+                layer={layer}
+                effectName={effectName}
+                effect={effect}
+                config={effectConfig}
+                dispatch={dispatch} />);
         }
-      }
-    }
-
-    let effectMenu;
-    if (!this.props.element.manifest.nonVisual) {
-      effectMenu = (
-        <EffectMenuPopover dispatcher={Dispatcher} layer={this.props.layer}>
-          <Button minimal={true} fill={true} alignText="left" icon="plus" className="btn-add-effect" text="Add Property" />
-        </EffectMenuPopover>
-      );
     }
 
     return (
-      <div className={"layer " + (this.props.isDragging ? "is-dragging" : null)} data-index={this.props.index}>
-        <CollapsableLayer
-          label={editableTextLabel}
-          leftButtons={leftButtons}
-          rightButtons={rightButtons}
-          onToggle={this.onCollapsableToggled}
-          islocked={this.state.isEditingLabel}
-          intent={this.props.isSelected ? Intent.PRIMARY : null}
-          disabled={this.props.layer.hidden}
-          active={this.props.isDragging}
-          draggable={true}
-          onDragStart={this.onDragStart}
-          collapsed={this.props.collapsed}>
-          {configForm}
-          {effectsForms}
-          {effectMenu}
-        </CollapsableLayer>
-      </div>
+        <>
+            <div className="layer-header" isselected={isSelected ? "true" : null} style={layer.hidden ? { opacity: 0.5 } : null}>
+                <Button icon="eye-open" minimal={true} intent={layer.hidden ? "danger" : "success"} title="Toggle Visibility" onClick={onToggleVisibility} />
+                <div className="label" onClick={onClick}>
+                    <LabelEditor value={layer.label} onChange={onLabelChanged} selectAllOnFocus={true} />
+                </div>
+                {addEffectButton}
+                <Button icon="trash" title="Delete" minimal={true} onClick={() => dispatch("DeleteLayers", [layer.id])} />
+            </div>
+            {effectsForms}
+        </>
     );
-  }
+};
+
+const LayerList = () => {
+    const [[elements, layers, selectedLayerIds], dispatch] = useOverlayEditorContext(state => state.elements, state => state.overlay.layers, state => state.selectedLayerIds);
+
+    const onCreateLayer = useCallback(elementName => {
+        console.log({ createlayer: elementName });
+        dispatch("CreateLayers", [{ elementName }]);
+    }, []);
+
+    const onReorderItem = useCallback((key, newIndex) => {
+        dispatch("ReorderLayer", { id: parseInt(key), newIndex });
+    }, []);
+
+   return (
+    <div className="main-list layer-list">
+        <div className="actions">
+            <Button text="Animation" small={true} minimal={true} icon="walk" onClick={() => dispatch("OpenEditor", { type: "animation" })} />
+            <div className="right">
+                <Popover position="right-top">
+                    <Button small={true} title="New Layer" icon="plus" intent="primary" rightIcon="caret-right" />
+                    <Menu>
+                        {Object.entries(elements).map(([elementName, element]) => (
+                            <MenuItem key={elementName} icon={element.manifest.icon} text={element.manifest.name} onClick={() => onCreateLayer(elementName)} />
+                        ))}
+                    </Menu>
+                </Popover>
+            </div>
+        </div>
+        <div className="list-items">
+            <ReorderableList itemType={DragAndDropTypes.LAYER} onReorderItem={onReorderItem}>
+                {layers.map(layer => (
+                    <Layer
+                        key={layer.id}
+                        layer={layer}
+                        element={elements[layer.elementName]}
+                        isSelected={selectedLayerIds.includes(layer.id)}
+                        dispatch={dispatch}
+                    />
+                ))}
+            </ReorderableList>
+        </div>
+    </div>
+);
 }
 
-export default class LayerList extends React.Component {
-
-  constructor(props) {
-    super(props);
-    // props.layers
-    this.state = {
-      draggedLayerIndex: null,
-      draggedLayerId: null
-    };
-  }
-
-  onLayerDragStart = (evt, id) => {
-    if (evt.target.name == "INPUT") {
-      evt.preventDefault();
-      return;
-    }
-
-    // listen for drag end events in the whole window
-    window.addEventListener("dragend", this.onLayerDragEnd);
-
-    evt.dataTransfer.setData(DragAndDropTypes.LAYER, id);
-    let layerIndex = this.props.layers.findIndex(r => r.id == id);
-    this.setState({ draggedLayerIndex: layerIndex, draggedLayerId: id });
-  }
-
-  onLayerDragEnd = (evt, id) => {
-    window.removeEventListener("dragend", this.onLayerDragEnd);
-    this.setState({ draggedLayerIndex: null, draggedLayerId: null });
-  }
-
-  onDragOver = evt => {
-    // only handle layer data
-    if (!DragAndDropTypes.EventHasType(evt, DragAndDropTypes.LAYER)) { return; }
-
-    // tell the browser we're handling it
-    evt.preventDefault();
-
-    // set the drop effect
-    evt.dataTransfer.dropEffect = "move";
-
-    if (evt.target.matches(".layer-list-layers")) {
-      // if we're over the container, and not any layer, then set the positioner index to the end of the list
-      if (this.state.draggedLayerIndex != this.props.layers.length) {
-        this.setState({ draggedLayerIndex: this.props.layers.length });
-      }
-      return;
-    }
-
-    // all other cases, we should be over a layer
-    let target = evt.target.closest(".layer");
-    if (target) {
-
-      if (target.matches(".is-dragging")) {
-        // don't do anything if over the dragged layer
-        return;
-      } 
-
-      // grab the index attribute
-      let index = parseInt(target.getAttribute("data-index"));
-
-      // calculate if we're over the top or bottom of this layer
-      let rect = target.getBoundingClientRect();
-      let isOverBottom = (evt.nativeEvent.clientY > (rect.top + (rect.height / 2)));
-
-      // set the positioner
-      let newIndex = (isOverBottom ? index + 1 : index);
-      if (this.state.draggedLayerIndex != newIndex) {
-        this.setState({ draggedLayerIndex: newIndex });
-      }
-    }
-  }
-
-  onDrop = evt => {
-    evt.preventDefault();
-
-    // only handle layers
-    if (!DragAndDropTypes.EventHasType(evt, DragAndDropTypes.LAYER)) { return; }
-
-    // pull the layer id from the drag data
-    let id = parseInt(evt.dataTransfer.getData(DragAndDropTypes.LAYER));
-
-    // dispatch the move message
-    Dispatcher.Dispatch("MOVE_LAYER", id, this.state.draggedLayerIndex);
-
-    // clear the positioner
-    this.setState({ draggedLayerIndex: null, draggedLayerId: null });
-  }
-
-  renderDraggedLayer() {
-    if (this.state.draggedLayerId == null) { return null; }
-
-    let layer = this.props.layers.find(r => r.id == this.state.draggedLayerId);
-    let element = this.props.elements[layer.elementName];
-    return (<Layer
-      key={layer.id}
-      index={this.state.draggedLayerIndex}
-      dispatcher={Dispatcher}
-      layer={layer}
-      element={element}
-      isSelected={false}
-      isDragging={true}
-      collapsed={true}
-      />);
-  }
-
-  render() {
-
-    let layerList = [];
-    this.props.layers.forEach((layer, index) => {
-
-      // pull the element for this layer
-      let element = this.props.elements[layer.elementName];
-
-      // don't render anything if we can't find the element (maybe fix this later)
-      if (!element) { return null; }
-
-      // render the dragged layer if necessary
-      if (index == this.state.draggedLayerIndex) { layerList.push(this.renderDraggedLayer()); }
-
-      // don't render the layer being dragged
-      if (layer.id != this.state.draggedLayerId) {
-        // render to the stack
-        layerList.push(<Layer
-          key={layer.id}
-          index={index}
-          dispatcher={Dispatcher}
-          layer={layer}
-          element={element}
-          isSelected={this.props.selectedLayerIds.includes(layer.id)}
-          onDragStart={this.onLayerDragStart}
-          onDragEnd={this.onLayerDragEnd}
-          onUpload={this.props.onUpload}
-          collapsed={this.state.draggedLayerId == null ? undefined : true}
-          animationTime={this.props.animationTime}
-          />);
-      }
-    });
-
-    if (this.state.draggedLayerIndex == this.props.layers.length) { layerList.push(this.renderDraggedLayer()); }
-
-    return (
-      <div className="layer-list-layers" onDragOver={this.onDragOver} onDrop={this.onDrop}>
-        {layerList}
-      </div>
-    );
-  }
-}
+export default LayerList;

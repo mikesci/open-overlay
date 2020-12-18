@@ -12,9 +12,12 @@ export default class CollapsableLayer extends React.Component {
 
     onToggle = evt => {
         if (!this.props.islocked) {
+            if (this.props.onToggle) {
+                this.props.onToggle(!this.state.isOpen, evt);
+            }
+            
             this.setState(prevState => {
                 let isOpen = !prevState.isOpen;
-                if (this.props.onToggle) { this.props.onToggle(isOpen); }
                 return { isOpen: isOpen };
             });
         }

@@ -1,0 +1,30 @@
+
+.animation-panel { height: 100%; overflow: hidden; display:flex; }
+.animation-panel .scrubber-height { height: 15px; }
+.animation-panel .phase-layers { height: 100%; flex: 1 1 auto; border-left: 1px solid #ffffff20; display: flex; flex-direction: column; overflow: hidden; }
+.animation-panel .phase-layers .label-width { width: 200px; border-right: 1px solid #ffffff20; }
+.animation-panel .phase-layers > .scroll-body { overflow-x: hidden; overflow-y: auto; height: 100%; }
+.animation-panel .phase-layers .phase-layer { position: relative; width: 100%; overflow: hidden; border-bottom: 1px solid #ffffff20; background: #00000020; }
+.animation-panel .phase-layers .phase-layer > .layer-name-row { border-bottom: 1px solid #ffffff20; background: #ffffff20; }
+.animation-panel .phase-layers .phase-layer > .layer-name-row .label-width { text-align: right; padding-right: 3px; font-size: 0.8em; }
+.animation-panel .phase-layers .phase-layer > .layer-name-row .label-width label { padding-right: 5px; }
+.animation-panel .phase-layers .phase-layer > .animation-row { border-bottom: 1px solid #ffffff20; display: flex; flex-direction: row; }
+.animation-panel .phase-layers .phase-layer > .animation-row[isselected="true"] { background: #6cb0ff20; }
+.animation-panel .phase-layers .phase-layer > .animation-row > .animation-name { text-align: right; padding-right: 3px; }
+.animation-panel .phase-layers .phase-layer > .animation-row > .timeline { flex: 1 1 auto; position: relative; }
+.animation-panel .phase-layers .phase-layer > .animation-row > .timeline > .keyframe-handle { position: absolute; top: 0; height: 100%; }
+.animation-panel .phase-layers .phase-layer > .animation-row > .timeline > .keyframe-handle::before { content: ""; position: absolute; top: 10px; width: 100%; height: 8px; background: #00a2ff40; }
+.animation-panel .phase-layers .phase-layer > .animation-row > .timeline > .keyframe-handle .bp3-icon { position: absolute; top: 6px; right: -7px; z-index: 2; }
+.animation-panel .phase-layers .phase-header { flex: 0 0 40px; padding: 5px; background: #00000020; display:flex; align-items: center; justify-content: space-between; }
+.animation-panel .phase-layers .phase-header .timing { width: 200px; }
+.animation-panel .phase-layers .phase-header .timing .bp3-control-group { align-items: center; }
+.animation-panel .phase-layers .phase-header .timing .bp3-control-group .bp3-tag { margin: 3px; }
+.animation-panel .phase-layers .phase-header .timing .bp3-control-group .bp3-input { height: 25px; }
+.animation-panel .phase-layers .scrubber-row { flex: 0 0 15px; display: flex; background: linear-gradient(#ffffff00, #ffffff20); }
+.animation-panel .phase-layers .scrubber-row > .scrubber { flex: 1 1 auto; display: flex; position: relative; font-size: 0.8em; margin-right: 1px; }
+.animation-panel .phase-layers .scrubber-row > .scrubber:last-child { margin-right: 0; }
+.animation-panel .phase-layers .scrubber-row > .scrubber .caret { position: absolute; top: 0; border-left: 2px solid #FFFFFF20; height: 100vh; }
+.animation-panel .phase-layers .scrubber-row > .scrubber .caret .bp3-icon { margin-left: -9px; }
+.animation-panel .phase-layers .scrubber-row > .scrubber label { flex: 1 1 auto; text-align: right; border-left: 1px solid #ffffff20; padding: 0 3px; }
+
+.animation-panel .animation-editor { border-left: 1px solid #ffffff20; height: 100%; width: 200px; padding: 10px; }

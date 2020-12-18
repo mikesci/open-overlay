@@ -1,53 +1,52 @@
-import React from "react";
-import { HTMLSelect } from "@blueprintjs/core";
-import "./ZoomSelector.css";
+import React, { useCallback } from "react";
+import { Button, ControlGroup, HTMLSelect } from "@blueprintjs/core";
 
-export default class ZoomSelector extends React.Component {
+const ZoomPresets = [
+    { value: 1.0, label: "100%" },
+    { value: 0.666666667, label: "67%" },
+    { value: 0.5, label: "50%" },
+    { value: 0.25, label: "25%" }
+];
 
-  static ZOOM_AUTOFIT_VALUE = -9999;
+// onChanged(zoom, isAuto)
+const ZoomSelector = ({ zoomSelection, onZoomSelectionChanged, ...props }) => {
 
-  static ZOOM_OPTIONS = [
-    { text: "Fit", value: this.ZOOM_AUTOFIT_VALUE, isAutoFit: true },
-    { text: "100%", value: 1.0 },
-    { text: "67%", value: 0.666666667 },
-    { text: "50%", value: 0.5 },
-    { text: "25%", value: 0.25 }
-  ];
-
-  constructor(props) {
-    super(props);
-    // props.zoom           - the current zoom percentage
-    // props.autoFitZoom    - the amount to zoom to auto-fit
-    // props.onZoomChanged  - called when the user changes the zoom from the dropdown
-  }
-
-  onZoomDropDownChanged = evt => {
-    if (this.props.onZoomChanged) {
-      let zoom = evt.target.value;
-      this.props.onZoomChanged(zoom);
-    }
-  }
-
-  render() {
+    const onDropdownChanged = useCallback(evt => {
+        if (!onZoomSelectionChanged)
+            return;
+        if (evt.target.value == "auto")
+            onZoomSelectionChanged({ ...zoomSelection, isAuto: true });
+        else
+            onZoomSelectionChanged({ ...zoomSelection, zoom: parseFloat(evt.target.value), isAuto: false });
+    }, [ zoomSelection ]);
     
     // show and select the custom option if the zoom isn't elsewhere in the option list
-    let selectedValue = null;
-    let zoomOptions = ZoomSelector.ZOOM_OPTIONS.map(r => {
-      if (r.isAutoFit)
-        return { label: `Fit (${Math.round(this.props.autoFitZoom * 100)}%)`, value: ZoomSelector.ZOOM_AUTOFIT_VALUE };
-      else
-        return { label: Math.round(r.value * 100) + "%", value: r.value };
-    });
+    let zoomOptions = [];
 
-    let isCustomSelected = !(this.props.zoom == this.props.autoFitZoom || ZoomSelector.ZOOM_OPTIONS.findIndex(r => r.value == this.props.zoom) > -1);
-    if (isCustomSelected) {
-        zoomOptions.unshift({ label: `Custom (${Math.round(this.props.zoom * 100)}%)`, value: this.props.zoom });
+    // if zoom isn't auto and doesn't match one of the presets, then add the "Custom" option
+    if (!zoomSelection.isAuto) {
+        const matchesPreset = (ZoomPresets.findIndex(r => r.value == zoomSelection.zoom) != -1);
+        if (!matchesPreset) {
+            zoomOptions.push({
+                label: `${Math.round(zoomSelection.zoom * 100)}%`,
+                value: zoomSelection.zoom
+            });
+        }
     }
 
+    // add autofit
+    zoomOptions.push({
+        label: `Auto (${Math.round(zoomSelection.autoFitZoom * 100)}%)`,
+        value: "auto"
+    });
+
+    // add presets
+    for(const zoomPreset of ZoomPresets)
+        zoomOptions.push(zoomPreset);
+
     return (
-      <div className="zoom-selector">
-        <HTMLSelect onChange={this.onZoomDropDownChanged} options={zoomOptions} value={this.props.zoom} />
-      </div>
+        <HTMLSelect {...props} onChange={onDropdownChanged} options={zoomOptions} value={zoomSelection.isAuto ? "auto" : zoomSelection.zoom} />
     );
-  }
 }
+
+export default ZoomSelector;

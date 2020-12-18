@@ -1,0 +1,6 @@
+.collapsible-panel { }
+.collapsible-panel > .panel-header { display: flex; align-items: center; background: #00000020; padding: 3px; cursor: pointer; }
+.collapsible-panel > .panel-header:hover { background: #ffffff10; }
+.collapsible-panel > .panel-header > .bp3-icon { padding: 4px; }
+.collapsible-panel > .panel-header > label { flex: 1 1 auto; cursor: inherit; }
+.collapsible-panel > .panel-header > .bp3-button { padding: 4px 10px; min-height: 20px; min-width: 20px; }

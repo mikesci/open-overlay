@@ -1,0 +1,194 @@
+import stringHash from "string-hash";
+
+const entry = [
+    "animSlideIn",
+    "animWipeIn",
+    "animFadeIn",
+    "animScaleIn",
+    "animBlurIn",
+    "animCustom"
+];
+
+const exit = [
+    "animSlideOut",
+    "animWipeOut",
+    "animScaleOut",
+    "animFadeOut",
+    "animBlurOut",
+    "animCustom"
+];
+
+function rotateAboutCenter(angle, point, center) {
+    return [
+        center[0] + (point[0] - center[0]) * Math.cos(angle) + (point[1] - center[1]) * Math.sin(angle),
+        center[1] - (point[0] - center[0]) * Math.sin(angle) + (point[1] - center[1]) * Math.cos(angle)
+    ];
+}
+
+const getWipeBoundingBox = (angle, width, height) => {
+    // NOTE: do not work on this until you have a beer ready for afterward
+    // step 1: enlarge the clipping box to fit the source box after rotation
+    // step 2: center the clipping box on the source box
+    // step 3: rotate about the center
+    const center = [width/2, height/2];
+    const boxHeight = Math.abs(Math.sin(angle) * width) + Math.abs(Math.cos(angle) * height);
+    const boxWidth = Math.abs(Math.cos(angle) * width) + Math.abs(Math.sin(angle) * height);
+    const origin = [-(boxWidth-width) / 2, -(boxHeight-height) / 2];
+    const tl = rotateAboutCenter(angle, origin, center);
+    const tr = rotateAboutCenter(angle, [origin[0] + boxWidth, origin[1]], center);
+    const br = rotateAboutCenter(angle, [origin[0] + boxWidth, origin[1] + boxHeight], center);
+    const bl = rotateAboutCenter(angle, [origin[0], origin[1] + boxHeight], center);
+    const dx = (tr[0] - tl[0]);
+    const dy = (tr[1] - tl[1]);
+    return { tl, tr, br, bl, dx, dy };
+}
+
+const animations = {
+    "animSlideIn": {
+        trigger: "entry",
+        displayName: "Slide In",
+        parameters: [
+            { name: "angle", type: "number", displayName: "Angle", defaultValue: 0, min: 0, max: 360 }
+        ],
+        getKeyframesId: ({ angle = 0 }) => {
+            return angle;
+        },
+        getKeyframesDefinition: ({ angle = 0 }) => {
+            const radians = angle * (Math.PI/180);
+            const tLeft = Math.cos(radians) * 100;
+            const tTop = Math.sin(radians) * 100;
+            return `from { transform: translate(${tLeft}vw, ${tTop}vw); } to { transform: translate(0, 0); }`;
+        }
+    },
+    "animSlideOut": {
+        trigger: "exit",
+        displayName: "Slide Out",
+        parameters: [
+            { name: "angle", type: "number", displayName: "Angle", defaultValue: 0, min: 0, max: 360 }
+        ],
+        getKeyframesId: ({ angle = 0 }) => {
+            return angle;
+        },
+        getKeyframesDefinition: ({ angle = 0 }) => {
+            const radians = angle * (Math.PI/180);
+            const tLeft = Math.cos(radians) * 100;
+            const tTop = Math.sin(radians) * 100;
+            return `from { transform: translate(0, 0); } to { transform: translate(${tLeft}vw, ${tTop}vw); }`;
+        }
+    },
+    "animWipeIn": {
+        trigger: "entry",
+        displayName: "Wipe In",
+        parameters: [
+            { name: "angle", type: "number", displayName: "Angle", defaultValue: 0, min: 0, max: 360 }
+        ],
+        getKeyframesId: ({ angle = 0 }, { width, height }) => {
+            return `${angle}-${parseInt(width)}-${parseInt(height)}`;
+        },
+        getKeyframesDefinition: ({ angle = 0 }, { width, height }) => {
+            const radians = angle * (Math.PI/180);
+            const { tl, tr, br, bl, dx, dy } = getWipeBoundingBox(radians, width, height);
+            return `from { clip-path: polygon(${tl[0] + dx}px ${tl[1] + dy}px,${tr[0] + dx}px ${tr[1] + dy}px,${br[0] + dx}px ${br[1] + dy}px,${bl[0] + dx}px ${bl[1] + dy}px,${tl[0] + dx}px ${tl[1] + dy}px); } to { clip-path: polygon(${tl[0]}px ${tl[1]}px,${tr[0]}px ${tr[1]}px,${br[0]}px ${br[1]}px,${bl[0]}px ${bl[1]}px,${tl[0]}px ${tl[1]}px) }`;
+        }
+    },
+    "animWipeOut": {
+        trigger: "exit",
+        displayName: "Wipe Out",
+        parameters: [
+            { name: "angle", type: "number", displayName: "Angle", defaultValue: 0, min: 0, max: 360 }
+        ],
+        getKeyframesId: ({ angle = 0 }, { width, height }) => {
+            return `${angle}-${parseInt(width)}-${parseInt(height)}`;
+        },
+        getKeyframesDefinition: ({ angle = 0 }, { width, height }) => {
+            const radians = angle * (Math.PI/180);
+            const { tl, tr, br, bl, dx, dy } = getWipeBoundingBox(radians, width, height);
+            return `from { clip-path: polygon(${tl[0]}px ${tl[1]}px,${tr[0]}px ${tr[1]}px,${br[0]}px ${br[1]}px,${bl[0]}px ${bl[1]}px,${tl[0]}px ${tl[1]}px); } to { clip-path: polygon(${tl[0] + dx}px ${tl[1] + dy}px,${tr[0] + dx}px ${tr[1] + dy}px,${br[0] + dx}px ${br[1] + dy}px,${bl[0] + dx}px ${bl[1] + dy}px,${tl[0] + dx}px ${tl[1] + dy}px) }`;
+        }
+    },
+    "animFadeIn": {
+        trigger: "entry",
+        displayName: "Fade In",
+        getKeyframesDefinition: (config) => {
+            return "from { opacity: 0; } to { opacity: 1; }";
+        }
+    },
+    "animFadeOut": {
+        trigger: "entry",
+        displayName: "Fade In",
+        getKeyframesDefinition: (config) => {
+            return "from { opacity: 1; } to { opacity: 0; }";
+        }
+    },
+    "animScaleIn": {
+        trigger: "entry",
+        displayName: "Scale In",
+        parameters: [
+            { name: "size", type: "number", displayName: "Size", defaultValue: 10 }
+        ],
+        getKeyframesId: (config, layer) => {
+            return `${config.size}`;
+        },
+        getKeyframesDefinition: ({ size = 10 }) => {
+            return `from { transform: scale(${size}); } to { transform: scale(1); }`;
+        }
+    },
+    "animScaleOut": {
+        trigger: "exit",
+        displayName: "Scale Out",
+        parameters: [
+            { name: "size", type: "number", displayName: "Size", defaultValue: 10 }
+        ],
+        getKeyframesId: (config, layer) => {
+            return `${config.size}`;
+        },
+        getKeyframesDefinition: ({ size = 10 }) => {
+            return `from { transform: scale(1); } to { transform: scale(${size}); }`;
+        }
+    },
+    "animBlurIn": {
+        trigger: "entry",
+        displayName: "Blur In",
+        parameters: [
+            { name: "amount", type: "number", displayName: "Amount", defaultValue: 10 }
+        ],
+        getKeyframesId: ({ amount }) => {
+            return amount.toString();
+        },
+        getKeyframesDefinition: ({ amount = 10 }) => {
+            return `from { filter: blur(${amount}px); } to { filter: blur(0); }`;
+        }
+    },
+    "animBlurOut": {
+        trigger: "exit",
+        displayName: "Blur Out",
+        parameters: [
+            { name: "amount", type: "number", displayName: "Amount", defaultValue: 10 }
+        ],
+        getKeyframesId: ({ amount }) => {
+            return amount.toString();
+        },
+        getKeyframesDefinition: ({ amount = 10 }) => {
+            return `from { filter: blur(0); } to { filter: blur(${amount}px); }`;
+        }
+    },
+    "animCustom": {
+        phase: "entry",
+        displayName: "Custom",
+        parameters: [
+            { "name": "keyframes", "type": "textarea", "displayName": "Keyframes", "defaultValue": "from { }\nto { }" },
+        ],
+        getKeyframesId: ({ keyframes }) => {
+            return stringHash(keyframes);
+        },
+        getKeyframesDefinition: ({ keyframes }) => {
+            return keyframes;
+        }
+    }
+};
+
+export {
+    entry,
+    exit,
+    animations
+};

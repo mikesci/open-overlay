@@ -1,0 +1,39 @@
+.layout-changer { width: 100%; height: 100%; display: flex; flex-direction: row; overflow: hidden; user-select: none; position: relative; }
+
+.layout-changer .script-wrapper {  }
+.layout-changer .panel-bg { background: #293742; }
+
+.layout-changer .app-toaster { position: absolute !important; }
+.layout-changer .bottom-bar { padding: 5px 0; flex: 0 0 auto; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+.layout-changer .bottom-bar .center-buttons { display: flex; flex-direction: row; justify-content: center; margin: 5px 0; }
+.layout-changer .bottom-bar .center-buttons > * { margin-right: 5px; }
+.layout-changer .bottom-bar .center-buttons > *:last-child { margin-right: 0; }
+.layout-changer .bottom-bar .bottom-tabs .bp3-tab-panel { margin-top: 5px; }
+.layout-changer .leftpanel-wrapper {  z-index: 3; height: 100%; display: flex; flex-direction: column; }
+.layout-changer .rightpanel-wrapper { z-index: 3; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: hidden; }
+
+.layout-changer .lists-wrapper { height: 100%; display: flex; flex-direction: column; }
+.layout-changer .lists-panel { flex: 1 1 auto; margin-bottom: 1px; background: #00000040; overflow: hidden; }
+
+.layout-changer .lists-panel .main-list { flex: 1 1 auto; height: 100%; height: 100%; display: flex; flex-direction: column; }
+.layout-changer .lists-panel .main-list > .actions { padding: 10px; border-bottom: 1px solid #ffffff20; display: flex; }
+.layout-changer .lists-panel .main-list > .actions .bp3-divider { border-color: #ffffff20; }
+.layout-changer .lists-panel .main-list > .actions .right { flex: 1 1 auto; text-align: right; }
+.layout-changer .lists-panel .main-list > .list-items { margin: 0px 1px 5px 0; flex: 1 1 auto; overflow-y: auto; }
+
+.layout-changer .center-wrapper { display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden; }
+.layout-changer .center-wrapper .stage-wrapper { flex: 1 1 auto; flex-direction:column; position: relative; }
+.layout-changer .center-wrapper .bottom-panel-wrapper { height: 100%; }
+
+.layout-changer .stage-wrapper .toolbar-wrapper { margin-top: -30px; width: 100%; display: flex; justify-content: center; }
+.layout-changer .stage-wrapper .toolbar-wrapper > * { margin-top: 30px; z-index: 2; height: 30px; }
+
+.layout-changer .animations-toggle { position: relative; overflow: visible; }
+.layout-changer .animations-toggle .inner { position: absolute; left: 0; bottom: 0; width: 100%; display: flex; justify-content: center; z-index:10; height: 0; }
+.layout-changer .animations-toggle .inner .bp3-button { margin-top: -2.5em; }
+
+/* disable focus outlines */
+.layout-changer *:focus { outline: none; }
+
+/* should probably go somewhere else */
+.toolbar .bp3-button { border-radius: 0 !important; }

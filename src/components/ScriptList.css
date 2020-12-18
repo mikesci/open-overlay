@@ -1,0 +1,6 @@
+.script-list { padding: 5px 0; }
+.script-list .script-list-item { display: flex; align-items: center; }
+.script-list .script-list-item .bp3-icon { padding: 0 5px; }
+.script-list .script-list-item .label { flex: 1 1 100%; text-align: left; padding: 6px 5px; }
+.script-list .script-list-item .label .label-editor { width: 100%; display: inline-block; }
+.script-list .script-list-item .label input { height: 25px; min-height: 0; }

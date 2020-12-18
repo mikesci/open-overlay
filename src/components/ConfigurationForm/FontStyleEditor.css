@@ -1,0 +1,14 @@
+/*# sourceURL=FontStyleEditor.css*/
+.font-style-editor {  }
+.font-style-editor .button-row-2 > * { flex-basis: 16.66666666666667 !important; margin: 1px 0; }
+.font-style-editor .font-family { width: 50%; }
+.font-style-editor .font-size { width: 33.3333333%; }
+.font-style-editor .font-color { width: 16.6666666%; }
+.font-style-editor .font-color .bp3-popover-target { width: 100%; border-left: 1px solid #000; }
+.font-style-editor .font-color button { width: 100%; }
+.font-style-editor .text-wrap { flex: 0 0 50% !important; margin: 8px 1px 3px 0; }
+
+.font-style-editor .border-input { display: flex; flex-direction: row; justify-content: flex-start; align-items: stretch; height: 100%; }
+.font-style-editor .border-input input[type='color'] { width: 2em !important; height: 2em; margin-right: 0.1em; }
+.font-style-editor .border-input select { width: 10em !important; margin-right: 0.1em; }
+.font-style-editor .border-input input[type='text'] { width: 5em !important; margin-right: 0.1em; }

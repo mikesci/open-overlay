@@ -1,22 +1,9 @@
-.layer-list { height: 100%; display: flex; flex-direction: column; }
-.layer-list .layer-list-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 5px 0 5px; }
-.layer-list .layer-list-header .left { flex: 1 1 auto; }
-.layer-list .layer-list-header .right { text-align: right; margin-left: 5px; }
-.layer-list > .layer-list-layers { margin: 5px; overflow-y: auto; }
+.layer-list .layer-header { display: flex; align-items: center; cursor: pointer; }
+.layer-list .layer-header[isselected="true"] { background: #137cbd80; }
+.layer-list .layer-header .label { flex: 1 1 100%; text-align: left; padding: 6px 5px; }
+.layer-list .layer-header .label .label-editor { width: 100%; display: inline-block; }
+.layer-list .layer-header .label input { height: 25px; min-height: 0; }
 
-.layer-label { display: flex; justify-content: space-between; align-items: center; }
-.layer-label .buttons { display: flex; }
-.layer-label .buttons a { padding: 0; min-height: 20px; min-width: 20px; margin-left: 5px; }
-.layer-label .buttons a.hideable { display: none; }
-.layer-label:hover .buttons a.hideable { display: block; }
-.layer-label .buttons .bp3-editable-text:hover { cursor: default; }
-.layer-label .buttons .bp3-editable-text:hover::before { content: none; }
-.layer-label .buttons a .bp3-icon:first-child:last-child, .layer-label a .bp3-spinner + .bp3-icon:last-child { margin: 2px; }
-
-.layer-list > .layer-list-layers > .layer .effect-item { background: rgba(0,0,0,0.1);}
-.layer-list > .layer-list-layers > .layer .effect-item > .effect-name { background: rgba(0,0,0,0.2); padding: 5px; display: flex; justify-content: space-between; align-items: center; }
-.layer-list > .layer-list-layers > .layer .effect-item > .effect-name .buttons { display: flex; }
-.layer-list > .layer-list-layers > .layer .effect-item > .effect-name > .buttons > a { min-height: 20px; min-width: 20px; }
-.layer-list > .layer-list-layers > .layer .effect-item > .configuration-form { margin: 5px 5px 0 5px; }
-.layer-list > .layer-list-layers > .layer .effect-item > .configuration-form > .bp3-form-group { margin-bottom: 5px; }
-.layer-list > .layer-list-layers > .layer .btn-add-effect { background: rgba(0,0,0,0.3); }
+.layer-list .effect { display: flex; align-items: center; font-size: 0.9em !important; padding-left: 20px; background: #00000020; }
+.layer-list .effect .bp3-button { font-size: inherit; min-height: 20px; }
+.layer-list .effect .label { flex: 1 1 100%; align-self: center; padding: 0 5px; cursor: pointer; }

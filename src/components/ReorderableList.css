@@ -1,0 +1,4 @@
+.reorderable-list { height: 100%; }
+.reorderable-list > .item { background: #ffffff10; }
+.reorderable-list > .item[dragging="true"] { background: #137cbd80; }
+.reorderable-list > .item:not([isselected="true"]):hover { background: rgba(138, 155, 168, 0.4); }

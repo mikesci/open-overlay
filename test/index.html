@@ -2,39 +2,61 @@
 <html>
 <head>
     <title>OpenOverlay</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0">
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@blueprintjs/core@3.31.0/lib/css/blueprint.css" />
     <style>
     html, body { overflow: hidden; height: 100%; width: 100%; padding: 0; margin: 0; }
-    body { display: flex; flex-direction: column; background: #293742ee; }
-    .app { flex: 1 1 auto; }
+    body { display: flex; flex-direction: column;  }
+    body.bp3-dark { background: #293742ee; }
+    .app { flex: 1 1 auto; height: 100%; }
+    *::-webkit-scrollbar { width: 10px; height: 10px; background: rgba(0,0,0,0.5); }
+    *::-webkit-scrollbar-thumb { width: 10px; height: 10px; background: #137cbd; }
     </style>
 </head>
 <body class="bp3-dark">
     <div class="app"></div>
+    <a href="#" id="btn-copy-overlay" style="position: fixed; bottom: 5px; left: 5px; background: #000; padding: 5px; color:#fff;z-index:1000;">COPY OVERLAY</a>
     <script src="https://unpkg.com/react@16.13.1/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js" crossorigin></script>
     <script src="OverlayEditor.js" crossorigin></script>
+    <script src="OverlayUtilities.js" crossorigin></script>
+    <script type="text/json" id="overlay-definition" src="overlay.json"></script>
     <script>
         window.addEventListener("load", function() {
-            // default overlay data
-            window._overlay = {
-                name: "New Overlay",
-                layers: []
-            };
 
-            ReactDOM.render(
-                React.createElement(
-                    OverlayEditor.default,
-                    {
-                        width: 1920,
-                        height: 1080,
-                        overlay: window._overlay,
-                        onOverlayChanged: (overlay) => { window._overlay = overlay; }
-                    }
-                ),
-                document.querySelector(".app")
-            );
+            document.querySelector("#btn-copy-overlay").addEventListener("click", evt => {
+                evt.preventDefault();
+                const text = JSON.stringify(window._overlay, null, 2);
+                navigator.clipboard.writeText(text);
+            });
+
+            const sourcePromise = new Promise((resolve, reject) => {
+                const overlayDefinitionElement = document.querySelector("#overlay-definition");
+                const src = overlayDefinitionElement.getAttribute("src");
+                if (src)
+                    fetch(src).then(r => r.json()).then(resolve);
+                else
+                    resolve(JSON.parse(overlayDefinitionElement.innerHTML));
+            });
+
+            sourcePromise.then(overlay => {
+                window._overlay = overlay;
+                ReactDOM.render(
+                    React.createElement(
+                        OverlayEditor,
+                        {
+                            width: 1920,
+                            height: 1080,
+                            overlay: overlay,
+                            onOverlayChanged: (overlay) => {
+                                window._overlay = overlay;
+                            }
+                        }
+                    ),
+                    document.querySelector(".app")
+                );
+            });
         });
     </script>
 </body>

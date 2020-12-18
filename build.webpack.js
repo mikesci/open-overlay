@@ -3,15 +3,17 @@ const path = require('path');
 module.exports = {
     mode: "development",
     entry: {
-        "OverlayEditor": [ "./src/OverlayEditor.jsx" ],
-        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ]
+        "OverlayEditor": "./src/OverlayEditor.jsx",
+        "OverlayRenderer": "./src/OverlayRenderer.jsx"
     },
     performance: { hints: false },
     output: {
         path: path.resolve(__dirname, './test'),
         filename: "[name].js",
         library: "[name]",
-        libraryTarget: "umd"
+        libraryTarget: "umd",
+        libraryExport: "default",
+        globalObject: "this"
     },
     optimization: { minimize: false },
     externals: {
