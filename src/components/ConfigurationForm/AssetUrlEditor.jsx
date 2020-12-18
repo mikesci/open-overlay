@@ -32,7 +32,7 @@ const AssetUrlEditor = ({ parameter }) => {
             }
         });
         input.click();
-    }, []);
+    }, [parameter.accept]);
 
     const onAssetUrlDrop = useCallback((evt) => {
         evt.preventDefault();

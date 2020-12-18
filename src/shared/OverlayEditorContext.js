@@ -239,7 +239,6 @@ const Reducers = {
     UpdateAnimationContextDuration: (ps, deltaMs) => {
         if (!ps.animationContext.duration) { return; }
         const duration = Math.max(500, ps.animationContext.duration + deltaMs);
-        console.log({ duration, deltaMs });
         return { animationContext: { ...ps.animationContext, duration }};
     },
     SetTaskMode: (ps, taskMode) => {
@@ -478,8 +477,8 @@ const Reducers = {
         // find the max layer id
         let selectedLayerIds = [];
         let newState = updateOverlay(ps, (overlay) => {
-            let maxLayerId = overlay.layers.map(r => r.id).reduce(maxValue, 1);
-            let layers = [...overlay.layers];
+            let layers = (overlay.layers ? [...overlay.layers] : []);
+            let maxLayerId = layers.map(r => r.id).reduce(maxValue, 1);
     
             for(const requestedLayer of requestedLayers) {
                 // get the element for the layer.  if we can't find it, skip
@@ -504,7 +503,7 @@ const Reducers = {
                     label: requestedLayer.label || element.manifest.name,
                     config: config,
                     effects: requestedLayer.effects || (element.manifest.defaultEffects ? { ...element.manifest.defaultEffects } : null),
-                    style: { ...element.manifest.defaultStyle, ...requestedLayer.styles }
+                    style: { ...element.manifest.defaultStyle, ...requestedLayer.style }
                 };
     
                 if (requestedLayer.animations)
@@ -529,6 +528,7 @@ const Reducers = {
 
         // select the newly created layers
         newState.selectedLayerIds = selectedLayerIds;
+        newState.selectedPropertyTab = "layer";
 
         return newState;
     },
@@ -1099,11 +1099,8 @@ const Reducers = {
                 else if (element.manifest.width && element.manifest.height)
                     dimensions = { width: element.manifest.width, height: element.manifest.height };
 
-                if (dimensions) {
-                    if (!layer.styles)
-                        layer.styles = {};
-                    layer.styles.rect = { top: 0, left: 0, width: dimensions.width, height: dimensions.height };
-                }
+                if (dimensions)
+                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
 
                 dispatch("CreateLayers", [ layer ]);
             };

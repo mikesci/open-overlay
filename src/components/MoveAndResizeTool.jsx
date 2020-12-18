@@ -10,6 +10,9 @@ const GUTTER_STATE_BOXSELECT = { top: false, left: false, bottom: false, right: 
 
 const getSelectableRects = (layers, layerDomElements, animationContext) => {
 
+    if (!layers)
+        return [];
+
     // get the style handler for rects
     //const rectStyle = styles.rect;
 

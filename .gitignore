@@ -3,3 +3,7 @@ node_modules
 /release
 /package-lock.json
 /.vscode
+/dist/OverlayEditor.js
+/dist/OverlayRenderer.js
+/test/OverlayRenderer.js
+/test/OverlayEditor.js

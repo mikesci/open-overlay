@@ -383,7 +383,7 @@ const AnimationPanel = () => {
         return clipOffsets;
     }, [layers, animationContext.phase.key]);
 
-    const targetLayers = (showAllLayers ? layers : layers.filter(r => selectedLayerIds.includes(r.id)));
+    const targetLayers = (showAllLayers ? layers : layers.filter(r => selectedLayerIds.includes(r.id))) || [];
     
     return (
         <div className="animation-panel" onWheel={onWheel}>

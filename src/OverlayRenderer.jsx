@@ -159,7 +159,7 @@ const OverlayRenderer = ({
 
     // if we have a scriptState, then we're executing a script
     // and we should use the overlay in that instead of the props overlay
-    const sourceLayers = scriptingContext ? scriptingContext.layers : overlay.layers;
+    const sourceLayers = (scriptingContext ? scriptingContext.layers : overlay.layers) || [];
 
     const layers = sourceLayers.map((layer, index) => (
         <LayerWrapper

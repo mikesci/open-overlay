@@ -113,7 +113,7 @@ const LayerList = () => {
         </div>
         <div className="list-items">
             <ReorderableList itemType={DragAndDropTypes.LAYER} onReorderItem={onReorderItem}>
-                {layers.map(layer => (
+                {(layers || []).map(layer => (
                     <Layer
                         key={layer.id}
                         layer={layer}

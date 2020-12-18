@@ -249,8 +249,8 @@ const LayerConfigPanel = () => {
 
     return (
         <Tabs id="property-tabs" onChange={setSelectedPropertyTab} selectedTabId={selectedPropertyTab} animate={false} className="normal-tabs">
-            <Tab id="layer" disabled={layerPanel == null} panel={layerPanel}><div className="title">Layer <Tag minimal={true}>{selectedLayerIds.length}</Tag></div></Tab>
-            <Tab id="animation" disabled={animationPanel == null} panel={animationPanel}><div className="title">Animation <Tag minimal={true}>{selectedAnimations.length}</Tag></div></Tab>
+            <Tab id="layer" disabled={layerPanel == null} panel={layerPanel}><div className="title">Layer <Tag minimal={true} round={true}>{selectedLayerIds.length}</Tag></div></Tab>
+            <Tab id="animation" disabled={animationPanel == null} panel={animationPanel}><div className="title">Animation <Tag minimal={true} round={true}>{selectedAnimations.length}</Tag></div></Tab>
         </Tabs>
     );
 
