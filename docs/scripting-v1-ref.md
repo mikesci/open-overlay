@@ -65,17 +65,19 @@ Selects any number of layers with properties matching any of the specified filte
 object is an implementation detail and subject to change, so it should not be relied upon. However, the properties
 specified [above](#layer-properties) are suitable for filtering.
 ```javascript
-// Selects the layer with ID 1. 
-const layerOne = layer({ id: 1 });
+// Selects the layer named "Text 1".
+const textLayer = layer("Text 1");
+
+// Selects the layer with ID 1.
+const layerOne = layer(1);
 
 // Selects all layers in the overlay.
 const allLayers = layer({});
 
-// Selects the layer named "Text 1".
-const textLayer = layer({ elementName: "Text 1" });
+// Selects all text elements
+const allTextLayersLayers = layer({ elementName: "text" });
 ```
-In the second example above, multiple layers are selected, but technically only the first match is returned.
-However, internally every other layer matching the filters are stored in the returned object. This means that:
+Internally every layer matching the filters is stored in the returned object. This means that:
 * `style` and `config` properties cannot be accessed directly. Use the methods in `Layer`.
 * Objects returned from the `layer` function are not suitable for long-term reference. `layer` should be called
 every time you want to modify a layer.
@@ -85,20 +87,12 @@ every time you want to modify a layer.
 Allows multiple updates to the overlay to be executed at once. Normally, every call to `style` or `config` triggers
 its own update. If many updates are to be applied together, this may be expensive so `bulkUpdate` should be used.
 ```javascript
-// Moves all text layers which say "test" to the upper left corner of the screen, then moves a rectangle. 
+// Moves all text layers to the upper left corner of the screen, then moves a rectangle. 
 bulkUpdate(() => {
-    layer({ config: { text: "test" } }).style({ top: 0, left: 0 });
-    layer({ elementName: "Rectangle 1" }).style({ top: 25, left: 25 });
+    layer({ elementName: "text" }).style({ top: 0, left: 0 });
+    layer("Rectangle 1").style({ top: "25px", left: "25px" });
 });
 ```
-
-# `setTimeout(callback: () => void, delay: number): void`
-Analogous to the `setTimeout` function from normal JavaScript. Executes a callback after `delay` milliseconds
-have elapsed.
-
-# `setInterval(callback: () => void, period: number): void`
-Analogous to the `setInterval` function from normal JavaScript. Executes a callback repeatedly, every `period`
-milliseconds.
 
 <h2>Layer Method Details</h2>
 

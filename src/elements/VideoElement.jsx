@@ -169,8 +169,6 @@ const VideoElement = {
                 });
             }
         }, []);
-
-        console.log({ src, url, playing, loop, volume });
         
         return (
             <video ref={vidRef} onLoadedData={onLoadedData} loop={loop} style={{ height: "100%", width: "100%", objectFit: "inherit", objectPosition: "inherit" }}>
