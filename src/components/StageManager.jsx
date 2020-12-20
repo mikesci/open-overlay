@@ -107,6 +107,10 @@ const StageManager = (props) => {
         dispatch("SetLayerDomElement", { id: layer.id, domElement: null });
     }, []);
 
+    const onScriptingContextCreated = useCallback((scriptingContext) => {
+        dispatch("SetScriptingContext", scriptingContext);
+    }, []);
+
     // get the memoized the stage style
     const stageStyle = useMemo(() => ({
         width: stageTransform.width + "px",
@@ -124,7 +128,8 @@ const StageManager = (props) => {
                     animationContext={animationContext}
                     executeScripts={isExecutingScript}
                     onLayerCreated={onLayerCreated}
-                    onLayerRemoved={onLayerRemoved} />
+                    onLayerRemoved={onLayerRemoved}
+                    onScriptingContextCreated={onScriptingContextCreated} />
             </div>
             {stageTool ? <stageTool.component /> : null}
         </div>

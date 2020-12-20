@@ -272,7 +272,7 @@ const Reducers = {
             return { layerDomElements: ps.layerDomElements.filter(r => r.id != id) };
         else
             return { layerDomElements: [...ps.layerDomElements, { id, domElement }] };
-    },
+    },    
     OpenEditor: (ps, { type, params }) => {
         let newState = {};
         const editorType = Editors[type];
@@ -282,6 +282,7 @@ const Reducers = {
         if (index == -1)
             newState.editors = [...ps.editors, { key, type, params }];
         newState.selectedEditorTab = key;
+        newState.preferences = {...ps.preferences, bottomPanelMinimized: false };
         return newState;
     },
     CloseEditor: (ps, key) => {
@@ -307,7 +308,10 @@ const Reducers = {
         return newState;
     },
     SelectEditor: (ps, selectedEditorTab) => {
-        return { selectedEditorTab };
+        return {
+            selectedEditorTab,
+            preferences: {...ps.preferences, bottomPanelMinimized: false }
+        };
     },
     SelectPropertyTab: (ps, selectedPropertyTab) => {
         return { selectedPropertyTab };
@@ -465,6 +469,9 @@ const Reducers = {
         else
             return { isExecutingScript: true };
     },
+    SetScriptingContext: (ps, scriptingContext) => {
+        return { scriptingContext };
+    },
     UpdateScriptSettings: (ps, partialSettings) => {
         return updateOverlay(ps, overlay => {
             const settings = {...overlay.settings, ...partialSettings};
@@ -491,8 +498,8 @@ const Reducers = {
     
                 // get default config values from the manifest parameters
                 for (const parameter of element.manifest.parameters) {
-                    if (config[parameter.name]) { continue; }
-                    if (!parameter.defaultValue) { continue; }
+                    if (config[parameter.name] !== undefined) { continue; }
+                    if (parameter.defaultValue === undefined) { continue; }
                     config[parameter.name] = parameter.defaultValue;
                 }
     
@@ -505,6 +512,8 @@ const Reducers = {
                     effects: requestedLayer.effects || (element.manifest.defaultEffects ? { ...element.manifest.defaultEffects } : null),
                     style: { ...element.manifest.defaultStyle, ...requestedLayer.style }
                 };
+
+                console.log({ layer });
     
                 if (requestedLayer.animations)
                     layer.animations = requestedLayer.animations;
@@ -1193,9 +1202,10 @@ const INITIAL_STATE = {
     selectedLayerIds: [],
     selectedAnimations: [],
     layerDomElements: [],
+    scriptingContext: null,
 
     // ui
-    preferences: { leftPanelWidth: 380, bottomPanelSize: 300 },
+    preferences: { leftPanelWidth: 380, bottomPanelSize: 300, consolePanelSize: 500, bottomPanelMinimized: false },
     editors: [],
     selectedPropertyTab: null,
     selectedEditorTab: null,

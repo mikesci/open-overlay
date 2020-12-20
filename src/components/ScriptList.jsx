@@ -79,7 +79,6 @@ const ScriptList = () => {
     return (
         <div className="main-list script-list">
             <div className="actions">
-                <Button text="Console" small={true} minimal={true} icon="console" onClick={() => dispatch("OpenEditor", { type: "console" })} />
                 <AnchorButton text="Reference" small={true} minimal={true} icon="manual" target="openoverlay-reference" href="https://github.com/mikesci/open-overlay/docs/SCRIPTING-v1.md" />
                 <div className="right">
                     <Popover position="right-top" isOpen={newPopoverOpen} onInteraction={setNewPopoverOpen}>

@@ -23,14 +23,15 @@
 
 .layout-changer .center-wrapper { display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden; }
 .layout-changer .center-wrapper .stage-wrapper { flex: 1 1 auto; flex-direction:column; position: relative; }
-.layout-changer .center-wrapper .bottom-panel-wrapper { height: 100%; }
+.layout-changer .center-wrapper .bottom-panel-wrapper { height: 100%; display: flex; }
+.layout-changer .center-wrapper .bottom-panel-wrapper .editor-tabs { flex: 1 1 auto; }
+.layout-changer .center-wrapper .bottom-panel-wrapper .console-wrapper { height: 100%; }
 
 .layout-changer .stage-wrapper .toolbar-wrapper { margin-top: -30px; width: 100%; display: flex; justify-content: center; }
 .layout-changer .stage-wrapper .toolbar-wrapper > * { margin-top: 30px; z-index: 2; height: 30px; }
 
-.layout-changer .animations-toggle { position: relative; overflow: visible; }
-.layout-changer .animations-toggle .inner { position: absolute; left: 0; bottom: 0; width: 100%; display: flex; justify-content: center; z-index:10; height: 0; }
-.layout-changer .animations-toggle .inner .bp3-button { margin-top: -2.5em; }
+.layout-changer .btn-minimize-bottom { margin-right: 0; height: 100%; }
+.layout-changer .btn-minimize-bottom svg { margin-top: -2px; }
 
 /* disable focus outlines */
 .layout-changer *:focus { outline: none; }

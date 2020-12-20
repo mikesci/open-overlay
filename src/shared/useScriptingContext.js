@@ -1,6 +1,6 @@
 import { cloneDeep } from "lodash";
-import React, { useEffect, useState, useMemo, useRef } from "react";
-import { findLayerIndexes, propsOrCallbackToFunction } from "./utilities";
+import { useEffect, useState } from "react";
+import { findLayerIndexes } from "./utilities";
 
 const compileScript = (scriptingContextId, scriptName, scripts, scriptUrls) => {
     const scriptText = scripts[scriptName];
@@ -18,13 +18,13 @@ const compileScript = (scriptingContextId, scriptName, scripts, scriptUrls) => {
     });
 
     // now that we have a fully replaced script, create the blob and return a url
-    const blob = new Blob([`//# sourceURL=openoverlay/${scriptName}\nconst { settings, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
+    const blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\nconst { console, settings, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
     const scriptUrl = URL.createObjectURL(blob);
     scriptUrls[scriptName] = scriptUrl;
     return scriptUrl;
 };
 
-const useScriptingContext = (overlay, execute) => {
+const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
     const [scriptState, setScriptState] = useState(null);
 
     useEffect(() => {
@@ -58,8 +58,19 @@ const useScriptingContext = (overlay, execute) => {
                 setScriptState({...workingScriptState});
         };
 
-        window._scriptingContexts[scriptId] = {
+        const log = (...args) => {
+            if (scriptingContext.onLog)
+                scriptingContext.onLog(...args);
+            console.log(...args);
+        };
+
+        const scriptingContext = {
             settings: overlay.settings || {},
+            console: {
+                ...console,
+                // intercept console.log
+                log
+            },
             on: (eventName, callback) => {
                 let callbackList = workingScriptState.eventHandlers[eventName];
                 if (!callbackList)
@@ -76,7 +87,7 @@ const useScriptingContext = (overlay, execute) => {
                 commitWorkingState();
             },
             addLayer: (layerObjOrElementName, config, style) => {
-                // if the user provides an object, take it as a complete object
+                // if the user provides an object, take it as a complete layer
                 let layer;
                 if (typeof layerObjOrElementName === "object") {
                     layer = layerObjOrElementName;
@@ -204,6 +215,14 @@ const useScriptingContext = (overlay, execute) => {
             }
         };
 
+        if (onScriptingContextCreated)
+            onScriptingContextCreated(scriptingContext);
+
+        window._scriptingContexts[scriptId] = scriptingContext;
+
+        // note: this doesn't work as intended yet
+        //log("Created scripting context.");
+
         // compile main.js
         let compiledMainJs;
         try {
@@ -218,7 +237,7 @@ const useScriptingContext = (overlay, execute) => {
             // webpackIgnore prevents webpack from unrolling this
             import(/* webpackIgnore: true */compiledMainJs).catch(err => {
                 Object.keys(err).map(console.log);
-                console.log(`Error executing script:\n${err.stack}`);
+                console.log(`Error executing script:\n${err.stack}`, { t: (typeof err), lineNumber: err.lineNumber });
             });
         }
 

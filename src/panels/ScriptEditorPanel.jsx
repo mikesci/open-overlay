@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from "react";
-import { Button } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -9,7 +8,9 @@ import { HotkeySets, useHotkeys } from "../shared/useHotkeys";
 import "./ScriptEditorPanel.css";
 
 const ScriptEditorPanel = ({ editorKey, scriptKey }) => {
-    const [[script], dispatch] = useOverlayEditorContext(state => (state.overlay.scripts ? state.overlay.scripts[scriptKey] : null));
+    const [[script], dispatch] = useOverlayEditorContext(
+        state => (state.overlay.scripts ? state.overlay.scripts[scriptKey] : null),
+    );
     //const [scriptText, setScriptText] = useState("");
 
     const onEditorChanged = useCallback((content) => {
@@ -36,14 +37,16 @@ const ScriptEditorPanel = ({ editorKey, scriptKey }) => {
         return null;
 
     return (
-        <div className="script-wrapper">
-            <Editor value={script}
-                onValueChange={onEditorChanged}
-                onKeyDown={onKeyDown}
-                highlight={code => highlight(code, languages.javascript)}
-                padding={5}
-                className="editor-wrapper"
-            />
+        <div className="script-editor-wrapper">
+            <div className="script-wrapper">
+                <Editor value={script}
+                    onValueChange={onEditorChanged}
+                    onKeyDown={onKeyDown}
+                    highlight={code => highlight(code, languages.javascript)}
+                    padding={5}
+                    className="editor-wrapper"
+                />
+            </div>
         </div>
     );
   }

@@ -1,5 +1,4 @@
 import AnimationPanel from "./AnimationPanel.jsx";
-import ConsoleEditorPanel from "./ConsoleEditorPanel.jsx";
 import ScriptEditorPanel from "./ScriptEditorPanel.jsx";
 
 export default {
@@ -8,12 +7,6 @@ export default {
         icon: () => "walk",
         title: () => "Animation",
         component: AnimationPanel
-    },
-    "console": {
-        key: () => "console",
-        icon: () => "console",
-        title: () => "Console",
-        component: ConsoleEditorPanel
     },
     "script": {
         key: (params) => params.scriptKey,

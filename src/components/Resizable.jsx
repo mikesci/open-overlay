@@ -1,18 +1,20 @@
 import React, { useCallback, useState } from "react";
 import "./Resizable.css";
 
-const Resizable = ({ edge, defaultSize, minimum, maximum, onSizeChanged, ...props }) => {
+const Resizable = ({ edge, defaultSize, canResize = true, minimum, maximum, onSizeChanged, ...props }) => {
 
     const [sizeOverride, setSizeOverride] = useState();
     const isVertical = (edge == "top" || edge == "bottom");
 
     const onMouseDown = useCallback((evt) => {
+        if (!canResize)
+            return;
         const origin = (isVertical ? evt.clientY : evt.clientX);
         let lastSize = defaultSize;
 
         const onMouseMove = (evt) => {
             const newSize = defaultSize + (isVertical ? (edge == "top" ? origin - evt.clientY : evt.clientY - origin) : (edge == "right" ? evt.clientX - origin : origin - evt.clientX));
-            if (newSize > minimum && newSize <= maximum) {
+            if ((minimum === undefined || newSize > minimum) && (maximum === undefined || newSize <= maximum)) {
                 lastSize = newSize;
                 setSizeOverride(newSize);
             }
@@ -20,15 +22,16 @@ const Resizable = ({ edge, defaultSize, minimum, maximum, onSizeChanged, ...prop
 
         const onMouseUp = (evt) => {
             onSizeChanged(lastSize);
+            setSizeOverride(null);
             window.removeEventListener("mousemove", onMouseMove);
             window.removeEventListener("mouseup", onMouseUp);
         };
 
         window.addEventListener("mousemove", onMouseMove);
         window.addEventListener("mouseup", onMouseUp);
-    }, [defaultSize]);
+    }, [defaultSize, canResize]);
 
-    const resizeHandle = <div className={"resize-bar " + edge}><div className="inner" onMouseDown={onMouseDown} /></div>;
+    const resizeHandle = <div className={"resize-bar " + edge + (canResize ? " can-resize" : "")}><div className="inner" onMouseDown={onMouseDown} /></div>;
 
     const size = sizeOverride || defaultSize;
 

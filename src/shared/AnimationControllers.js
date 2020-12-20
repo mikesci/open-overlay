@@ -5,15 +5,6 @@ class _AnimationControllerBase {
     _offset;
     _isPlaying;
 
-    /*
-    phases = {
-        entry: [
-            { offset: 0, styles: {...} },
-            { offset: 0.5, easing: "ease-out", styles: {...} }
-            { offset: 1, styles: {...} }
-        ]
-    }
-    */
     register(element, phases) {
         const item = { element, phases };
         const index = this._registered.findIndex(r => r.element == element);

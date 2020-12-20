@@ -14,6 +14,7 @@ import ScriptList from "./ScriptList.jsx";
 import ScriptSettingsPanel from "./ScriptSettingsPanel.jsx";
 import Editors from "../panels/Editors.js";
 import "./LayoutChanger.css";
+import ConsolePanel from "../panels/ConsolePanel.jsx";
 
 const LayoutChanger = ({  }) => {
     const [[settingsJson, preferences, editors, selectedEditorTab], dispatch] = useOverlayEditorContext(state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedEditorTab);
@@ -30,13 +31,20 @@ const LayoutChanger = ({  }) => {
 
     const onSavePreference = useCallback((preferences) => { dispatch("SavePreferences", preferences); }, []);
 
-    let bottomPanel;
+    let editorTabsPanel;
+    let consolePanel;
     if (editors.length > 0) {
-        bottomPanel = (
-            <Tabs id="editor-tabs" onChange={key => dispatch("SelectEditor", key)} selectedTabId={selectedEditorTab} animate={false} className="normal-tabs">
+        let selectedEditorIsScript;
+        editorTabsPanel = (
+            <Tabs id="editor-tabs" onChange={key => dispatch("SelectEditor", key)} selectedTabId={selectedEditorTab} animate={false} className="editor-tabs normal-tabs">
+                <Button className="btn-minimize-bottom" icon={preferences.bottomPanelMinimized ? "double-chevron-up" : "double-chevron-down"} minimal={true} onClick={() => onSavePreference({ bottomPanelMinimized: !preferences.bottomPanelMinimized })} />
                 {editors.map(editor => {
                     const editorType = Editors[editor.type];
                     const key = editorType.key(editor.params);
+
+                    if (selectedEditorTab == key && editor.type == "script")
+                        selectedEditorIsScript = true;
+
                     return (
                         <Tab key={key} id={key} panel={<editorType.component editorKey={key} {...editor.params} />}>
                             <Icon icon={editorType.icon(editor.params)} />
@@ -47,6 +55,14 @@ const LayoutChanger = ({  }) => {
                 })}
             </Tabs>
         );
+
+        if (selectedEditorIsScript) {
+            consolePanel = (
+                <Resizable edge="left" defaultSize={preferences.consolePanelSize} minimum={100} onSizeChanged={size => onSavePreference({ consolePanelSize: size })} className="console-wrapper">
+                    <ConsolePanel />
+                </Resizable>
+            );
+        }
     }
 
     let settingsTab;
@@ -89,9 +105,10 @@ const LayoutChanger = ({  }) => {
                     <div className="toolbar-wrapper"><MainToolbar /></div>
                     <StageManager />
                 </div>
-                {bottomPanel ? (
-                    <Resizable edge="top" defaultSize={preferences.bottomPanelSize} minimum={100} maximum={500} onSizeChanged={size => onSavePreference({ bottomPanelSize: size })} className="bottom-panel-wrapper panel-bg">
-                        {bottomPanel}
+                {editorTabsPanel ? (
+                    <Resizable edge="top" defaultSize={preferences.bottomPanelMinimized ? 29 : preferences.bottomPanelSize} canResize={!preferences.bottomPanelMinimized} minimum={100} maximum={500} onSizeChanged={size => onSavePreference({ bottomPanelSize: size })} className="bottom-panel-wrapper panel-bg">
+                        {editorTabsPanel}
+                        {consolePanel}
                     </Resizable>
                 ) : null}
             </div>

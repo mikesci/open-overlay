@@ -1,7 +1,11 @@
 .resizable { flex-shrink: 0; flex-grow: 0; }
 .resize-bar {  position: relative; overflow: visible; }
 .resize-bar .inner { position: absolute; top: 0; left: 0; height: 100%; border:0px solid #44505A; z-index: 11; }
-.resize-bar.top .inner { height: 4px; margin-top: -4px;cursor: ns-resize; border-bottom-width: 1px; width: 100%; }
-.resize-bar.bottom .inner { height: 4px; cursor: ns-resize; border-top-width: 1px; width: 100%; }
-.resize-bar.left .inner { width: 4px; margin-left: -4px; cursor: ew-resize; border-right-width: 1px; }
-.resize-bar.right .inner { width: 4px; cursor: ew-resize; border-left-width: 1px; }
+.resize-bar.top .inner { height: 4px; margin-top: -4px; border-bottom-width: 1px; width: 100%; }
+.resize-bar.bottom .inner { height: 4px; border-top-width: 1px; width: 100%; }
+.resize-bar.left .inner { width: 4px; margin-left: -4px; border-right-width: 1px; }
+.resize-bar.right .inner { width: 4px; border-left-width: 1px; }
+.resize-bar.top.can-resize .inner { cursor: ns-resize; }
+.resize-bar.bottom.can-resize .inner { cursor: ns-resize; }
+.resize-bar.left.can-resize .inner { cursor: ew-resize; }
+.resize-bar.right.can-resize .inner { cursor: ew-resize; }

@@ -1,0 +1,4 @@
+.console-panel { height: 100%; width: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.console-panel .console-header { height: 32px; display: flex; flex-direction: row; align-items: center; background: #ffffff20; }
+.console-panel .console-header .title { padding: 5px; }
+.console-panel .console-window { flex: 1 1 auto; overflow: auto; background: #000000; font-family: monospace; padding: 3px; font-size: 13px; color: #ebebeb; }

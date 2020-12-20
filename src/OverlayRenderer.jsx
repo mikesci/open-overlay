@@ -141,7 +141,8 @@ const OverlayRenderer = ({
     ElementRenderer,                // the component that renders elements.  can be overridden for "wireframe mode". leave undefined to render normally.
     executeScripts,                 // whether to execute scripts or not.  leave undefined to execute scripts automatically when shown.
     onLayerCreated,                 // occurs when the layer's DOM has been initially rendered
-    onLayerRemoved                  // occurs when the layer has been removed from the DOM
+    onLayerRemoved,                 // occurs when the layer has been removed from the DOM
+    onScriptingContextCreated       // occurs when a script executes and a context is created
     }) => {
 
     // use default renderer if not supplied
@@ -155,11 +156,11 @@ const OverlayRenderer = ({
     const overlayId = overlay.id || "default";
     const overlayRef = useRef();
 
-    const scriptingContext = useScriptingContext(overlay, executeScripts);
+    const scriptState = useScriptingContext(overlay, onScriptingContextCreated, executeScripts);
 
     // if we have a scriptState, then we're executing a script
     // and we should use the overlay in that instead of the props overlay
-    const sourceLayers = (scriptingContext ? scriptingContext.layers : overlay.layers) || [];
+    const sourceLayers = (scriptState ? scriptState.layers : overlay.layers) || [];
 
     const layers = sourceLayers.map((layer, index) => (
         <LayerWrapper

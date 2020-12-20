@@ -245,7 +245,7 @@ const VideoElement = {
             }
         }
     },
-    YoutubeVideoComponent: ({ videoId, url, playing = true, loop = false, volume = 100, assets }) => {
+    YoutubeVideoComponent: ({ videoId, url, playing = true, loop = false, volume = 100 }) => {
         const targetRef = useRef();
         const [player, setPlayer] = useState();
         const [playerState, setPlayerState] = useState();
@@ -308,7 +308,7 @@ const VideoElement = {
             </div>
         );
     },
-    HTMLVideoComponent: ({ src, url, playing = true, loop = false, volume = 100, assets }) => {
+    HTMLVideoComponent: ({ src, url, playing = true, loop = false, volume = 100 }) => {
         const vidRef = useRef();
     
         useEffect(() => {
@@ -336,6 +336,8 @@ const VideoElement = {
                 });
             }
         }, []);
+
+        console.log({ src, url, playing, loop, volume });
         
         return (
             <video ref={vidRef} onLoadedData={onLoadedData} loop={loop} style={{ height: "100%", width: "100%", objectFit: "inherit", objectPosition: "inherit" }}>

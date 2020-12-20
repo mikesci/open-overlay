@@ -1,7 +1,13 @@
-.script-wrapper { overflow: auto; height: 100%; width: 100%; }
-.script-wrapper .editor-wrapper { float: left; font-family: Consolas, monospace; font-size: 12px; min-width: 100%; min-height: 100%; }
-.script-wrapper .editor-wrapper pre,
-.script-wrapper .editor-wrapper textarea { white-space: pre !important;}
+.script-editor-wrapper { height: 100%; width: 100%; display: flex; flex-direction: row; }
+.script-editor-wrapper .script-wrapper { overflow: auto; height: 100%; width: 100%; }
+.script-editor-wrapper .script-wrapper .editor-wrapper { float: left; font-family: Consolas, monospace; font-size: 12px; min-width: 100%; min-height: 100%; }
+.script-editor-wrapper .script-wrapper .editor-wrapper pre,
+.script-editor-wrapper .script-wrapper .editor-wrapper textarea { white-space: pre !important;}
+
+.script-editor-wrapper .console-wrapper { height: 100%; width: 100%; overflow: hidden; display: flex; flex-direction: column; }
+.script-editor-wrapper .console-wrapper .console-header { height: 30px; display: flex; flex-direction: row; align-items: center; background: #ffffff20; }
+.script-editor-wrapper .console-wrapper .console-header .title { padding: 5px; }
+.script-editor-wrapper .console-wrapper .console-window { flex: 1 1 auto; overflow: auto; background: #000000; font-family: monospace; padding: 3px; font-size: 13px; }
 
 /*
 .script-wrapper .button-bar { margin: 0 5px; display: flex; flex-direction: row; justify-content: space-between; }
