@@ -185,3 +185,5 @@ const VideoElement = {
             return <VideoElement.HTMLVideoComponent src={getSrcFromAssetUrl(props.url, props.assets)} {...props} />
     }
 }
+
+export default VideoElement;

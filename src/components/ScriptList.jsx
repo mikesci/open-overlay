@@ -70,7 +70,7 @@ const ScriptList = () => {
     return (
         <div className="main-list script-list">
             <div className="actions">
-                <AnchorButton text="Reference" small={true} minimal={true} icon="manual" target="openoverlay-reference" href="https://github.com/mikesci/open-overlay/docs/#/scripting-v1" />
+                <AnchorButton text="Reference" small={true} minimal={true} icon="manual" target="openoverlay-reference" href="docs/" />
                 <div className="right">
                     <Popover position="right-top" isOpen={newPopoverOpen} onInteraction={setNewPopoverOpen}>
                         <Button small={true} icon="plus" title="New Script" intent="primary" rightIcon="caret-right" />
