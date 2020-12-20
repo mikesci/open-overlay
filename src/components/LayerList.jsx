@@ -85,7 +85,7 @@ const Layer = ({ layer, element, isSelected, dispatch }) => {
 };
 
 const LayerList = () => {
-    const [[elements, layers, selectedLayerIds], dispatch] = useOverlayEditorContext(state => state.elements, state => state.overlay.layers, state => state.selectedLayerIds);
+    const [[elements, layers, selectedLayerIds, editors], dispatch] = useOverlayEditorContext(state => state.elements, state => state.overlay.layers, state => state.selectedLayerIds, state => state.editors);
 
     const onCreateLayer = useCallback(elementName => {
         console.log({ createlayer: elementName });
@@ -99,7 +99,7 @@ const LayerList = () => {
    return (
     <div className="main-list layer-list">
         <div className="actions">
-            <Button text="Animation" small={true} minimal={true} icon="walk" onClick={() => dispatch("OpenEditor", { type: "animation" })} />
+            <Button text="Animation" small={true} minimal={true} icon="walk" active={editors.some(panel => panel.key === "animation")} onClick={() => dispatch("ToggleEditor", { type: "animation" })} />
             <div className="right">
                 <Popover position="right-top">
                     <Button small={true} title="New Layer" icon="plus" intent="primary" rightIcon="caret-right" />

@@ -272,7 +272,33 @@ const Reducers = {
             return { layerDomElements: ps.layerDomElements.filter(r => r.id != id) };
         else
             return { layerDomElements: [...ps.layerDomElements, { id, domElement }] };
-    },    
+    },
+    ToggleEditor: (ps, { type, params }) => {
+        let newState = {};
+        const editorType = Editors[type];
+        const key = editorType.key(params);
+
+        const index = ps.editors.findIndex(r => r.key == key);
+        if (index == -1) {
+            newState.editors = [...ps.editors, {key, type, params}];
+            newState.selectedEditorTab = key;
+        }
+        else {
+            newState.editors = [...ps.editors]
+            newState.editors.splice(index, 1);
+
+            if (ps.selectedEditorTab == key) {
+                if (newState.editors.length > index)
+                    ps.selectedEditorTab = newState.editors[index].key;
+                else if (index > 0)
+                    ps.selectedEditorTab = newState.editors[index - 1].key;
+                else
+                    ps.selectedEditorTab = null;
+            }
+        }
+
+        return newState;
+    },
     OpenEditor: (ps, { type, params }) => {
         let newState = {};
         const editorType = Editors[type];
