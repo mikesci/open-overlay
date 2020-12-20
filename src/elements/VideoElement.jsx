@@ -1,5 +1,6 @@
 import styleCategories from "./styleCategories.js";
 import { getSrcFromAssetUrl, isAssetUrl } from "./elementUtilities.js";
+import { useCallback, useEffect, useRef } from "react";
 
 const YOUTUBE_URL_REGEX = /.*(?:www\.youtube\.com\/(?:(?:watch\?v=)|(?:embed\/))|(?:youtu\.be\/))([a-z0-9]+)(?:\?(?:(?:t)|(?:start))=(\d+))?/i;
 const DEFAULT_DIMENSION_TIMEOUT_MS = 5000;
