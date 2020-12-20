@@ -723,7 +723,7 @@ const Reducers = {
         // no need to sort since we add these in indexed order
 
         // find the top-most index
-        const topMostIndex = indexedLayers.map(layer => layer.index).reduce((max, curr) => Math.min(max, curr), 10000);
+        let topMostIndex = indexedLayers.map(layer => layer.index).reduce((max, curr) => Math.min(max, curr), 10000);
 
         // if any layer is already at the top, immediately return and do nothing
         if (topMostIndex == 0) { return; }
@@ -752,7 +752,7 @@ const Reducers = {
         });
 
         // find the bottom-most index
-        const bottomMostIndex = indexedLayers.map(layer => layer.index).reduce((max, curr) => Math.max(max, curr), 0);
+        let bottomMostIndex = indexedLayers.map(layer => layer.index).reduce((max, curr) => Math.max(max, curr), 0);
 
         // if any layer is already at the bottom, immediately return and do nothing
         if (bottomMostIndex == ps.overlay.layers.length - 1) { return; }

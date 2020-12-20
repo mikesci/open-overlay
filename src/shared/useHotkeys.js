@@ -19,6 +19,7 @@ const HotkeySets = {
         { key: "Tab", shift: true, action: (dispatch) => dispatch("SelectNextLayer", true) },
         { key: "Delete", action: (dispatch) => dispatch("DeleteSelection") },
         { key: "c", ctrl: true, action: (dispatch) => dispatch("CopySelectedLayersToClipboard") },
+        { key: "Escape", action: (dispatch) => dispatch("SelectLayers", [])}
     ],
     MOVE_AND_RESIZE: [
         { key: "c", ctrl: false, action: (dispatch, context) => dispatch("CenterSelectedLayers", context.current) },
