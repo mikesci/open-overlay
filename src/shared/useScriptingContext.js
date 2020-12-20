@@ -2,6 +2,8 @@ import { cloneDeep } from "lodash";
 import { useEffect, useState } from "react";
 import { findLayerIndexes } from "./utilities";
 
+const MAX_LOG_ENTRIES = 200;
+
 const compileScript = (scriptingContextId, scriptName, scripts, scriptUrls) => {
     const scriptText = scripts[scriptName];
 
@@ -24,7 +26,7 @@ const compileScript = (scriptingContextId, scriptName, scripts, scriptUrls) => {
     return scriptUrl;
 };
 
-const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
+const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execute) => {
     const [scriptState, setScriptState] = useState(null);
 
     useEffect(() => {
@@ -50,18 +52,31 @@ const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
             timeouts: [],
             intervals: [],
             scriptUrls: {},
-            isBulkUpdating: false
+            isBulkUpdating: false,
+            logs: []
         };
 
         const commitWorkingState = () => {
-            if (!workingScriptState.isBulkUpdating)
-                setScriptState({...workingScriptState});
+            if (workingScriptState.isBulkUpdating)
+                return;
+
+            setScriptState({...workingScriptState});
+            if (onScriptStateChanged)
+                onScriptStateChanged(workingScriptState);
         };
 
         const log = (...args) => {
-            if (scriptingContext.onLog)
-                scriptingContext.onLog(...args);
+            // pass through console logging
             console.log(...args);
+
+            // and append to logs, and trim to max length
+            workingScriptState.logs.push(args);
+
+            if (workingScriptState.logs.length > MAX_LOG_ENTRIES)
+                workingScriptState.logs.splice(0, 1);
+
+            if (onScriptStateChanged)
+                onScriptStateChanged(workingScriptState);
         };
 
         const scriptingContext = {
@@ -101,7 +116,7 @@ const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
                 }
 
                 layer.id = ++workingScriptState.maxLayerId;
-                workingScriptState.layers.push(layer);
+                workingScriptState.layers.splice(0, 0, layer);
                 commitWorkingState();
                 return layer.id;
             },
@@ -196,6 +211,16 @@ const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
                         
                         return indexes.map(index => cloneDeep(workingScriptState.layers[index]));
                     },
+                    dom: () => {
+                        if (!overlayDomRef.current)
+                            return null;
+                        
+                        if (indexes.length == 0)
+                            return null;
+                        
+                        const id = workingScriptState.layers[indexes[0]].id;
+                        return overlayDomRef.current.querySelector(`[data-id='${id}']`);
+                    }
                 };
                 return stateObj;
             },
@@ -215,13 +240,11 @@ const useScriptingContext = (overlay, onScriptingContextCreated, execute) => {
             }
         };
 
-        if (onScriptingContextCreated)
-            onScriptingContextCreated(scriptingContext);
+        // call the initial onScriptStateChanged callback, if we have one
+        if (onScriptStateChanged)
+            onScriptStateChanged(workingScriptState);
 
         window._scriptingContexts[scriptId] = scriptingContext;
-
-        // note: this doesn't work as intended yet
-        //log("Created scripting context.");
 
         // compile main.js
         let compiledMainJs;

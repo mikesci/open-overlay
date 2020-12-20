@@ -1,12 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { AnchorButton, Button, ButtonGroup, Icon, Menu, MenuDivider, MenuItem, Popover } from "@blueprintjs/core";
+import { AnchorButton, Button, Icon, Menu, MenuDivider, MenuItem, Popover } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
-import "./ScriptList.css";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import ReorderableList from "./ReorderableList.jsx";
 import LabelEditor from "./LabelEditor.jsx";
+import "./ScriptList.css";
 
-const ScriptListItem = ({ scriptKey, script, isExecutingScript, dispatch }) => {
+const ScriptListItem = ({ scriptKey, dispatch }) => {
     const onClick = useCallback(() => {
         dispatch("OpenEditor", { type: "script", params: { scriptKey } });
     }, []);
@@ -20,18 +20,10 @@ const ScriptListItem = ({ scriptKey, script, isExecutingScript, dispatch }) => {
     }, []);
 
     let icon;
-    let executeButton;
     switch (scriptKey) {
-        case "main.js":
-            icon = "document-open";
-            executeButton = <Button icon={isExecutingScript ? "pause" : "play"} minimal={true} intent={isExecutingScript ? "warning" : "success"} title="Execute (Ctrl+E)" onClick={() => dispatch("ExecuteScript")} />;
-            break;
-        case "settings.json":
-            icon = "cog";
-            break;
-        default:
-            icon = "document";
-            break;
+        case "main.js": icon = "document-open"; break;
+        case "settings.json": icon = "cog"; break;
+        default: icon = "document"; break;
     }
     
     return (
@@ -40,14 +32,13 @@ const ScriptListItem = ({ scriptKey, script, isExecutingScript, dispatch }) => {
             <div className="label" onClick={onClick}>
                 <LabelEditor value={scriptKey} onChange={onScriptKeyChanged} selectAllOnFocus={true} />
             </div>
-            {executeButton}
             <Button icon="trash" minimal={true} title="Delete" onClick={onDelete} />
         </div>
     );
 };
 
 const ScriptList = () => {
-    const [[scripts, isExecutingScript], dispatch] = useOverlayEditorContext(state => state.overlay.scripts, state => state.isExecutingScript);
+    const [[scripts], dispatch] = useOverlayEditorContext(state => state.overlay.scripts);
     const [newPopoverOpen, setNewPopoverOpen] = useState(false);
 
     const onReorderItem = useCallback((scriptKey, newIndex) => {
@@ -74,7 +65,7 @@ const ScriptList = () => {
         newPopoverItems.push(<MenuItem key="new" icon="document" text="New Script" onClick={() => dispatch("CreateScript")} />);
     }
 
-    const scriptsEntries = (scripts ? Object.entries(scripts) : []);
+    const scriptsEntries = (scripts ? Object.keys(scripts) : []);
 
     return (
         <div className="main-list script-list">
@@ -91,8 +82,8 @@ const ScriptList = () => {
             </div>
             <div className="list-items">
                 <ReorderableList itemType={DragAndDropTypes.SCRIPT} onReorderItem={onReorderItem}>
-                    {scriptsEntries.map(([scriptKey, script]) => (
-                        <ScriptListItem key={scriptKey} scriptKey={scriptKey} script={script} isExecutingScript={isExecutingScript} dispatch={dispatch} />
+                    {scriptsEntries.map(scriptKey => (
+                        <ScriptListItem key={scriptKey} scriptKey={scriptKey} dispatch={dispatch} />
                     ))}
                 </ReorderableList>
             </div>

@@ -4,22 +4,12 @@ import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
 import "./ConsolePanel.css";
 
 const ConsolePanel = () => {
-    const [[isExecutingScript, scriptingContext], dispatch] = useOverlayEditorContext(
+    const [[isExecutingScript, scriptState], dispatch] = useOverlayEditorContext(
         state => state.isExecutingScript,
-        state => state.scriptingContext
+        state => state.scriptState
     );
 
-    const [logItems, setLogItems] = useState([]);
-
-    useMemo(() => {
-        if (scriptingContext) {
-            // enroll the console in the logging functions
-            console.log("set scripting context onLog");
-            scriptingContext.onLog = (...args) => {
-                setLogItems(prev => [...prev, args]);
-            };
-        }
-    }, [scriptingContext]);
+    const logs = (scriptState && scriptState.logs ? scriptState.logs : []);
 
     return (
         <div className="console-panel">
@@ -28,11 +18,11 @@ const ConsolePanel = () => {
                 <Button icon={isExecutingScript ? "pause" : "play"} intent={isExecutingScript ? "warning": "success"} title="Execute (Ctrl+e)" minimal={true} onClick={() => dispatch("ExecuteScript")} />
             </div>
             <div className="console-window">
-                {logItems.map(logItem => (
-                    <div className="log-row">
-                    {logItem.map(entry => (
-                        entry.toString()
-                    ))}
+                {logs.map((logItem, index) => (
+                    <div key={index} className="log-row">
+                        {logItem.map(entry => (
+                            entry.toString()
+                        ))}
                     </div>
                 ))}
             </div>

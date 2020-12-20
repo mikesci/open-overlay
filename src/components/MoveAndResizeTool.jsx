@@ -8,7 +8,7 @@ import "./MoveAndResizeTool.css";
 const GUTTER_STATE_MOVE = { top: true, left: true, bottom: true, right: true };
 const GUTTER_STATE_BOXSELECT = { top: false, left: false, bottom: false, right: false };
 
-const getSelectableRects = (layers, layerDomElements, animationContext) => {
+const getSelectableRects = (layers) => {
 
     if (!layers)
         return [];
@@ -72,9 +72,8 @@ const getSelection = (selectableRects, selectedLayerIds) => {
 };
 
 const MoveAndResizeToolInner = ({ containerElement }) => {
-    const [[layers, layerDomElements, animationContext, selectedLayerIds, stageTransform], dispatch] = useOverlayEditorContext(
+    const [[layers, animationContext, selectedLayerIds, stageTransform], dispatch] = useOverlayEditorContext(
         state => state.overlay.layers,
-        state => state.layerDomElements,
         state => state.animationContext,
         state => state.selectedLayerIds,
         state => state.stageTransform
@@ -83,8 +82,8 @@ const MoveAndResizeToolInner = ({ containerElement }) => {
     const [boxSelectRect, setBoxSelectRect] = useState();
 
     const selectableRects = useMemo(() => {
-        return getSelectableRects(layers, layerDomElements, animationContext);
-    }, [layers, layerDomElements, animationContext]);
+        return getSelectableRects(layers);
+    }, [layers]);
 
     const selection = useMemo(() => {
         return getSelection(selectableRects, selectedLayerIds)

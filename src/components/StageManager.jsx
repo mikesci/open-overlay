@@ -99,16 +99,13 @@ const StageManager = (props) => {
             dispatch("StepZoom", (-evt.deltaY / 100));
     }, []);
 
-    const onLayerCreated = useCallback((layer, domElement) => {
-        dispatch("SetLayerDomElement", { id: layer.id, domElement });
+    const onOverlayDomReady = useCallback((overlayDomElement) => {
+        dispatch("SetOverlayDomElement", overlayDomElement);
+        //dispatch("SetLayerDomElement", { id: layer.id, domElement });
     }, []);
 
-    const onLayerRemoved = useCallback((layer, domElement) => {
-        dispatch("SetLayerDomElement", { id: layer.id, domElement: null });
-    }, []);
-
-    const onScriptingContextCreated = useCallback((scriptingContext) => {
-        dispatch("SetScriptingContext", scriptingContext);
+    const onScriptStateChanged = useCallback((scriptState) => {
+        dispatch("SetScriptState", scriptState);
     }, []);
 
     // get the memoized the stage style
@@ -127,9 +124,8 @@ const StageManager = (props) => {
                     elements={elements}
                     animationContext={animationContext}
                     executeScripts={isExecutingScript}
-                    onLayerCreated={onLayerCreated}
-                    onLayerRemoved={onLayerRemoved}
-                    onScriptingContextCreated={onScriptingContextCreated} />
+                    onOverlayDomReady={onOverlayDomReady}
+                    onScriptStateChanged={onScriptStateChanged} />
             </div>
             {stageTool ? <stageTool.component /> : null}
         </div>

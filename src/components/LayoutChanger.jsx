@@ -69,7 +69,7 @@ const LayoutChanger = ({  }) => {
     if (settingsJson) {
         settingsTab = (
             <Tooltip content="Settings">
-                <Button active={topTabId == "settings"} icon="settings" onClick={() => setTopTabId("settings")} />
+                <Button active={topTabId == "settings"} text={"Settings"} alignText="left" icon="settings" onClick={() => setTopTabId("settings")} />
             </Tooltip>
         );
     }
@@ -82,13 +82,13 @@ const LayoutChanger = ({  }) => {
                     <ButtonGroup fill={true} className="toolbar">
                         {settingsTab}
                         <Tooltip content="Layers">
-                            <Button active={topTabId == "layers"} icon="layers" onClick={() => setTopTabId("layers")} />
+                            <Button active={topTabId == "layers"} text={"Layers"} alignText="left" icon="layers" onClick={() => setTopTabId("layers")} />
                         </Tooltip>
                         <Tooltip content="Assets">
-                            <Button active={topTabId == "assets"} icon="archive" onClick={() => setTopTabId("assets")} />
+                            <Button active={topTabId == "assets"} text={"Assets"} alignText="left" icon="archive" onClick={() => setTopTabId("assets")} />
                         </Tooltip>
                         <Tooltip content="Scripts">
-                            <Button active={topTabId == "scripts"} icon="manually-entered-data" onClick={() => setTopTabId("scripts")} />
+                            <Button active={topTabId == "scripts"} text={"Scripts"} alignText="left" icon="manually-entered-data" onClick={() => setTopTabId("scripts")} />
                         </Tooltip>
                     </ButtonGroup>
                     <div className="lists-panel">

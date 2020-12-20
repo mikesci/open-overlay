@@ -155,6 +155,9 @@ const Reducers = {
         if (ps.overlay == overlay) { return; }
         return { overlay };
     },
+    SetOverlayDomElement: (ps, overlayDomElement) => {
+        return { overlayDomElement };
+    },
     SetStageTool: (ps, stageTool) => {
         return { stageTool, animationContext: { phase: AnimationPhase.STATIC, offset: 0, state: AnimationState.PAUSED } };
     },
@@ -267,12 +270,6 @@ const Reducers = {
     SavePreferences: (ps, preferences) => {
         return { preferences: { ...ps.preferences, ...preferences } };
     },
-    SetLayerDomElement: (ps, { id, domElement }) => {
-        if (!domElement)
-            return { layerDomElements: ps.layerDomElements.filter(r => r.id != id) };
-        else
-            return { layerDomElements: [...ps.layerDomElements, { id, domElement }] };
-    },
     ToggleEditor: (ps, { type, params }) => {
         let newState = {};
         const editorType = Editors[type];
@@ -369,8 +366,6 @@ const Reducers = {
             return { assets };
         });
     },
-
-    
 
     // scripts
     CreateScript: (ps, name) => {
@@ -495,8 +490,10 @@ const Reducers = {
         else
             return { isExecutingScript: true };
     },
-    SetScriptingContext: (ps, scriptingContext) => {
-        return { scriptingContext };
+    SetScriptState: (ps, scriptState) => {
+        // this seems slow, and inefficient.  maybe fix later?
+
+        return { scriptState: {...scriptState} };
     },
     UpdateScriptSettings: (ps, partialSettings) => {
         return updateOverlay(ps, overlay => {
@@ -1227,8 +1224,8 @@ const INITIAL_STATE = {
     isExecutingScript: false,
     selectedLayerIds: [],
     selectedAnimations: [],
-    layerDomElements: [],
-    scriptingContext: null,
+    overlayDomElement: null,
+    scriptState: null,
 
     // ui
     preferences: { leftPanelWidth: 380, bottomPanelSize: 300, consolePanelSize: 500, bottomPanelMinimized: false },

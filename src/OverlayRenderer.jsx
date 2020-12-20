@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Elements from "./elements/_All.jsx";
 import { precomputeAnimations, precomputeLayerStyle } from "./shared/usePrecomputed.js";
 import { effects } from "./components/Effects.jsx";
@@ -140,9 +140,8 @@ const OverlayRenderer = ({
     animationContext,               // animation properties.  leave blank to handle automatically.
     ElementRenderer,                // the component that renders elements.  can be overridden for "wireframe mode". leave undefined to render normally.
     executeScripts,                 // whether to execute scripts or not.  leave undefined to execute scripts automatically when shown.
-    onLayerCreated,                 // occurs when the layer's DOM has been initially rendered
-    onLayerRemoved,                 // occurs when the layer has been removed from the DOM
-    onScriptingContextCreated       // occurs when a script executes and a context is created
+    onOverlayDomReady,              // occurs when the overlay's DOM element has been rendered and is ready
+    onScriptStateChanged            // occurs when a script executes and/or it's state changes
     }) => {
 
     // use default renderer if not supplied
@@ -154,9 +153,12 @@ const OverlayRenderer = ({
         executeScripts = !hidden;
 
     const overlayId = overlay.id || "default";
-    const overlayRef = useRef();
+    const overlayDomRef = useRef();
+    const scriptState = useScriptingContext(overlay, overlayDomRef, onScriptStateChanged, executeScripts);
 
-    const scriptState = useScriptingContext(overlay, onScriptingContextCreated, executeScripts);
+    useEffect(() => {
+        if (onOverlayDomReady) { onOverlayDomReady(overlayDomRef.current); }
+    }, []);
 
     // if we have a scriptState, then we're executing a script
     // and we should use the overlay in that instead of the props overlay
@@ -171,31 +173,21 @@ const OverlayRenderer = ({
             index={index}
             animationContext={animationContext}
             ElementRenderer={ElementRenderer}
-            onLayerCreated={onLayerCreated}
-            onLayerRemoved={onLayerRemoved}
         />
     ));
     return (
-        <div className="overlay" data-overlayid={overlayId} ref={overlayRef} style={{ zIndex }}>
+        <div className="overlay" ref={overlayDomRef} data-overlayid={overlayId} style={{ zIndex }}>
             {layers}
         </div>
     );
 }
 
-const LayerWrapper = ({ overlay, layer, index, animationContext, onLayerCreated, onLayerRemoved, ElementRenderer }) => {
+const LayerWrapper = ({ overlay, layer, index, animationContext, ElementRenderer }) => {
     const wrapperRef = useRef();
     const layerHidden = layer.hidden || overlay.hidden;
 
     if (!animationContext)
         animationContext = useAutomaticAnimation(layerHidden, overlay.phases);
-
-    // handle onLayerCreated/removed
-    useEffect(() => {
-        if (onLayerCreated)
-            onLayerCreated(layer, wrapperRef.current);
-        if (onLayerRemoved)
-            return (() => onLayerRemoved(layer, wrapperRef.current));
-    }, []);
 
     // handle style application & animations
     useEffect(() => {
