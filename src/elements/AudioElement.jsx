@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { getSrcFromAssetUrl, isAssetUrl } from "./elementUtilities.js";
 
 const AudioElement = {
