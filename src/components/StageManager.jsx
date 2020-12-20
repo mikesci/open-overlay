@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import OverlayRenderer from "../OverlayRenderer.jsx";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
-import AnimationState from "../shared/AnimationState.js";
 import "./StageManager.css";
-import TaskMode from "../shared/TaskMode.js";
 
 const getAutoFitZoom = (stageDOM, height, width) => {
     if (!stageDOM) { return; }
@@ -21,17 +19,19 @@ const getAutoFitZoom = (stageDOM, height, width) => {
 }
 
 const StageManager = (props) => {
-    const [[elements, overlay, animationContext, isExecutingScript, stageTool, stageTransform], dispatch] = useOverlayEditorContext(
+    const [[elements, overlay, animationContext, isExecutingScript, stageTool, stageTransform, preferences], dispatch] = useOverlayEditorContext(
         state => state.elements,
         state => state.overlay,
         state => state.animationContext,
         state => state.isExecutingScript,
         state => state.stageTool,
-        state => state.stageTransform);
+        state => state.stageTransform,
+        state => state.preferences);
 
     const stageContainerRef = useRef();
 
     // handle auto-fit monitoring
+    // re-run this if preferences change, as that can change around the UI
     useEffect(() => {
         const stageContainer = stageContainerRef.current;
         const onWindowResized = (evt) => { dispatch("SetStageAutoFitZoom", getAutoFitZoom(stageContainer, stageTransform.height, stageTransform.width)); }
@@ -39,7 +39,7 @@ const StageManager = (props) => {
         dispatch("SetStageAutoFitZoom", getAutoFitZoom(stageContainer, stageTransform.height, stageTransform.width));
         window.addEventListener("resize", onWindowResized);
         return () => { window.removeEventListener("resize", onWindowResized); };
-    }, []);
+    }, [preferences]);
 
     const handleMouseDown = useCallback((evt, stageTransform) => {
         // right mouse only
@@ -108,7 +108,7 @@ const StageManager = (props) => {
         dispatch("SetScriptState", scriptState);
     }, []);
 
-    // get the memoized the stage style
+    // get the memoized stage style
     const stageStyle = useMemo(() => ({
         width: stageTransform.width + "px",
         height: stageTransform.height + "px",

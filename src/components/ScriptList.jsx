@@ -2,8 +2,8 @@ import React, { useCallback, useState } from "react";
 import { AnchorButton, Button, Icon, Menu, MenuDivider, MenuItem, Popover } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
-import ReorderableList from "./ReorderableList.jsx";
-import LabelEditor from "./LabelEditor.jsx";
+import ReorderableList from "../ui/ReorderableList.jsx";
+import LabelEditor from "../ui/LabelEditor.jsx";
 import "./ScriptList.css";
 
 const ScriptListItem = ({ scriptKey, dispatch }) => {

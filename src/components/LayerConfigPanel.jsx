@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Tab, Tabs, Tag } from "@blueprintjs/core";
-import ConfigurationForm from "./ConfigurationForm/ConfigurationForm.jsx";
+import React, { useCallback, useMemo } from "react";
+import { Button, Tab, Tabs } from "@blueprintjs/core";
+import ConfigurationForm from "../ui/ConfigurationForm/ConfigurationForm.jsx";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
-import CollapsiblePanel from "./CollapsiblePanel.jsx";
+import CollapsiblePanel from "../ui/CollapsiblePanel.jsx";
 import { useAnimationSelectionContext } from "../shared/AnimationSelectionContext.js";
 import { useLayerSelectionContext } from "../shared/LayerSelectionContext.js";
-import "./LayerConfigPanel.css";
 import AnimationPresets from "../shared/AnimationPresets.js";
 import { MERGE_CONFLICT } from "../shared/mergeHelper.js";
 import styleEditors from "../shared/styleEditors.js";
 import { effects } from "./Effects.jsx";
+import "./LayerConfigPanel.css";
 
 const ANIMATION_PARAMETERS = [
     { type: "group", items: [

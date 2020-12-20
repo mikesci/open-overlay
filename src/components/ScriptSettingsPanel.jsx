@@ -1,7 +1,7 @@
 import { Card } from "@blueprintjs/core";
 import React, { useMemo } from "react";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
-import ConfigurationForm from "./ConfigurationForm/ConfigurationForm.jsx";
+import ConfigurationForm from "../ui/ConfigurationForm/ConfigurationForm.jsx";
 import "./ScriptSettingsPanel.css";
 
 const ScriptSettingsPanel = ({ settingsJson }) => {

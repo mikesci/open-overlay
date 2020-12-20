@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { Button, Popover, Menu, MenuItem } from "@blueprintjs/core";
-import LabelEditor from "./LabelEditor.jsx";
+import LabelEditor from "../ui/LabelEditor.jsx";
+import ReorderableList from "../ui/ReorderableList.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import EffectMenuPopover from "./EffectMenuPopover.jsx"
 import { effects } from "./Effects.jsx";
-import ReorderableList from "./ReorderableList.jsx";
 import "./LayerList.css";
 
 const EffectItem = ({ layer, effect, effectName, config, dispatch }) => {

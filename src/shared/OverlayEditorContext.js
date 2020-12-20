@@ -5,7 +5,6 @@ import { effects } from "../components/Effects.jsx";
 import { maxValue, copyToClipboard, parsePropsOrFn } from "./utilities.js";
 import AnimationPhase from "./AnimationPhase.js";
 import AnimationState from "./AnimationState.js";
-import TaskMode from "./TaskMode.js";
 import Elements from "../elements/_All.jsx";
 import { stageTools } from "../components/StageTools.jsx";
 import Editors from "../panels/Editors.js";
@@ -243,29 +242,6 @@ const Reducers = {
         if (!ps.animationContext.duration) { return; }
         const duration = Math.max(500, ps.animationContext.duration + deltaMs);
         return { animationContext: { ...ps.animationContext, duration }};
-    },
-    SetTaskMode: (ps, taskMode) => {
-        let newState = { taskMode };
-
-        // temporarily switch out to a static animation context while designing/scripting
-        if (taskMode != TaskMode.ANIMATE && ps.taskMode == TaskMode.ANIMATE) {
-            newState.lastAnimationContext = ps.animationContext;
-            newState.animationContext = { phase: AnimationPhase.STATIC };
-        } else if (taskMode == TaskMode.ANIMATE && ps.taskMode != TaskMode.ANIMATE) {
-            if (ps.lastAnimationContext)
-                newState.animationContext = ps.lastAnimationContext;
-            else {
-                // calculate a good starting context duration - the max end time of all animations will work
-                let maxEndTime = 500;
-                if (ps.overlay.animations) {
-                    for(const animation of ps.overlay.animations)
-                        maxEndTime = Math.max(maxEndTime, animation.delay + animation.duration);
-                }
-                newState.animationContext = { phase: AnimationPhase.ENTRY, offset: 0, state: AnimationState.PAUSED, duration: maxEndTime };
-            }
-        }
-
-        return newState;
     },
     SavePreferences: (ps, preferences) => {
         return { preferences: { ...ps.preferences, ...preferences } };
@@ -1216,7 +1192,6 @@ const INITIAL_STATE = {
     },
 
     // modes/selections/contexts
-    taskMode: TaskMode.DESIGN,
     stageTool: stageTools.moveAndResize,
     stageZoomSelection: { zoom: 1, autoFitZoom: 1, isAuto: true },
     stageTransform: { zoom: 1, panning: [0,0], width: 1920, height: 1080 },

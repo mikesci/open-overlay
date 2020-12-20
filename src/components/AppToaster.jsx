@@ -1,5 +1,5 @@
 import React from "react";
-import { Toaster, Toast, Position, ProgressBar, Intent } from "@blueprintjs/core";
+import { Toaster, Toast, Position, ProgressBar } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 
 const AppToaster = ({ props }) => {

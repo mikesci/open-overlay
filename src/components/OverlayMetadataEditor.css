@@ -1,6 +1,0 @@
-.overlay-metadata-editor { padding: 5px; display: flex; flex-direction: row; border-bottom: 1px solid #ffffff40; }
-.overlay-metadata-editor .left { flex: 1 1 auto; }
-.overlay-metadata-editor .right { flex: 0 1 0; display: flex; flex-direction: column; }
-.overlay-metadata-editor .overlay-name { font-size: 1.4em; margin-bottom: 4px; }
-.overlay-metadata-editor .overlay-name
-.overlay-metadata-editor .overlay-author { font-size: 0.9em; }

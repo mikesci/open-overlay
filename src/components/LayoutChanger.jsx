@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import AppToaster from "./AppToaster.jsx";
 import LayerConfigPanel from "./LayerConfigPanel.jsx";
 import MainToolbar from "./MainToolbar.jsx";
-import Resizable from "./Resizable.jsx";
+import Resizable from "../ui/Resizable.jsx";
 import LayerList from "./LayerList.jsx";
 import StageManager from "./StageManager.jsx";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
@@ -13,8 +13,8 @@ import AssetList from "./AssetList.jsx";
 import ScriptList from "./ScriptList.jsx";
 import ScriptSettingsPanel from "./ScriptSettingsPanel.jsx";
 import Editors from "../panels/Editors.js";
-import "./LayoutChanger.css";
 import ConsolePanel from "../panels/ConsolePanel.jsx";
+import "./LayoutChanger.css";
 
 const LayoutChanger = ({  }) => {
     const [[settingsJson, preferences, editors, selectedEditorTab], dispatch] = useOverlayEditorContext(state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedEditorTab);
@@ -77,7 +77,7 @@ const LayoutChanger = ({  }) => {
     return (
         <div className="layout-changer">
             <AppToaster />
-            <Resizable edge="right" defaultSize={preferences.leftPanelWidth} minimum={250} maximum={500} onSizeChanged={size => onSavePreference({ leftPanelWidth: size })} className="leftpanel-wrapper panel-bg">
+            <Resizable edge="right" defaultSize={preferences.leftPanelWidth} minimum={350} maximum={500} onSizeChanged={size => onSavePreference({ leftPanelWidth: size })} className="leftpanel-wrapper panel-bg">
                 <Resizable edge="bottom" defaultSize={preferences.layerListSize || 300} minimum={100} maximum={800} onSizeChanged={size => onSavePreference({ layerListSize: size })} className="lists-wrapper">
                     <ButtonGroup fill={true} className="toolbar">
                         {settingsTab}

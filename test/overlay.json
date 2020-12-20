@@ -1,164 +1,164 @@
 {
     "name": "New Overlay",
     "layers": [
-      {
-        "id": 7,
-        "elementName": "text",
-        "label": "Text",
-        "config": {
-          "text": "text"
+        {
+            "id": 7,
+            "elementName": "text",
+            "label": "Text",
+            "config": {
+                "text": "text"
+            },
+            "effects": null,
+            "style": {
+                "top": "400.62059238363895px",
+                "left": "1188.1523272214388px",
+                "width": 399.9999999999999,
+                "height": 150.18335684062052,
+                "fontFamily": "Arial",
+                "fontSize": "60px",
+                "color": "rgba(255,255,255,1)",
+                "whiteSpace": "pre"
+            }
         },
-        "effects": null,
-        "style": {
-          "top": "400.62059238363895px",
-          "left": "1188.1523272214388px",
-          "width": 399.9999999999999,
-          "height": 150.18335684062052,
-          "fontFamily": "Arial",
-          "fontSize": "60px",
-          "color": "rgba(255,255,255,1)",
-          "whiteSpace": "pre"
+        {
+            "id": 5,
+            "elementName": "rectangle",
+            "label": "red",
+            "config": {},
+            "effects": null,
+            "style": {
+                "top": "270.73909028571444px",
+                "left": "160.3406262857144px",
+                "width": 419.55838413309453,
+                "height": 339.8434780834828,
+                "backgroundColor": "#FF0000"
+            }
+        },
+        {
+            "id": 4,
+            "elementName": "rectangle",
+            "label": "blue",
+            "config": {},
+            "effects": null,
+            "style": {
+                "top": "505.0699702906597px",
+                "left": "272.6958140525742px",
+                "width": 346.85796851924425,
+                "height": 332.284417438162,
+                "backgroundColor": "#0014ffff"
+            }
+        },
+        {
+            "id": 3,
+            "elementName": "rectangle",
+            "label": "green",
+            "config": {},
+            "effects": null,
+            "style": {
+                "top": "530.4871245539714px",
+                "left": "472.26613118015797px",
+                "width": 342.8182791082605,
+                "height": 315.51157383563896,
+                "backgroundColor": "#0aff00ff"
+            }
+        },
+        {
+            "id": 2,
+            "elementName": "rectangle",
+            "label": "purp",
+            "config": {},
+            "effects": null,
+            "style": {
+                "top": "291.3623399056914px",
+                "left": "553.3795695235732px",
+                "width": 340.2488398270761,
+                "height": 370.07972066476583,
+                "backgroundColor": "#9100ffff"
+            }
+        },
+        {
+            "id": 6,
+            "elementName": "rectangle",
+            "label": "white",
+            "config": {},
+            "effects": null,
+            "style": {
+                "top": "159.78389610389604px",
+                "left": "107.7194805194805px",
+                "width": 869.8015584415583,
+                "height": 720.8602597402596,
+                "backgroundColor": "#ffffffff"
+            }
         }
-      },
-      {
-        "id": 5,
-        "elementName": "rectangle",
-        "label": "red",
-        "config": {},
-        "effects": null,
-        "style": {
-          "top": "270.73909028571444px",
-          "left": "160.3406262857144px",
-          "width": 419.55838413309453,
-          "height": 339.8434780834828,
-          "backgroundColor": "#FF0000"
-        }
-      },
-      {
-        "id": 4,
-        "elementName": "rectangle",
-        "label": "blue",
-        "config": {},
-        "effects": null,
-        "style": {
-          "top": "505.0699702906597px",
-          "left": "272.6958140525742px",
-          "width": 346.85796851924425,
-          "height": 332.284417438162,
-          "backgroundColor": "#0014ffff"
-        }
-      },
-      {
-        "id": 3,
-        "elementName": "rectangle",
-        "label": "green",
-        "config": {},
-        "effects": null,
-        "style": {
-          "top": "530.4871245539714px",
-          "left": "472.26613118015797px",
-          "width": 342.8182791082605,
-          "height": 315.51157383563896,
-          "backgroundColor": "#0aff00ff"
-        }
-      },
-      {
-        "id": 2,
-        "elementName": "rectangle",
-        "label": "purp",
-        "config": {},
-        "effects": null,
-        "style": {
-          "top": "291.3623399056914px",
-          "left": "553.3795695235732px",
-          "width": 340.2488398270761,
-          "height": 370.07972066476583,
-          "backgroundColor": "#9100ffff"
-        }
-      },
-      {
-        "id": 6,
-        "elementName": "rectangle",
-        "label": "white",
-        "config": {},
-        "effects": null,
-        "style": {
-          "top": "159.78389610389604px",
-          "left": "107.7194805194805px",
-          "width": 869.8015584415583,
-          "height": 720.8602597402596,
-          "backgroundColor": "#ffffffff"
-        }
-      }
     ],
     "animations": [
-      {
-        "id": 1,
-        "phase": "entry",
-        "delay": 1000,
-        "duration": 1000,
-        "preset": "fade",
-        "config": {
-          "from": 0,
-          "to": 100
+        {
+            "id": 1,
+            "phase": "entry",
+            "delay": 1000,
+            "duration": 1000,
+            "preset": "fade",
+            "config": {
+                "from": 0,
+                "to": 100
+            }
+        },
+        {
+            "id": 2,
+            "phase": "entry",
+            "delay": 0,
+            "duration": 5000,
+            "preset": "slide",
+            "easing": "ease-out",
+            "config": {
+                "fromTop": 1080,
+                "fromLeft": 0,
+                "toTop": 0,
+                "toLeft": 0
+            }
+        },
+        {
+            "id": 3,
+            "phase": "exit",
+            "delay": 0,
+            "duration": 5000,
+            "preset": "fade",
+            "easing": "ease-out",
+            "config": {
+                "from": 100,
+                "to": 0
+            }
+        },
+        {
+            "id": 4,
+            "phase": "entry",
+            "delay": 0,
+            "duration": 5000,
+            "preset": "fade",
+            "config": {
+                "from": 0,
+                "to": 100
+            }
+        },
+        {
+            "id": 5,
+            "phase": "exit",
+            "delay": 0,
+            "duration": 5000,
+            "preset": "fade",
+            "easing": "ease-out",
+            "config": {
+                "from": 100,
+                "to": 0
+            }
         }
-      },
-      {
-        "id": 2,
-        "phase": "entry",
-        "delay": 0,
-        "duration": 5000,
-        "preset": "slide",
-        "easing": "ease-out",
-        "config": {
-          "fromTop": 1080,
-          "fromLeft": 0,
-          "toTop": 0,
-          "toLeft": 0
-        }
-      },
-      {
-        "id": 3,
-        "phase": "exit",
-        "delay": 0,
-        "duration": 5000,
-        "preset": "fade",
-        "easing": "ease-out",
-        "config": {
-          "from": 100,
-          "to": 0
-        }
-      },
-      {
-        "id": 4,
-        "phase": "entry",
-        "delay": 0,
-        "duration": 5000,
-        "preset": "fade",
-        "config": {
-          "from": 0,
-          "to": 100
-        }
-      },
-      {
-        "id": 5,
-        "phase": "exit",
-        "delay": 0,
-        "duration": 5000,
-        "preset": "fade",
-        "easing": "ease-out",
-        "config": {
-          "from": 100,
-          "to": 0
-        }
-      }
     ],
     "scripts": {
-      "main.js": "layer(\"Text\").config({ text: settings.amount });",
-      "settings.json": "{\n  \"info\": \"This is the scripts's info/instructions, configurable in Scripts -> settings.json.\",\n  \"initial\": { \"amount\": 25 },\n  \"parameters\": [\n    { \"name\": \"amount\", \"type\": \"slider\", \"displayName\": \"Amount\", \"inline\": true }\n  ]\n}",
-      "example.js": "class Example {\n  test() {\n    console.log(\"TEST\");\n  }\n};\n\nexport default Example;"
+        "main.js": "layer(\"Text\").config({ text: settings.amount });",
+        "settings.json": "{\n  \"info\": \"This is the scripts's info/instructions, configurable in Scripts -> settings.json.\",\n  \"initial\": { \"amount\": 25 },\n  \"parameters\": [\n    { \"name\": \"amount\", \"type\": \"slider\", \"displayName\": \"Amount\", \"inline\": true }\n  ]\n}",
+        "example.js": "class Example {\n  test() {\n    console.log(\"TEST\");\n  }\n};\n\nexport default Example;"
     },
     "settings": {
-      "amount": 20
+        "amount": 20
     }
-  }
+}

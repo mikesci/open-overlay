@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { Button, ButtonGroup, AnchorButton, Icon } from "@blueprintjs/core";
+import React from "react";
+import { Button, ButtonGroup, Icon } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import "./AssetList.css";
 
