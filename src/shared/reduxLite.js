@@ -94,7 +94,6 @@ const createStore = (initialState, reducers, extractUndoEntry, applyUndoEntry) =
         // move the pointer backwards or forwards by one
         const newUndoPointer = undo.pointer + (redo ? -1 : 1);
     
-        console.log({ newUndoPointer, len: undo.history.length });
          // don't allow the pointer to go past the beginning or end of the history
         if (newUndoPointer > undo.history.length - 1 || newUndoPointer < 0) { return; }
     

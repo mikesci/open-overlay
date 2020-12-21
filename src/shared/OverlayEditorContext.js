@@ -212,11 +212,6 @@ const Reducers = {
             clearTimeout(ps.animationContext.timeout);
         }
 
-        // if phase is changing, deselect all animations
-        if (phase && phase != ps.animationContext.phase) {
-            newState.selectedAnimations = [];
-        }
-
         return newState;
     },
     ToggleAnimationPlaying: (ps, { phase, duration }) => {
@@ -910,7 +905,7 @@ const Reducers = {
             ...animation
         };
 
-        return updateOverlay(ps, (overlay) => {
+        const newState = updateOverlay(ps, (overlay) => {
             // add to the overlay's animation array
             let animations = (overlay.animations ? [...overlay.animations] : []);
             animations.push(animation);
@@ -926,6 +921,11 @@ const Reducers = {
             });
             return { animations, layers };
         }, true);
+
+        newState.selectedAnimations = [ animation.id ];
+        newState.selectedPropertyTab = "animation";
+
+        return newState;
     },
     UpdateAnimation: (ps, updatedAnimation) => {
         return updateOverlay(ps, (overlay) => {
@@ -950,7 +950,7 @@ const Reducers = {
                 return layer;
             });
             return { animations, layers };
-        }, true);
+        });
     },
     SelectAnimation: (ps, { id, additive }) => {
         let selectedAnimations;
@@ -1215,24 +1215,39 @@ const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged
 
     if (!storeRef.current) {
         const extractUndoEntry = (prevState, newPartialState) => {
-            // the only things we track for undo are LAYERS
+            // the only things we track for undo are LAYERS, ASSETS, and ANIMATIONS
 
             // if overlay was not specified in the new state
             // or if the overlay was specified but didn't change, do nothing
             if (!newPartialState.overlay || prevState.overlay == newPartialState.overlay)
                 return null;
 
-            // if layers are not specified or didn't change, do nothing
-            if (!newPartialState.overlay.layers || prevState.overlay.layers != newPartialState.overlay.layers)
+            // if nothing tracked changed, then do nothing
+            let entry = {};
+            let shouldSave = false;
+            if (newPartialState.overlay.layers && prevState.overlay.layers != newPartialState.overlay.layers) {
+                entry.layers = newPartialState.overlay.layers;
+                shouldSave = true;
+            }
+
+            if (newPartialState.overlay.assets && prevState.overlay.assets != newPartialState.overlay.assets) {
+                entry.assets = newPartialState.overlay.assets;
+                shouldSave = true;
+            }
+
+            if (newPartialState.overlay.animations && prevState.overlay.animations != newPartialState.overlay.animations) {
+                entry.animations = newPartialState.overlay.animations;
+                shouldSave = true;
+            }
+
+            if (!shouldSave)
                 return null;
 
-            return {
-                layers: newPartialState.overlay.layers
-            };
+            return entry;
         };
         
         const applyUndoEntry = (state, entry) => {
-            state.overlay.layers = entry.layers;
+            state.overlay = { ...state.overlay, ...entry };
         };
 
         storeRef.current = createStore(INITIAL_STATE, Reducers, extractUndoEntry, applyUndoEntry);

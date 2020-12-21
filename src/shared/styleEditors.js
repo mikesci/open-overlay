@@ -427,7 +427,7 @@ const styleEditors = {
                 blur: (blurMatch ? parseFloat(blurMatch[1]) : 0),
                 brightness: (brightnessMatch ? (parseFloat(brightnessMatch[1]) * 50) : 50),
                 contrast: (contrastMatch ? (parseFloat(contrastMatch[1]) * 50) : 50),
-                saturation: (saturationMatch ? (parseFloat(saturationMatchion[1]) * 50) : 50),
+                saturation: (saturationMatch ? (parseFloat(saturationMatch[1]) * 50) : 50),
                 hue: (hueMatch ? (parseFloat(hueMatch[1]) / 3.6) : 0),
                 invert: (invertMatch ? parseFloat(invertMatch[1]) : 0),
                 sepia: (sepiaMatch ? parseFloat(sepiaMatch[1]) : 0)

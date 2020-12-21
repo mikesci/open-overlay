@@ -131,6 +131,10 @@ const AnimationRow = ({ animation, selected, timelineDuration, dispatch }) => {
 
     const [animationOverride, setAnimationOverride] = useState();
 
+    const onClick = useCallback(evt => {
+        dispatch("SelectAnimation", { id: animation.id, additive: evt.ctrlKey });
+    }, [animation.id]);
+
     const onDeleteClick = useCallback(() => {
         dispatch("DeleteAnimation", animation.id);
     }, [ animation ]);
@@ -252,7 +256,7 @@ const AnimationRow = ({ animation, selected, timelineDuration, dispatch }) => {
     const presetDisplayName = (animation.preset ? AnimationPresets[animation.preset].displayName : null);
 
     return (
-        <div className="animation-row" isselected={selected.toString()}>
+        <div className="animation-row" isselected={selected.toString()} onClick={onClick}>
             <div className="animation-name label-width">
                 <Button minimal={true} icon="trash" onClick={onDeleteClick} />
                 <Tag>{presetDisplayName}</Tag>
@@ -337,8 +341,9 @@ const AnimationPanel = () => {
 
     const [showAllLayers, setShowAllLayers] = useState(true);
 
-    const onWheel = useCallback(({ deltaY }) => {
-        setTimelineDuration(old => Math.max(0, old + deltaY));
+    const onWheel = useCallback(({ ctrlKey, deltaY }) => {
+        if (ctrlKey)
+            setTimelineDuration(old => Math.max(0, old + deltaY));
     }, []);
 
     const onPlayPauseClick = useCallback(() => {

@@ -230,27 +230,34 @@ const LayerConfigPanel = () => {
         dispatch("UpdateSelectedAnimations", newProps);
     }, []);
 
-    let layerPanel;
+    let layerTab;
     if (selectedLayerIds.length > 0) {
-        layerPanel = <LayerSelectionEditor
+        const layerPanel = <LayerSelectionEditor
             onHandleUpload={onHandleUpload}
             onElementConfigChanged={onElementConfigChanged}
             onStyleChanged={onStyleChanged}
             onEffectChanged={onEffectChanged} />;
+        layerTab = <Tab id="layer" panel={layerPanel}><div className="title">Layer</div></Tab>;
     }
 
 
-    let animationPanel;
+    let animationTab;
     if (selectedAnimations.length > 0) {
-        animationPanel = <AnimationSelectionEditor
-            onHandleUpload={onHandleUpload}
-            onAnimationChanged={onAnimationChanged} />;
+        const animationPanel = <AnimationSelectionEditor onHandleUpload={onHandleUpload} onAnimationChanged={onAnimationChanged} />;
+        animationTab = <Tab id="animation" panel={animationPanel}><div className="title">Animation</div></Tab>
+    }
+
+    // if we have neither animations nor layers selected, render a special message
+    if (!layerTab && !animationTab) {
+        return (
+            <div className="no-selection"></div>
+        );
     }
 
     return (
         <Tabs id="property-tabs" onChange={setSelectedPropertyTab} selectedTabId={selectedPropertyTab} animate={false} className="normal-tabs">
-            <Tab id="layer" disabled={layerPanel == null} panel={layerPanel}><div className="title">Layer</div></Tab>
-            <Tab id="animation" disabled={animationPanel == null} panel={animationPanel}><div className="title">Animation</div></Tab>
+            {layerTab}
+            {animationTab}
         </Tabs>
     );
 

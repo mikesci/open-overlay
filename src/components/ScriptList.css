@@ -4,3 +4,7 @@
 .script-list .script-list-item .label { flex: 1 1 100%; text-align: left; padding: 6px 5px; }
 .script-list .script-list-item .label .label-editor { width: 100%; display: inline-block; }
 .script-list .script-list-item .label input { height: 25px; min-height: 0; }
+
+.delete-popover-body { padding: 10px; }
+.delete-popover-body .buttons { padding-top: 10px; display: flex; justify-content: flex-end; }
+.delete-popover-body .buttons > * { margin-left: 5px; }

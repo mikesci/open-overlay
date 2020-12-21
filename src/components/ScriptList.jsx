@@ -7,6 +7,8 @@ import LabelEditor from "../ui/LabelEditor.jsx";
 import "./ScriptList.css";
 
 const ScriptListItem = ({ scriptKey, dispatch }) => {
+    const [confirmPopoverOpen, setConfirmPopoverOpen] = useState();
+
     const onClick = useCallback(() => {
         dispatch("OpenEditor", { type: "script", params: { scriptKey } });
     }, []);
@@ -25,6 +27,22 @@ const ScriptListItem = ({ scriptKey, dispatch }) => {
         case "settings.json": icon = "cog"; break;
         default: icon = "document"; break;
     }
+
+    let deleteButton = <Button icon="trash" minimal={true} title="Delete" onClick={() => setConfirmPopoverOpen(last => !last)} />;
+    if (confirmPopoverOpen) {
+        deleteButton = (
+            <Popover isOpen={true} position="left" boundary="window">
+                {deleteButton}
+                <div className="delete-popover-body">
+                    Deleting this script is permanent and cannot be undone.  Continue?
+                    <div className="buttons">
+                        <Button icon="cross" onClick={() => setConfirmPopoverOpen(false)}>No, cancel</Button>
+                        <Button icon="tick" intent="danger" onClick={onDelete}>Yes, Delete</Button>
+                    </div>
+                </div>
+            </Popover>
+        );
+    }
     
     return (
         <div className="script-list-item">
@@ -32,7 +50,7 @@ const ScriptListItem = ({ scriptKey, dispatch }) => {
             <div className="label" onClick={onClick}>
                 <LabelEditor value={scriptKey} onChange={onScriptKeyChanged} selectAllOnFocus={true} />
             </div>
-            <Button icon="trash" minimal={true} title="Delete" onClick={onDelete} />
+            {deleteButton}
         </div>
     );
 };
