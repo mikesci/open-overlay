@@ -27,9 +27,13 @@ overlay = {
     elementName: "image", // contains the name of the Element that will render the layer
     label: "Image Name", // contains the UI label for the layer
     style: { top: "0px", left: "0px", width: "640px", height: "480px" }, // contains the react-compatible style definition
+    animations: [ 1 ],
     config: { url: "asset:image.png" } // contains element-specific configuration values
   }],
   scripts: { "main.js": "//script here" },
+  animations: [
+    { id: 1, phase: "entry", preset: "fade", delay: 0, duration: 500, config: { from: 0, to: 100 } }
+  ],
   assets: {  "image.png": "data:image/png;base64,..." }
 }
 ```
