@@ -4,40 +4,42 @@ The following functions are exposed at the top level to scripts:
 
 * [`on(name: string, callback: () => void): void`](#onname-string-callback-gt-void-void)
 * [`off(name: string, callback: () => void): void`](#offname-string-callback-gt-void-void)
-* [`addLayer(layerName: string, config: Object, style: React.CSSProperties): number`](#addlayerlayername-string-config-object-style-reactcssproperties-number)
+* [`addLayer(layerName: string, config: ElementConfig, style: React.CSSProperties): number`](#addlayerlayername-string-config-elementconfig-style-reactcssproperties-number)
 * [`addLayer(layer: Layer): number`](#addlayerlayer-layer-number)
-* [`layer(...filters: Object): Object`](#layerfilters-object-object)
+* [`layer(...filters: Object[]): LayerSelection`](#layerfilters-object-layerselection)
 * [`bulkUpdate(callback: () => void): void`](#bulkupdatecallback-gt-void-void)
-* [`setTimeout(callback: () => void, delay: number): void`](#settimeoutcallback-gt-void-delay-number-void)
-* [`setInterval(callback: () => void, period: number): void`](#setintervalcallback-gt-void-period-number-void)
 
 The `settings` property is also a top-level object, documented [here](/scripting-v1-settings).
 
-#### `Layer` properties
+### Type Summary
+
+#### `Layer`
 ```javascript
-{
-    id: number; // The layer ID, if the layer is in the overlay
-    elementName: string; // contains the text representation of the layer type
-    label: string; // contains the UI label for the layer
-    config: Object; // The configuration object for the layer. Depends on the type of layer.
-    style: React.CSSProperties; // CSS style information for the layer.
-    hidden: boolean // controls whether the layer is visible
+export interface Layer {
+    id: number; // internal layer id
+    elementName: string; // text representation of the element type
+    label: string; // human-readable name of the layer
+    config: ElementConfig; // configuration object
+    style: CSSProperties; // layer style object
+    hidden: boolean; // if the layer's visibility is disabled in the user interface. In order to programmatically hide a layer, use the `style` function.
 }
 ```
 For more information about the `config` property, see the [layer documentation](/scripting-v1-layers).
 
-#### `Layer` selector methods
-These methods are present for the object returned by [`layer(...filters: Object): Object`](#layerfilters-object-object).
+#### `LayerSelection`
 
-* [`config(): Object | null`](#config-object-null)
-* [`config(configuration: Object): Layer`](#configconfiguration-object-layer)
+These methods are present for the object returned by [`layer(...filters: Object): LayerSelection`](#layerfilters-object-layerselection).
+
+* [`config(): ElementConfig | null`](#config-elementconfig-null)
+* [`config(configuration: ElementConfig): LayerSelection`](#configconfiguration-elementconfig-layerselection)
 * [`style(): React.CSSProperties | null`](#style-reactcssproperties-null)
-* [`style(props: React.CSSProperties): Layer`](#styleprops-reactcssproperties-layer)
-* [`moveUp(toTop: boolean): Layer`](#moveuptotop-boolean-layer)
-* [`moveDown(toBottom: boolean): Layer`](#movedowntobottom-boolean-layer)
+* [`style(props: React.CSSProperties): LayerSelection`](#styleprops-reactcssproperties-layerselection)
+* [`moveUp(toTop: boolean): LayerSelection`](#moveuptotop-boolean-layerselection)
+* [`moveDown(toBottom: boolean): LayerSelection`](#movedowntobottom-boolean-layerselection)
 * [`remove(): void`](#remove-void)
 * [`clone(): Layer | Layer[]`](#clone-layer-layer)
 * [`dom(): Object`](#dom-object)
+* [`collect(): Layer[]`](#collect-layer)
 
 <h2>Details</h2>
 
@@ -49,7 +51,7 @@ should not be used until a later version.
 Unsubscribes the given `callback` from the specified event `name`. The event bus implementation is incomplete and this
 should not be used until a later version.
 
-# `addLayer(layerName: string, config: Object, style: React.CSSProperties): number`
+# `addLayer(layerName: string, config: ElementConfig, style: React.CSSProperties): number`
 Constructs a layer explicitly and adds it to the overlay, returning the new layer's ID. For example,
 to create a simple text layer:
 ```javascript
@@ -61,10 +63,10 @@ text `"Hello World!"`. For a reference of `config` properties, see the [layer do
 # `addLayer(layer: Layer): number`
 Adds an existing layer object to the overlay. This is most useful when combined with [cloneLayer](#clone-layer).
 
-# `layer(...filters: Object): Object`
+# `layer(...filters: Object[]): LayerSelection`
 Selects any number of layers with properties matching any of the specified filter objects. The exact structure of the layer 
 object is an implementation detail and subject to change, so it should not be relied upon. However, the properties
-specified [above](#layer-properties) are suitable for filtering.
+specified [above](#layer) are suitable for filtering.
 ```javascript
 // Selects the layer named "Text 1".
 const textLayer = layer("Text 1");
@@ -76,13 +78,13 @@ const layerOne = layer(1);
 const allLayers = layer({});
 
 // Selects all text elements
-const allTextLayersLayers = layer({ elementName: "text" });
+const allTextLayers = layer({ elementName: "text" });
 ```
 Internally every layer matching the filters is stored in the returned object. This means that:
-* `style` and `config` properties cannot be accessed directly. Use the methods in `Layer`.
-* Objects returned from the `layer` function are not suitable for long-term reference. `layer` should be called
+* `style` and `config` properties cannot be accessed directly. Use the methods in `LayerSelection`.
+* Objects returned from the `layer` function are not suitable for long-term reference. `layer()` should be called
 every time you want to modify a layer.
-* Non-getter methods in `Layer` will apply changes to all layers selected.
+* Non-getter methods in `LayerSelection` will apply changes to all layers selected.
 
 # `bulkUpdate(callback: () => void): void`
 Allows multiple updates to the overlay to be executed at once. Normally, every call to `style` or `config` triggers
@@ -95,14 +97,14 @@ bulkUpdate(() => {
 });
 ```
 
-<h2>Layer Selector Method Details</h2>
+<h2>LayerSelection Method Details</h2>
 
-# `config(): Object | null`
+# `config(): ElementConfig | null`
 Gets the configuration object for the layer, or `null` if no layers matched the selector. If multiple layers are
 selected, gets the configuration object for the first layer.
 
-# `config(configuration: Object): Layer`
-Merges the `configuration` object into the layer's existing configuration object. 
+# `config(configuration: ElementConfig): LayerSelection`
+Merges the `configuration` object into the layers' existing configuration objects, returning the same selection.
 ```javascript
 // Changes all text layers to display "new text".
 layer({ elementName: "text" }).config({ text: "new text" });
@@ -112,20 +114,19 @@ layer({ elementName: "text" }).config({ text: "new text" });
 Gets the style object for the layer, or `null` if no layers matched the selector. If multiple layers are
 selected, gets the style object for the first layer.
 
-# `style(props: React.CSSProperties): Layer`
-Merges the `props` object into the layer's existing style.
+# `style(props: React.CSSProperties): LayerSelection`
+Merges the `props` object into the layers' existing style, returning the same selection.
 
-# `moveUp(toTop: boolean): Layer`
+# `moveUp(toTop: boolean): LayerSelection`
 Changes the layer's stacking order, moving it either one layer towards the top or, if `toTop` is `true`, moves it
-to the top of the stack.
+to the top of the stack. Returns the same selection.
 
-# `moveDown(toBottom: boolean): Layer`
+# `moveDown(toBottom: boolean): LayerSelection`
 Changes the layer's stacking order, moving it either one layer towards the bottom or, if `toBottom` is `true`, moves it
-to the bottom of the stack.
+to the bottom of the stack. Returns the same selection.
 
 # `remove(): void`
-Removes the layer from the overlay. This should not be used to make layers invisible; instead, use the
-`hidden` configuration property.
+Removes the layer from the overlay.
 
 # `clone(): Layer | Layer[]`
 Makes a copy of the layer without inserting it into the overlay. If multiple layers were selected, this returns an
@@ -139,3 +140,6 @@ let layers = layer({ hidden: true }).clone().forEach(l => addLayer(l));
 Returns the DOM object for the layer. This is a dangerous function to use and should be avoided if possible. If there
 is a feature you need that can currently only be accomplished by modifying the DOM, please consider opening an
 [issue](https://github.com/mikesci/open-overlay/issues) on GitHub or making a [pull request](https://github.com/mikesci/open-overlay/pulls).
+
+# `collect(): Layer[]`
+Returns the underlying selected layer objects. 

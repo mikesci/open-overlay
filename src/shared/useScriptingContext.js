@@ -220,6 +220,9 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                         
                         const id = workingScriptState.layers[indexes[0]].id;
                         return overlayDomRef.current.querySelector(`[data-id='${id}']`);
+                    },
+                    collect: () => {
+                        return workingScriptState.layers.filter((layer, index) => indexes.includes(index));
                     }
                 };
                 return stateObj;
