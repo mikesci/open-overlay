@@ -21,7 +21,7 @@ export interface Layer {
     label: string; // human-readable name of the layer
     config: ElementConfig; // configuration object
     style: CSSProperties; // layer style object
-    hidden: boolean; // if the layer's visibility is disabled in the user interface. In order to programmatically hide a layer, use the `style` function.
+    hidden: boolean; // if the layer's visibility is disabled in the user interface.
 }
 ```
 For more information about the `config` property, see the [layer documentation](/scripting-v1-layers).
@@ -34,6 +34,8 @@ These methods are present for the object returned by [`layer(...filters: Object)
 * [`config(configuration: ElementConfig): LayerSelection`](#configconfiguration-elementconfig-layerselection)
 * [`style(): React.CSSProperties | null`](#style-reactcssproperties-null)
 * [`style(props: React.CSSProperties): LayerSelection`](#styleprops-reactcssproperties-layerselection)
+* [`show(): LayerSelection`](#show-layerselection)
+* [`hide(): LayerSelection`](#hide-layerselection)
 * [`moveUp(toTop: boolean): LayerSelection`](#moveuptotop-boolean-layerselection)
 * [`moveDown(toBottom: boolean): LayerSelection`](#movedowntobottom-boolean-layerselection)
 * [`remove(): void`](#remove-void)
@@ -116,6 +118,12 @@ selected, gets the style object for the first layer.
 
 # `style(props: React.CSSProperties): LayerSelection`
 Merges the `props` object into the layers' existing style, returning the same selection.
+
+# `show(): LayerSelection`
+Makes the layers visible. Sets the `hidden` property of the layer to `false`.
+
+# `hide(): LayerSelection`
+Makes the layers hidden. Sets the `hidden` property of the layer to `true`.
 
 # `moveUp(toTop: boolean): LayerSelection`
 Changes the layer's stacking order, moving it either one layer towards the top or, if `toTop` is `true`, moves it

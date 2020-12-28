@@ -17,6 +17,8 @@ declare global {
         config(configuration: ElementConfig): LayerSelection;
         style(): CSSProperties | null;
         style(props: CSSProperties): LayerSelection;
+        show(): void;
+        hide(): void;
         moveUp(toTop: boolean): LayerSelection;
         moveDown(toBottom: boolean): LayerSelection;
         remove(): void;
