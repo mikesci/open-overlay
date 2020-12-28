@@ -9,7 +9,7 @@
     "watch": "nodemon --watch src -e js,jsx,css --exec \"webpack --config build.webpack.js\"",
     "watch-dist": "nodemon --watch src -e js,jsx,css --exec \"webpack --config build-dist.webpack.js\"",
     "test": "static -p 8991 test/",
-    "docs": "static -p 8994 docs/"
+    "docs": "docsify serve docs"
   },
   "author": "MikeSci",
   "license": "Apache 2.0",
@@ -51,6 +51,7 @@
     "style-loader": "^0.23.1",
     "ttf-loader": "^1.0.2",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^3.3.12",
+    "docsify-cli": "^4.4.2"
   }
 }
