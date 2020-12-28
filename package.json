@@ -8,7 +8,8 @@
     "build-dist": "webpack --config build-dist.webpack.js",
     "watch": "nodemon --watch src -e js,jsx,css --exec \"webpack --config build.webpack.js\"",
     "watch-dist": "nodemon --watch src -e js,jsx,css --exec \"webpack --config build-dist.webpack.js\"",
-    "test": "static -p 8991 test/"
+    "test": "static -p 8991 test/",
+    "docs": "static -p 8994 docs/"
   },
   "author": "MikeSci",
   "license": "Apache 2.0",

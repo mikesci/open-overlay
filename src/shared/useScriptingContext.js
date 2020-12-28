@@ -148,6 +148,30 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                         commitWorkingState();
                         return stateObj;
                     },
+                    show: () => {
+                        if (indexes.length > 0) {
+                            for(const index of indexes) {
+                                workingScriptState.layers[index] = {
+                                    ...workingScriptState.layers[index],
+                                    hidden: false
+                                };
+                            }
+                            commitWorkingState();
+                        }
+                        return stateObj;
+                    },
+                    hide: () => {
+                        if (indexes.length > 0) {
+                            for(const index of indexes) {
+                                workingScriptState.layers[index] = {
+                                    ...workingScriptState.layers[index],
+                                    hidden: true
+                                };
+                            }
+                            commitWorkingState();
+                        }
+                        return stateObj;
+                    },
                     moveUp: (toTop) => {
                         if (indexes.length == 0) { return stateObj; }
                         // do nothing if the highest selected layer is at the top already

@@ -1,2 +1,18 @@
-.no-layers-selected { height: 100%; width: 100%; background: #00000020; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.no-content { height: 100%; width: 100%; background: #ffffff20; display: flex; align-items: center; justify-content: center; font-size: 20px; text-align: center; }
 .create-keyframe { height: 100%; width: 100%; background: #00000020; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+.element-config-editor { margin-top: 5px; }
+.transitions-panel { height: 100%; display: flex; flex-direction: column; }
+.transitions-panel .phases-wrapper { flex: 1 1 auto; display: flex; overflow: hidden auto; }
+.transitions-panel .phases-wrapper .phase { width: 50%; height: 100%; }
+.transitions-panel .phases-wrapper .phase:not(:first-child) { border-left: 1px solid #ffffff20; }
+.transitions-panel .phases-wrapper .phase .header { padding: 5px; border-bottom: 1px solid #ffffff20; display: flex; justify-content: space-between; align-items: center; }
+.transitions-panel .phases-wrapper .phase .item-list { padding: 2px; }
+.transitions-panel .phases-wrapper .phase .item-list .transition-item { margin-bottom: 2px; }
+.transitions-panel .phases-wrapper .phase .item-list .transition-item label { flex: 1 1 100%; padding: 3px; text-align: left; }
+
+.transition-editor { width: 400px; padding: 10px; }
+.transition-editor > h5 { padding: 2px 9px; margin-bottom: 0; }
+.transition-editor > .custom-transition-form { max-height: 300px; overflow-y: auto; border: 1px solid #ffffff20; }
+.transition-editor > .transition-config-form { border-bottom: 1px solid #ffffff20; padding-bottom: 5px; }
+.transition-editor > .timing-form { padding-top: 5px; }

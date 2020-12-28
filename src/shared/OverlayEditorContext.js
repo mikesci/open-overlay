@@ -8,6 +8,8 @@ import AnimationState from "./AnimationState.js";
 import Elements from "../elements/_All.jsx";
 import { stageTools } from "../components/StageTools.jsx";
 import Editors from "../panels/Editors.js";
+import Transitions from "./Transitions.js";
+import initialScriptContent from "./initialScriptContent.js";
 
 const OverlayEditorContext = React.createContext();
 
@@ -215,6 +217,7 @@ const Reducers = {
         return newState;
     },
     ToggleAnimationPlaying: (ps, { phase, duration }) => {
+
         return (dispatch) => {
             // if we're playing, then cancel the timeout and revert to the static phase
             if (ps.animationContext.state == AnimationState.PLAYING) {
@@ -223,6 +226,22 @@ const Reducers = {
 
                 dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, state: AnimationState.PAUSED, timeout: null });
             } else {
+
+                // if duration is not specified, derive it from transitions
+                if (!duration) {
+                    // find the maximum delay+duration for all transitions in this phase
+                    // minimum duration is 500
+                    duration = 500;
+                    for(const layer of ps.overlay.layers) {
+                        if (!layer.transitions) { continue; }
+                        for(const [transitionName, transitionConfig] of Object.entries(layer.transitions)) {
+                            if (Transitions[transitionName].phase == phase.key) {
+                                duration = Math.max(duration, transitionConfig.delay + transitionConfig.duration);
+                            }
+                        }
+                    }
+                }
+
                 // if changing the state to playing, set a timeout to flip back to paused after the phase ends
                 //const timeoutLength = duration - initialAnimationOffset;
                 let timeout = setTimeout(() => {
@@ -357,16 +376,18 @@ const Reducers = {
                     name = uniqueName;
                 }
 
-                dispatch("CreateScriptInternal", name);
+                // if this file matches one of the initialScriptContent strings, use it.  otherwise, use ""
+                const content = initialScriptContent[name] || "";
+                dispatch("CreateScriptInternal", { name, content });
             }
 
             // now open the script in the editor even if we didn't create it
             dispatch("OpenEditor", { type: "script", params: { scriptKey: name } });
         };
     },
-    CreateScriptInternal: (ps, name) => {
+    CreateScriptInternal: (ps, { name, content }) => {
         return updateOverlay(ps, (overlay) => {
-            const scripts = {...overlay.scripts, [name]: "" };
+            const scripts = {...overlay.scripts, [name]: content };
             return { scripts };
         });
     },
@@ -531,7 +552,8 @@ const Reducers = {
 
         // select the newly created layers
         newState.selectedLayerIds = selectedLayerIds;
-        newState.selectedPropertyTab = "layer";
+        // and force the property tab to show the element config
+        newState.selectedPropertyTab = "element";
 
         return newState;
     },
@@ -580,14 +602,12 @@ const Reducers = {
         }
 
         return {
-            selectedLayerIds,
-            selectedPropertyTab: "layer",
+            selectedLayerIds
         };
     },
     SelectLayers: (ps, selectedLayerIds) => {
         return {
-            selectedLayerIds,
-            selectedPropertyTab: "layer"
+            selectedLayerIds
         };
     },
     UpdateLayers: (ps, { layers }) => {
@@ -980,6 +1000,67 @@ const Reducers = {
         }, true);
     },
 
+    /* transitions */
+    AddTransition: (ps, transitionName) => {
+        const transition = Transitions[transitionName];
+        return updateLayers(ps, ps.selectedLayerIds, (layer) => {
+
+            // skip layers that already have this transition
+            if (layer.transitions && layer.transitions[transitionName])
+                return;
+
+            const transitions = {
+                ...layer.transitions,
+                [transitionName]: {
+                    delay: 0,
+                    duration: 500,
+                    easing: "linear",
+                    ...transition.initialConfig
+                }
+            };
+            return { transitions };
+        });
+    },
+    DeleteTransition: (ps, transitionName) => {
+        return updateLayers(ps, ps.selectedLayerIds, (layer) => {
+
+            // skip layers that don't have this transition
+            if (!layer.transitions || !layer.transitions[transitionName])
+                return;
+
+            let transitions = {...layer.transitions};
+            delete transitions[transitionName];
+            return { transitions };
+        });
+    },
+    UpdateTransition: (ps, { transitionName, transitionConfig }) => {
+        const transition = Transitions[transitionName];
+        return updateLayers(ps, ps.selectedLayerIds, (layer) => {
+            let transitions = {...layer.transitions};
+
+            // if layer doesn't have this transition, add it with default values
+            if (!transitions[transitionName]) {
+                transitions[transitionName] = {
+                    delay: 0,
+                    duration: 500,
+                    easing: "linear",
+                    ...transition.initialConfig
+                };
+            }
+            else {
+                let updatedTransition = { ...transitions[transitionName] };
+                for(const [key, val] of Object.entries(transitionConfig)) {
+                    if (val == "DELETE")
+                        delete updatedTransition[key];
+                    else
+                        updatedTransition[key] = val;
+                }
+                transitions[transitionName] = updatedTransition;
+            }
+            return { transitions };
+        });
+    },
+
     // data import/export & file uploads
     HandlePaste: (ps, items) => {
         return async (dispatch) => {
@@ -1203,7 +1284,13 @@ const INITIAL_STATE = {
     scriptState: null,
 
     // ui
-    preferences: { leftPanelWidth: 380, bottomPanelSize: 300, consolePanelSize: 500, bottomPanelMinimized: false },
+    preferences: {
+        leftPanelWidth: 380,
+        bottomPanelSize: 300,
+        consolePanelSize: 500,
+        bottomPanelMinimized: false,
+        transitionEditorSize: 300
+    },
     editors: [],
     selectedPropertyTab: null,
     selectedEditorTab: null,

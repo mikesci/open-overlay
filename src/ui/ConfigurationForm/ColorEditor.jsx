@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { Button, Popover } from "@blueprintjs/core";
 import { SketchPicker } from 'react-color'
 import { useConfigurationFormContext } from "./ConfigurationFormContext.jsx";
@@ -14,19 +14,26 @@ const rgbaObjectToHexString = (rgba) => {
 
 const ColorEditor = ({ parameter }) => {
     const [value, onValueChanged] = useConfigurationFormContext(parameter);
+    const [localValue, setLocalValue] = useState(null);
 
     const onChange = useCallback((color) => {
-        onValueChanged(parameter, rgbaObjectToHexString(color.rgb), false);
+        const newVal = rgbaObjectToHexString(color.rgb);
+        setLocalValue(newVal);
+        if (parameter.immediate)
+            onValueChanged(parameter, newVal, false);
     }, []);
 
     const onChangeComplete = useCallback((color) => {
+        setLocalValue(null);
         onValueChanged(parameter, rgbaObjectToHexString(color.rgb), true);
     }, []);
 
+    const renderValue = (localValue !== null ? localValue : value);
+
     return (
         <Popover boundary="window">
-            <Button style={{ "backgroundColor": value }} text="" />
-            <SketchPicker color={value} onChange={onChange} onChangeComplete={onChangeComplete} />
+            <Button style={{ "backgroundColor": renderValue }} text="" />
+            <SketchPicker color={renderValue} onChange={onChange} onChangeComplete={onChangeComplete} />
         </Popover>
     );
 };

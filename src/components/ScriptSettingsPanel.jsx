@@ -1,5 +1,5 @@
 import { Card } from "@blueprintjs/core";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
 import ConfigurationForm from "../ui/ConfigurationForm/ConfigurationForm.jsx";
 import "./ScriptSettingsPanel.css";
@@ -9,6 +9,10 @@ const ScriptSettingsPanel = ({ settingsJson }) => {
     const [[settings], dispatch] = useOverlayEditorContext(state => state.overlay.settings);
 
     const onParameterValuesChanged = (values) => { dispatch("UpdateScriptSettings", values, false); };
+
+    const onHandleUpload = useCallback((files, onComplete) => {
+        dispatch("HandleFileUpload", { files, onComplete, autoCreateLayers: false });
+    }, []);
 
     const settingsObj = useMemo(() => {
         try { return JSON.parse(settingsJson); }
@@ -27,7 +31,11 @@ const ScriptSettingsPanel = ({ settingsJson }) => {
     return (
         <div className="script-settings-panel">
             {infoBox}
-            <ConfigurationForm parameters={settingsObj.parameters || []} parameterValues={parameterValues} onParameterValuesChanged={onParameterValuesChanged} />
+            <ConfigurationForm
+                parameters={settingsObj.parameters || []}
+                parameterValues={parameterValues}
+                onHandleUpload={onHandleUpload}
+                onParameterValuesChanged={onParameterValuesChanged} />
         </div>
     );
 }

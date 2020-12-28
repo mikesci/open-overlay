@@ -1,4 +1,4 @@
-import AnimationPresets from "./AnimationPresets";
+import Transitions from "./Transitions.js";
 
 const precomputeLayerStyle = (layer, index) => {
     /*
@@ -32,12 +32,14 @@ const translateKeyframes = (keyframes) => {
     }, [])
 }
 
-const precomputeAnimations = (animations, layer) => {
+/*
+const precomputeAnimations =  (animations, layer) => {
     if (!animations)
         return {};
 
     if (!layer.animations)
-        return {};
+     return {};
+    
     
     return animations.reduce((computedAnimations, animation) => {
         // if this is not part of the layer's animations, skip
@@ -83,6 +85,40 @@ const precomputeAnimations = (animations, layer) => {
             delay: animation.delay,
             duration: animation.duration,
             easing: animation.easing,
+            keyframes: keyframes
+        });
+
+        return computedAnimations;
+    }, {});
+}
+*/
+
+const precomputeAnimations =  (animations, layer) => {
+    
+    if (!layer.transitions)
+        return {};
+
+    return Object.entries(layer.transitions).reduce((computedAnimations, [transitionKey, transitionConfig]) => {
+
+        const transition = Transitions[transitionKey];
+
+        if (!transition) {
+            console.log("Unknown transition.", transitionKey);
+            return computedAnimations;
+        }
+
+        let phaseAnimations = computedAnimations[transition.phase];
+        if (!phaseAnimations)
+            phaseAnimations = computedAnimations[transition.phase] = [];
+
+        // get keyframes
+        let keyframes = transition.keyframes(transitionConfig, layer);
+
+        // store the animation
+        phaseAnimations.push({
+            delay: transitionConfig.delay,
+            duration: transitionConfig.duration,
+            easing: transitionConfig.easing,
             keyframes: keyframes
         });
 

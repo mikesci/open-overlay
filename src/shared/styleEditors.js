@@ -10,7 +10,7 @@ const SATURATION_REGEX = /saturate\(([0-9\.]+)\)/;
 const HUE_REGEX = /hue-rotate\(([0-9\.]+)deg\)/;
 const INVERT_REGEX = /invert\(([0-9\.]+)\)/;
 const SEPIA_REGEX = /sepia\(([0-9\.]+)\)/;
-const TRANSFORM_REGEX = /perspective\(([0-9\.]+)px\) translate3d\((\-?[0-9\.]+)px, (\-?[0-9\.]+)px, (\-?[0-9\.]+)px\) rotate3d\(1, 0, 0, (\-?[0-9\.]+)deg\) rotate3d\(0, 1, 0, (\-?[0-9\.]+)deg\) rotate\((\-?[0-9\.]+)deg\) scale3d\(([0-9\.]+), ([0-9\.]+), ([0-9\.]+)\)/;
+const TRANSFORM_REGEX = /perspective\(([0-9\.]+)px\) translate3d\((\-?[0-9\.]+)px, (\-?[0-9\.]+)px, (\-?[0-9\.]+)px\) rotate3d\(1, 0, 0, (\-?[0-9\.]+)deg\) rotate3d\(0, 1, 0, (\-?[0-9\.]+)deg\) rotate\((\-?[0-9\.]+)deg\) scale\(([0-9\.]+), ([0-9\.]+)\)/;
 
 const styleEditors = {
     "rect": {
@@ -396,13 +396,13 @@ const styleEditors = {
         displayName: "Filters",
         properties: ["filter"],
         parameters: [
-            { name: "blur", displayName: "Blur", type: "slider", inline: true },
-            { name: "brightness", displayName: "Brightness", type: "slider", inline: true },
-            { name: "contrast", displayName: "Contrast", type: "slider", inline: true },
-            { name: "saturation", displayName: "Saturation", type: "slider", inline: true },
-            { name: "hue", displayName: "Hue", type: "slider", inline: true },
-            { name: "invert", displayName: "Invert", type: "slider", inline: true },
-            { name: "sepia", displayName: "Sepia", type: "slider", inline: true },
+            { name: "blur", displayName: "Blur", type: "slider", inline: true, immediate: false },
+            { name: "brightness", displayName: "Brightness", type: "slider", inline: true, immediate: false },
+            { name: "contrast", displayName: "Contrast", type: "slider", inline: true, immediate: false },
+            { name: "saturation", displayName: "Saturation", type: "slider", inline: true, immediate: false },
+            { name: "hue", displayName: "Hue", type: "slider", inline: true, immediate: false },
+            { name: "invert", displayName: "Invert", type: "slider", inline: true, immediate: false },
+            { name: "sepia", displayName: "Sepia", type: "slider", inline: true, immediate: false },
         ],
         initialConfig: {
             blur: 0,
@@ -486,14 +486,13 @@ const styleEditors = {
                 { name: "tz", type: "number", width: 33.333, tag: "Z" }
             ]},
             { type: "group", displayName: "Rotate", items: [
-                { name: "rx", type: "number", width: 33.333, tag: "X" },
-                { name: "ry", type: "number", width: 33.333, tag: "Y" },
-                { name: "rz", type: "number", width: 33.333, tag: "Z" }
+                { name: "rx", type: "angle", width: 33.333, tag: "X \u00B0" },
+                { name: "ry", type: "angle", width: 33.333, tag: "Y \u00B0" },
+                { name: "rz", type: "angle", width: 33.333, tag: "Z \u00B0" }
             ]},
             { type: "group", displayName: "Scale", items: [
-                { name: "sx", type: "number", width: 33.333, tag: "X", min: 0, step: 0.05 },
-                { name: "sy", type: "number", width: 33.333, tag: "Y", min: 0, step: 0.05 },
-                { name: "sz", type: "number", width: 33.333, tag: "Z", min: 0, step: 0.05 }
+                { name: "sx", type: "number", width: 33.333, tag: "X%", min: 0, step: 5 },
+                { name: "sy", type: "number", width: 33.333, tag: "Y%", min: 0, step: 5 }
             ]},
             { name: "perspective", displayName: "Perspective", type: "number", defaultValue: "1000", inline: true, tag: "px", min: 1 }
         ],
@@ -505,9 +504,8 @@ const styleEditors = {
             rx: 0,
             ry: 0,
             rz: 0,
-            sx: 1,
-            sy: 1,
-            sz: 1
+            sx: 100,
+            sy: 100
         },
         extract: (styleMap) => {
             const transformString = styleMap.transform;
@@ -522,14 +520,13 @@ const styleEditors = {
                 rx: parseFloat(matches[5]),
                 ry: parseFloat(matches[6]),
                 rz: parseFloat(matches[7]),
-                sx: parseFloat(matches[8]),
-                sy: parseFloat(matches[9]),
-                sz: parseFloat(matches[10])
+                sx: parseFloat(matches[8]) * 100,
+                sy: parseFloat(matches[9]) * 100
             };
         },
-        apply: ({ perspective, tx = 0, ty = 0, tz = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1 }) => {
+        apply: ({ perspective, tx = 0, ty = 0, tz = 0, rx = 0, ry = 0, rz = 0, sx = 100, sy = 100 }) => {
             return {
-                transform: `perspective(${perspective}px) translate3d(${tx}px, ${ty}px, ${tz}px) rotate3d(1, 0, 0, ${rx}deg) rotate3d(0, 1, 0, ${ry}deg) rotate(${rz}deg) scale3d(${sx}, ${sy}, ${sz})`
+                transform: `perspective(${perspective}px) translate3d(${tx}px, ${ty}px, ${tz}px) rotate3d(1, 0, 0, ${rx}deg) rotate3d(0, 1, 0, ${ry}deg) rotate(${rz}deg) scale(${sx/100}, ${sy/100})`
             };
         }
     },

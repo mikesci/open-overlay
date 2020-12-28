@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useConfigurationFormContext } from "./ConfigurationFormContext.jsx";
 import { InputGroup, Tag } from "@blueprintjs/core";
 
-const TextBoxEditor = ({ parameter }) => {
+const TextBoxEditor = ({ parameter, valueOverride }) => {
     const [value, onValueChanged] = useConfigurationFormContext(parameter);
     const [localTextValue, setLocalTextValue] = useState();
 
@@ -12,6 +12,9 @@ const TextBoxEditor = ({ parameter }) => {
 
     const onChange = useCallback((evt) => {
         setLocalTextValue(evt.target.value);
+
+        if (parameter.immediate)
+            onValueChanged(parameter, evt.target.value, false);
     }, []);
 
     const onBlur = useCallback((evt) => {
@@ -47,10 +50,14 @@ const TextBoxEditor = ({ parameter }) => {
         };
 
         const onMouseMove = evt => {
-            onValueChanged(parameter, calcNewValue(evt), false);
+            const newValue = calcNewValue(evt);
+            setLocalTextValue(newValue);
+            if (parameter.immediate)
+                onValueChanged(parameter, newValue, false);
         };
 
         const onMouseUp = evt => {
+            setLocalTextValue(null);
             onValueChanged(parameter, calcNewValue(evt), true);
             window.removeEventListener("mousemove", onMouseMove);
             window.removeEventListener("mouseup", onMouseUp);
@@ -64,9 +71,15 @@ const TextBoxEditor = ({ parameter }) => {
     if (parameter.tag)
         rightElement = <Tag minimal={true} onMouseDown={parameter.type == "number" ? onNumberMouseDown : null}>{parameter.tag}</Tag>;
         
+    let textValue;
+    if (localTextValue != null) { textValue = localTextValue; }
+    else if (valueOverride != null) { textValue = valueOverride; }
+    else if (value != null) { textValue = value; }
+    else { textValue = ""; } // force controlled mode
+
     return (
         <InputGroup
-            value={localTextValue != null ? localTextValue : value}
+            value={textValue}
             type={parameter.type}
             min={parameter.min}
             max={parameter.max}

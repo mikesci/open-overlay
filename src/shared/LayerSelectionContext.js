@@ -23,7 +23,8 @@ function recalculate() {
                     mergedElement: { element, elementName: layer.elementName, config: layer.config },
                     mergedEffects: (layer.effects ? {...layer.effects} : EMPTY),
                     allowedStyles: (element.manifest.allowedStyles ? [...element.manifest.allowedStyles] : []),
-                    mergedStyle: {...layer.style}
+                    mergedStyle: (layer.style ? {...layer.style} : EMPTY ),
+                    mergedTransitions: (layer.transitions ? {...layer.transitions} : EMPTY )
                 };
             }
 
@@ -58,6 +59,14 @@ function recalculate() {
                 for (const [styleName, styleValue] of Object.entries(layer.style)) {
                     if (mergedLayer.mergedStyle[styleName] != styleValue)
                         delete mergedLayer.mergedStyle[styleName];
+                }
+            }
+
+            // merge transitions
+            if (mergedLayer.mergedTransitions && layer.transitions) {
+                for (const [name, value] of Object.entries(mergedLayer.mergedTransitions)) {
+                    if (!layer.transitions[name])
+                        delete mergedLayer.mergedTransitions[name];
                 }
             }
         }

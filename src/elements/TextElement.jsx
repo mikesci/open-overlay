@@ -7,7 +7,7 @@ const TextElement = {
         preserveAspect: false,
         primative: true,
         parameters: [
-            { "name": "text", "displayName": null, "type": "textarea", "defaultValue": "text" }
+            { "name": "text", "displayName": "Content", "type": "textarea", "defaultValue": "text", "immediate": true }
         ],
         allowedStyles: [
             ...styleCategories.POSITIONABLE,

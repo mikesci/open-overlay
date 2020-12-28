@@ -11,9 +11,28 @@ import SliderEditor from "./SliderEditor.jsx";
 import AssetUrlEditor from "./AssetUrlEditor.jsx";
 import TextAreaEditor from "./TextAreaEditor.jsx";
 import TextBoxEditor from "./TextBoxEditor.jsx";
+import AngleEditor from "./AngleEditor.jsx";
+import EasingEditor from "./EasingEditor.jsx";
 import "./ConfigurationForm.css";
 
 const FieldAndLabel = ({ parameter }) => {
+
+    // type checking
+    if (parameter.min !== undefined && typeof(parameter.min) !== "number") {
+        console.log("min must be a number", parameter);
+        return null;
+    }
+
+    if (parameter.max !== undefined && typeof(parameter.max) !== "number") {
+        console.log("max must be a number", parameter);
+        return null;
+    }
+
+    if (parameter.step !== undefined && typeof(parameter.step) !== "number") {
+        console.log("step must be a number", parameter);
+        return null;
+    }
+
     let field;
     switch (parameter.type) {
         case "font":
@@ -42,6 +61,12 @@ const FieldAndLabel = ({ parameter }) => {
             break;
         case "textarea":
             field = (<TextAreaEditor parameter={parameter} />);
+            break;
+        case "angle":
+            field = (<AngleEditor parameter={parameter} />);
+            break;
+        case "easing":
+            field = (<EasingEditor parameter={parameter} />);
             break;
         case "text":
         default:
