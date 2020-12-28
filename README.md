@@ -1,11 +1,11 @@
 # Open Overlay
-An open source, react-based overlay builder for livestreaming.
+An open source, React-based overlay builder for livestreaming.
 
 The public implementation of this package is available at https://openoverlay.org.
 
 ## What's this then?
 
-This package contains the core designer component used in the system above.
+This project contains the core component used for the tool above.
 
 - OverlayEditor.jsx
   - Handles building an entire overlay.  Expects the following props:
@@ -38,9 +38,7 @@ overlay = {
 }
 ```
 
-## Authoring Custom Elements
-Documentation Forthcoming.
-
 ## Scripting
 
-Moved to (docs/SCRIPTING-v1.md)[docs/SCRIPTING-v1.md]
+Available at https://openoverlay.org/releases/2.0/docs/
+or in docs/
