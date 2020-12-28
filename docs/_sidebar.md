@@ -7,5 +7,7 @@
   * [Layer Configuration](scripting-v1-layers.md)
   * [Type Definitions](scripting-v1-types.md)  
   * [Scripting Reference](scripting-v1-ref.md)
-  
+- Transitions
+  * [Basic Transitions](transitions-builtin.md)
+  * [Custom Transitions](transitions-custom.md)
 - [Hotkeys](hotkeys.md)

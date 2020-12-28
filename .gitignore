@@ -7,3 +7,4 @@ node_modules
 /dist/OverlayRenderer.js
 /test/OverlayRenderer.js
 /test/OverlayEditor.js
+/build.stats.json
