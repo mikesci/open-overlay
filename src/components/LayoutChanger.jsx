@@ -8,17 +8,17 @@ import StageManager from "./StageManager.jsx";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import usePasteHandler from "../shared/usePasteHandler.js";
 import { HotkeySets, useHotkeys } from "../shared/useHotkeys.js";
-import { ButtonGroup, Button, Tabs, Tab, Icon, Popover, Menu, MenuItem, Tooltip } from "@blueprintjs/core";
+import { ButtonGroup, Button, Tabs, Tab, Icon, Popover, Menu, MenuItem, Tooltip, MenuDivider } from "@blueprintjs/core";
 import AssetList from "./AssetList.jsx";
 import ScriptList from "./ScriptList.jsx";
 import ScriptSettingsPanel from "./ScriptSettingsPanel.jsx";
 import Editors from "../panels/Editors.js";
 import ConsolePanel from "../panels/ConsolePanel.jsx";
+import { showUploadDialogAsync } from "../shared/utilities.js";
 import "./LayoutChanger.css";
 
 const LayoutChanger = ({  }) => {
-    const [[settingsJson, preferences, editors, selectedEditorTab], dispatch] = useOverlayEditorContext(state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedEditorTab);
-    const [topTabId, setTopTabId] = useState("layers");
+    const [[elements, settingsJson, preferences, editors, selectedListTab, selectedEditorTab], dispatch] = useOverlayEditorContext(state => state.elements, state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedListTab, state => state.selectedEditorTab);
 
     // handle paste events the same, regardless of task
     usePasteHandler(dispatch);
@@ -30,6 +30,27 @@ const LayoutChanger = ({  }) => {
     useHotkeys(HotkeySets.LAYERS);
 
     const onSavePreference = useCallback((preferences) => { dispatch("SavePreferences", preferences); }, []);
+
+    const onSelectListTab = useCallback(tabId => { dispatch("SelectListTab", tabId); }, []);
+
+    const onCreateLayer = useCallback(elementName => {
+        dispatch("CreateLayers", [{ elementName }]);
+    }, []);
+
+    const onUploadAssetClick = useCallback(async () => {
+        try
+        {
+            const files = await showUploadDialogAsync();
+            dispatch("HandleFileUpload", { files, autoCreateLayers: false });
+            dispatch("SelectListTab", "assets");
+        } catch {
+            // do nothing if we select no files
+        }
+    }, []);
+
+    const onCreateScript = useCallback((name) => {
+        dispatch("CreateScript", name);
+    }, []);
 
     let editorTabsPanel;
     let consolePanel;
@@ -69,7 +90,7 @@ const LayoutChanger = ({  }) => {
     if (settingsJson) {
         settingsTab = (
             <Tooltip content="Settings">
-                <Button active={topTabId == "settings"} text={"Settings"} alignText="left" icon="settings" onClick={() => setTopTabId("settings")} />
+                <Button className="list-button" active={selectedListTab == "settings"} text={"Settings"} alignText="left" icon="settings" onClick={() => onSelectListTab("settings")} />
             </Tooltip>
         );
     }
@@ -82,20 +103,37 @@ const LayoutChanger = ({  }) => {
                     <ButtonGroup fill={true} className="toolbar">
                         {settingsTab}
                         <Tooltip content="Layers">
-                            <Button active={topTabId == "layers"} text={"Layers"} alignText="left" icon="layers" onClick={() => setTopTabId("layers")} />
-                        </Tooltip>
-                        <Tooltip content="Assets">
-                            <Button active={topTabId == "assets"} text={"Assets"} alignText="left" icon="archive" onClick={() => setTopTabId("assets")} />
+                            <Button className="list-button" active={selectedListTab == "layers"} text={"Layers"} alignText="left" icon="layers" onClick={() => onSelectListTab("layers")} />
                         </Tooltip>
                         <Tooltip content="Scripts">
-                            <Button active={topTabId == "scripts"} text={"Scripts"} alignText="left" icon="manually-entered-data" onClick={() => setTopTabId("scripts")} />
+                            <Button className="list-button" active={selectedListTab == "scripts"} text={"Scripts"} alignText="left" icon="manually-entered-data" onClick={() => onSelectListTab("scripts")} />
                         </Tooltip>
+                        <Tooltip content="Assets">
+                            <Button className="list-button" active={selectedListTab == "assets"} text={"Assets"} alignText="left" icon="archive" onClick={() => onSelectListTab("assets")} />
+                        </Tooltip>
+                        <Popover position="right" boundary="window" className="new-object">
+                            <Tooltip content="New">
+                                <Button icon="plus" intent="primary" />
+                            </Tooltip>
+                            <Menu className="no-outline">
+                                <MenuDivider title="Layers" />
+                                {Object.entries(elements).map(([elementName, element]) => (
+                                    <MenuItem key={elementName} icon={element.manifest.icon} text={element.manifest.name} onClick={() => onCreateLayer(elementName)} />
+                                ))}
+                                <MenuDivider title="Scripts" />
+                                <MenuItem key="main.js" icon="document-share" text="main.js" intent="success" onClick={() => onCreateScript("main.js")} />
+                                <MenuItem key="settings.json" icon="cog" text="settings.json" intent="success" onClick={() => onCreateScript("settings.json")} />
+                                <MenuItem key="new" icon="document" text="Script File" onClick={() => onCreateScript()} />
+                                <MenuDivider />
+                                <MenuItem key="asset-upload" icon="cloud-upload" text="Upload asset..." onClick={onUploadAssetClick} />
+                            </Menu>
+                        </Popover>
                     </ButtonGroup>
                     <div className="lists-panel">
-                        {topTabId == "settings" ? <ScriptSettingsPanel settingsJson={settingsJson} /> : null}
-                        {topTabId == "layers" ? <LayerList /> : null}
-                        {topTabId == "assets" ? <AssetList /> : null}
-                        {topTabId == "scripts" ? <ScriptList /> : null}
+                        {selectedListTab == "settings" ? <ScriptSettingsPanel settingsJson={settingsJson} /> : null}
+                        {selectedListTab == "layers" ? <LayerList /> : null}
+                        {selectedListTab == "scripts" ? <ScriptList /> : null}
+                        {selectedListTab == "assets" ? <AssetList /> : null}
                     </div>
                 </Resizable>
                 <LayerConfigPanel />

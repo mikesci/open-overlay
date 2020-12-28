@@ -3,24 +3,41 @@ import { useEffect, useState } from "react";
 import { findLayerIndexes } from "./utilities";
 
 const MAX_LOG_ENTRIES = 200;
+const IMPORT_REGEX = /(import (.+ from )?["'])(\.\/)?(.+)(["'])/g;
 
-const compileScript = (scriptingContextId, scriptName, scripts, scriptUrls) => {
-    const scriptText = scripts[scriptName];
+const compileScript = (scriptingContextId, scriptName, scripts, assets, scriptUrls) => {
+
+    let scriptText;
+    let requiresCompile;
+    if (scriptName.startsWith("asset:")) {
+        const asset = assets[scriptName];
+        if (asset) {
+            scriptText = atob(asset.src.substring(28));
+            requiresCompile = false;
+        }
+    } else {
+        scriptText = scripts[scriptName];
+        requiresCompile = true;
+    }
 
     if (!scriptText)
-        throw "Could not find script: " + scriptName;
+        throw "Could not find script or asset: " + scriptName;
 
-    // find all instances of "import ... from "...url...""
-    const importLineRegex = /(import (.+ from )?["'])(\.\/)(.+)(["'])/g;
-    const compiledScript = scriptText.replace(importLineRegex, (match, pre, pre2, dotSlash, importedScriptName, post) => {
-        // check to see if we've already compiled this script, and if so, return it's url
-        // otherwise, compile the imported script
-        const dependencyUrl = scriptUrls[importedScriptName] || compileScript(scriptingContextId, importedScriptName, scripts, scriptUrls);
-        return pre + dependencyUrl + post;
-    });
+    let blob;
+    if (!requiresCompile) {
+        blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\n${scriptText}`], { type: "text/javascript"});
+    }
+    else {
+        const compiledScript = scriptText.replace(IMPORT_REGEX, (match, pre, pre2, dotSlash, importedScriptName, post) => {
+            // check to see if we've already compiled this script, and if so, return it's url
+            // otherwise, compile the imported script
+            const dependencyUrl = scriptUrls[importedScriptName] || compileScript(scriptingContextId, importedScriptName, scripts, assets, scriptUrls);
+            return pre + dependencyUrl + post;
+        });
+        blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\nconst { console, settings, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
+    }
 
-    // now that we have a fully replaced script, create the blob and return a url
-    const blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\nconst { console, settings, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
+    // now that we have a fully compiled script, create the blob and return a url
     const scriptUrl = URL.createObjectURL(blob);
     scriptUrls[scriptName] = scriptUrl;
     return scriptUrl;
@@ -276,7 +293,7 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
         // compile main.js
         let compiledMainJs;
         try {
-            compiledMainJs = compileScript(scriptId, "main.js", overlay.scripts, workingScriptState.scriptUrls);
+            compiledMainJs = compileScript(scriptId, "main.js", overlay.scripts, overlay.assets, workingScriptState.scriptUrls);
         }
         catch (err) {
             console.log(`Error compiling script:\n${err}`);

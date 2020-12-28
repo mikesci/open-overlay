@@ -17,7 +17,6 @@ const parseFloatOrDefault = (str, def = 0) => {
     return (isNaN(result) ? def : result);
 }
 
-
 const getSimpleReducer = (reducerMethods) => {
     return (ps, action) => {
         const reducer = reducerMethods[action.type];
@@ -210,6 +209,33 @@ const containerToStageCoordinates = (containerRect, stageTransform, rect) => {
     };
 }
 
+const showUploadDialogAsync = (accept) => {
+    return new Promise((resolve, reject) => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.style = "display: none";
+        input.accept = accept;
+        input.addEventListener("change", (evt) => {
+            if (input.files.length == 0) { reject(); return; }
+            resolve(input.files);
+        });
+        input.click();
+    });
+}
+
+const exportFile = async (name, dataUri) => {
+    const blob = await fetch(dataUri).then(r => r.blob());
+    const a = document.createElement("a");
+    a.style.display = "none";
+    const url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
 export {
     parsePropsOrFn,
     parseIntOrDefault,
@@ -224,5 +250,7 @@ export {
     getExternalScriptsStringAsync,
     copyToClipboard,
     stageToContainerCoordinates,
-    containerToStageCoordinates
+    containerToStageCoordinates,
+    showUploadDialogAsync,
+    exportFile
 };

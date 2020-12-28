@@ -326,6 +326,9 @@ const Reducers = {
             preferences: {...ps.preferences, bottomPanelMinimized: false }
         };
     },
+    SelectListTab: (ps, selectedListTab) => {
+        return { selectedListTab };
+    },
     SelectPropertyTab: (ps, selectedPropertyTab) => {
         return { selectedPropertyTab };
     },
@@ -356,6 +359,26 @@ const Reducers = {
             return { assets };
         });
     },
+    ReorderAsset: (ps, { assetKey, newIndex }) => {
+        if (!ps.overlay.assets) { return; }
+        return updateOverlay(ps, (overlay) => {
+            const asset = overlay.assets[assetKey];
+            const assetEntries = Object.entries(overlay.assets);
+            const assets = assetEntries.reduce((assets, [iteratorAssetKey, iteratorAsset], index) => {
+                if (index == newIndex)
+                    assets[assetKey] = asset;
+
+                if (assetKey != iteratorAssetKey)
+                    assets[iteratorAssetKey] = iteratorAsset;
+
+                if (index == assetEntries.length - 1 && newIndex > index)
+                    assets[assetKey] = asset;
+
+                return assets;
+            }, {});
+            return { assets };
+        });
+    },
 
     // scripts
     CreateScript: (ps, name) => {
@@ -380,6 +403,8 @@ const Reducers = {
                 const content = initialScriptContent[name] || "";
                 dispatch("CreateScriptInternal", { name, content });
             }
+
+            dispatch("SelectListTab", "scripts");
 
             // now open the script in the editor even if we didn't create it
             dispatch("OpenEditor", { type: "script", params: { scriptKey: name } });
@@ -527,8 +552,6 @@ const Reducers = {
                     effects: requestedLayer.effects || (element.manifest.defaultEffects ? { ...element.manifest.defaultEffects } : null),
                     style: { ...element.manifest.defaultStyle, ...requestedLayer.style }
                 };
-
-                console.log({ layer });
     
                 if (requestedLayer.animations)
                     layer.animations = requestedLayer.animations;
@@ -552,10 +575,62 @@ const Reducers = {
 
         // select the newly created layers
         newState.selectedLayerIds = selectedLayerIds;
+        // select the layers list
+        newState.selectedListTab = "layers";
         // and force the property tab to show the element config
         newState.selectedPropertyTab = "element";
 
         return newState;
+    },
+    CreateLayerFromAsset: (ps, assetKey) => {
+        return (dispatch) => {
+            // get the content type handler for this asset
+            const asset = ps.overlay.assets[assetKey];
+            if (!asset) {
+                console.log("Could not find asset.", assetKey);
+                return;
+            }
+
+            const contentTypeHandler = getContentTypeHandler(asset.type, null);
+
+            if (!contentTypeHandler) {
+                console.log("Could not get contentTypeHandler for type:", asset.type);
+                return;
+            }
+
+            // if the contentTypeHandler doesn't support creating layers, bail out
+            if (!contentTypeHandler.getLayer)
+                return;
+
+            // get the layer from the content type handler based on the assetKey
+            let layer = contentTypeHandler.getLayer(assetKey);
+
+            // it's possible that the built-in element we need won't be supported by the consuming
+            // application.  check here.
+            const element = ps.elements[layer.elementName];
+            if (!element) {
+                console.log("Tried to create layer for unknown element:" + layer.elementName);
+                return;
+            }
+
+            // set the layer's name to be the asset's name
+            layer.name = asset.name;
+
+            // if the element has natural dimensions, get those to store with the layer
+            let dimensionsPromise;
+            if (element.manifest.getNaturalDimensions)
+                dimensionsPromise = element.manifest.getNaturalDimensions(layer.config, { [assetKey]: asset });
+            else if (element.manifest.width && element.manifest.height)
+                dimensionsPromise = Promise.resolve({ width: element.manifest.width, height: element.manifest.height });
+            else
+                dimensionsPromise = Promise.resolve();
+            
+            dimensionsPromise.then(dimensions => {
+                if (dimensions)
+                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
+                dispatch("CreateLayers", [ layer ]);
+            });
+        };
     },
     SelectLayer: (ps, { id, append, selectBetween }) => {
         // optimization for deselecting when nothing is selected
@@ -1161,6 +1236,7 @@ const Reducers = {
                     return onUploadInlineAsset(file, onProgress).then(src => ({ name: file.name, src, inline: true }));
             };
 
+            /*
             const createLayer = async (contentTypeHandler, layerName, assetKey, asset) => {
 
                 // if the contentTypeHandler doesn't support creating layers, bail out
@@ -1193,10 +1269,11 @@ const Reducers = {
 
                 dispatch("CreateLayers", [ layer ]);
             };
+            */
 
             // if we don't have an onComplete function
             // then we want to create layers
-
+            let assetPromises = [];
             for(const file of files) {
                 // ensure we recognize the file type
                 const contentTypeHandler = getContentTypeHandler(file.type, null);
@@ -1210,31 +1287,33 @@ const Reducers = {
                 onUploadStarted(file);
 
                 // upload asynchronously
-                upload(file, onUploadProgress).then(asset => {
+                const assetPromise = upload(file, onUploadProgress).then(asset => {
                     if (!asset || !asset.src) {
                         onError(file, "Upload failed: asset or asset.src is null.");
                         return;
                     }
-
                     onUploadFinished(file);
-
                     asset.type = contentTypeHandler.assetType;
-
-                    new Promise((resolve) => {
+                    return new Promise((resolve) => {
                         dispatch("CreateAsset", { asset, onCreated: resolve }, false);
-                    }).then(assetKey => {
-                        // if we're creating layers, do it
-                        if (autoCreateLayers)
-                            createLayer(contentTypeHandler, file.name, assetKey, asset);
-
-                        // if we have an onComplete callback, call it
-                        if (onComplete)
-                            onComplete(assetKey);
-                    });
+                    })
                 }).catch(error => {
                     onError(file, error);
                 });
+
+                assetPromises.push(assetPromise);
             }
+
+            Promise.all(assetPromises).then(assetKeys => {
+                for(const assetKey of assetKeys) {
+                    // if we're creating layers, do it
+                    if (autoCreateLayers)
+                        dispatch("CreateLayerFromAsset", assetKey);
+                    // if we have an onComplete callback, call it
+                    if (onComplete)
+                        onComplete(assetKey);
+                }
+            });
         };
     },
 
@@ -1292,6 +1371,7 @@ const INITIAL_STATE = {
         transitionEditorSize: 300
     },
     editors: [],
+    selectedListTab: "layers",
     selectedPropertyTab: null,
     selectedEditorTab: null,
     toasts: []

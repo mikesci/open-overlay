@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import OverlayRenderer from "../OverlayRenderer.jsx";
+import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import "./StageManager.css";
 
@@ -91,7 +92,16 @@ const StageManager = (props) => {
     const onDrop = useCallback((evt) => {
         evt.preventDefault();
         evt.stopPropagation();
-        dispatch("HandleFileUpload", { files: evt.dataTransfer.files, autoCreateLayers: true });
+        if (DragAndDropTypes.EventHasType(evt, "Files")) {
+            dispatch("HandleFileUpload", { files: evt.dataTransfer.files, autoCreateLayers: true });
+            return;
+        }
+
+        if (DragAndDropTypes.EventHasType(evt, DragAndDropTypes.ASSET)) {
+            const assetKey = evt.dataTransfer.getData(DragAndDropTypes.ASSET);
+            dispatch("CreateLayerFromAsset", assetKey);
+            return;
+        }
     }, []);
 
     const onWheel = useCallback(evt => {

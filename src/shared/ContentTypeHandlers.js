@@ -72,11 +72,11 @@ let contentTypeHandlers = [
         }
     },
     {   // javascript (external scripts)
-        match: type => type.match(/text\/javascript/i),
+        match: type => type.match(/script/i),
         assetType: "script"
     },
     {   // iframe (any HTML content type)
-        match: type => type.match(/text\/html/i),
+        match: type => type.match(/html/i),
         assetType: "html",
         getLayer: (url) => {
             return {

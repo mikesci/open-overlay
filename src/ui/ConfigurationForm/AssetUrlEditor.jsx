@@ -1,5 +1,6 @@
 import { Button, InputGroup } from "@blueprintjs/core";
 import React, { useCallback, useState } from "react";
+import { showUploadDialogAsync } from "../../shared/utilities.js";
 import { useConfigurationFormContext } from "./ConfigurationFormContext.jsx";
 
 const AssetUrlEditor = ({ parameter }) => {
@@ -19,19 +20,11 @@ const AssetUrlEditor = ({ parameter }) => {
         setLocalTextValue(null);
     }, []);
 
-    const onUploadClick = useCallback(evt => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.style = "display: none";
-        input.accept = parameter.accept;
-        input.addEventListener("change", (evt) => {
-            if (input.files.length > 0) {
-                onHandleUpload(input.files, (url) => {
-                    onValueChanged(parameter, url, true);
-                });
-            }
+    const onUploadClick = useCallback(async (evt) => {
+        const files = await showUploadDialogAsync(parameter.accept);
+        onHandleUpload(files, (url) => {
+            onValueChanged(parameter, url, true);
         });
-        input.click();
     }, [parameter.accept]);
 
     const onAssetUrlDrop = useCallback((evt) => {

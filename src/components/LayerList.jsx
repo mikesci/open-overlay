@@ -97,19 +97,6 @@ const LayerList = () => {
 
    return (
     <div className="main-list layer-list">
-        <div className="actions">
-            {/*<Button text="Animation" small={true} minimal={true} icon="walk" active={editors.some(panel => panel.key === "animation")} onClick={() => dispatch("ToggleEditor", { type: "animation" })} />*/}
-            <div className="right">
-                <Popover position="right-top">
-                    <Button small={true} title="New Layer" icon="plus" intent="primary" rightIcon="caret-right" />
-                    <Menu>
-                        {Object.entries(elements).map(([elementName, element]) => (
-                            <MenuItem key={elementName} icon={element.manifest.icon} text={element.manifest.name} onClick={() => onCreateLayer(elementName)} />
-                        ))}
-                    </Menu>
-                </Popover>
-            </div>
-        </div>
         <div className="list-items">
             <ReorderableList itemType={DragAndDropTypes.LAYER} onReorderItem={onReorderItem}>
                 {(layers || []).map(layer => (

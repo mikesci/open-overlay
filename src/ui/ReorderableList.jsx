@@ -81,11 +81,10 @@ const ReorderableList = ({ itemType, onReorderItem, children }) => {
     }, [ draggedItemIndex ]);
 
     const onDrop = useCallback(evt => {
+        if (!DragAndDropTypes.EventHasType(evt, itemType)) { return; }
+
         evt.preventDefault();
         evt.stopPropagation();
-
-        // only handle items dragged from here
-        if (!DragAndDropTypes.EventHasType(evt, itemType)) { return; }
 
         // pull the id from the drag data
         let id = evt.dataTransfer.getData(itemType);
