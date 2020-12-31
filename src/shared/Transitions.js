@@ -2,6 +2,16 @@ import { parseFloatOrDefault } from "./utilities";
 
 const RAD = (Math.PI / 180);
 
+const getInferredKeyframe = (offset, layer, ...styleProperties) => {
+    let inferredKeyframe = { offset };
+    if (layer.style) {
+        for(const styleProperty of styleProperties) {
+            inferredKeyframe[styleProperty] = layer.style[styleProperty] || "initial";
+        }
+    }
+    return inferredKeyframe;
+}
+
 const Transitions = {
     "fade-in": {
         displayName: "Fade In",
@@ -10,8 +20,9 @@ const Transitions = {
             { name: "fromOpacity", type: "number", displayName: "From", tag: "%", min: 0, max: 100, immediate: false }
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", fromOpacity: 0 },
-        keyframes: ({ fromOpacity = 0 }) => ([
-            { offset: 0, opacity: (fromOpacity/100) }
+        keyframes: ({ fromOpacity = 0 }, layer) => ([
+            { offset: 0, opacity: (fromOpacity/100) },
+            getInferredKeyframe(1, layer, "opacity")
         ])
     },
     "slide-in": {
@@ -30,7 +41,8 @@ const Transitions = {
             const top = layerTop - (Math.cos(angle * RAD) * distance);
             const left = layerLeft + (Math.sin(angle * RAD) * distance);
             return [
-                { offset: 0, top: top + "px", left: left + "px" }
+                { offset: 0, top: top + "px", left: left + "px" },
+                getInferredKeyframe(1, layer, "top", "left")
             ];
         }
     },
@@ -44,18 +56,24 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", fromRotation: 0, fromScale: 100 },
-        keyframes: ({ fromRotation = 0, fromScale = 100 }) => ([
-            { offset: 0, transform: `rotate(${fromRotation}deg) scale(${fromScale/100})` }
-        ])
+        keyframes: ({ fromRotation = 0, fromScale = 100 }, layer) => {
+            const layerTransform = (layer.style ? layer.style.transform : null) || "";
+            return [
+                { offset: 0, transform: `${layerTransform} rotate(${fromRotation}deg) scale(${fromScale/100})` },
+                { offset: 1, transform: `${layerTransform} rotate(0) scale(1)` }
+            ];
+        }
     },
     "custom-in": {
         displayName: "Custom",
         phase: "entry",
         isCustom: true,
         initialConfig: { delay: 0, duration: 500, easing: "linear" },
-        keyframes: (config) => {
-            const { delay, duration, easing, ...style } = config;
-            return [{ offset: 0, ...style }];
+        keyframes: ({ delay, duration, easing, ...style}, layer) => {
+            return [
+                { offset: 0, ...style },
+                getInferredKeyframe(1, layer, ...Object.keys(style))
+            ];
         }
     },
     "fade-out": {
@@ -65,7 +83,8 @@ const Transitions = {
             { name: "toOpacity", type: "number", displayName: "To", tag: "%", min: 0, max: 100, immediate: false }
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", toOpacity: 0 },
-        keyframes: ({ toOpacity = 0 }) => ([
+        keyframes: ({ toOpacity = 0 }, layer) => ([
+            getInferredKeyframe(0, layer, "opacity"),
             { offset: 1, opacity: (toOpacity/100) }
         ])
     },
@@ -85,6 +104,7 @@ const Transitions = {
             const top = layerTop - (Math.cos(angle * RAD) * distance);
             const left = layerLeft + (Math.sin(angle * RAD) * distance);
             return [
+                getInferredKeyframe(0, layer, "top", "left"),
                 { offset: 1, top: top + "px", left: left + "px" }
             ];
         }
@@ -99,18 +119,24 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", toRotation: 0, toScale: 100 },
-        keyframes: ({ toRotation = 0, toScale = 100 }) => ([
-            { offset: 1, transform: `rotate(${toRotation}deg) scale(${toScale/100})` }
-        ])
+        keyframes: ({ toRotation = 0, toScale = 100 }, layer) => {
+            const layerTransform = (layer.style ? layer.style.transform : null) || "";
+            return [
+                { offset: 0, transform: `${layerTransform} rotate(0) scale(1)` },
+                { offset: 1, transform: `${layerTransform} rotate(${toRotation}deg) scale(${toScale/100})` }
+            ];
+        }
     },
     "custom-out": {
         displayName: "Custom",
         phase: "exit",
         isCustom: true,
         initialConfig: { delay: 0, duration: 500, easing: "linear" },
-        keyframes: (config) => {
-            const { delay, duration, easing, ...style } = config;
-            return [{ offset: 1, ...style }];
+        keyframes: ({ delay, duration, easing, ...style }, layer) => {
+            return [
+                getInferredKeyframe(0, layer, ...Object.keys(style)),
+                { offset: 1, ...style }
+            ];
         }
     }
 };

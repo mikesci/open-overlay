@@ -62,9 +62,11 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
         const scriptId = (window._lastScriptId ? window._lastScriptId + 1 : 1);
         window._lastScriptId = scriptId;
 
+        let workingLayers = (overlay.layers ? [...overlay.layers] : []);
+
         let workingScriptState = {
-            layers: [...overlay.layers],
-            maxLayerId: overlay.layers.map(r => r.id).reduce((a,c) => (c.id > a ? c.id : a), 0),
+            layers: workingLayers,
+            maxLayerId: workingLayers.map(r => r.id).reduce((a,c) => (c.id > a ? c.id : a), 0),
             eventHandlers: {},
             timeouts: [],
             intervals: [],
@@ -96,8 +98,24 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                 onScriptStateChanged(workingScriptState);
         };
 
+        let settings;
+        try
+        {
+            const settingsJsonText = (overlay.scripts ? overlay.scripts["settings.json"] : null);
+            const settingsJson = (settingsJsonText ? JSON.parse(settingsJsonText) : null);
+            if (settingsJson && settingsJson.initial)
+                settings = {...settingsJson.initial};
+        }
+        catch {}
+
+        if (!settings)
+            settings = {};
+
+        if (overlay.settings)
+            Object.apply(settings, overlay.settings);
+
         const scriptingContext = {
-            settings: overlay.settings || {},
+            settings,
             console: {
                 ...console,
                 // intercept console.log

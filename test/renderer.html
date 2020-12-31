@@ -37,7 +37,7 @@
             
             sourcePromise.then(overlay => {
                 ReactDOM.render(
-                    React.createElement(OverlayRenderer.default, { overlay }),
+                    React.createElement(OverlayRenderer, { overlay }),
                     document.querySelector("#root")
                 );
             });

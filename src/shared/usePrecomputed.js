@@ -1,17 +1,5 @@
 import Transitions from "./Transitions.js";
 
-const precomputeLayerStyle = (layer, index) => {
-    /*
-    let phaseStyle = buildLayerStyle(layer);
-
-    // add the z-index
-    phaseStyle.zIndex = 1000 - index;
-
-    return phaseStyle;
-    */
-    return {...layer.style, zIndex: 1000 - index};
-}
-
 const translateKeyframes = (keyframes) => {
     return keyframes.reduce((outputKeyframes, keyframe, index) => {
         // easing is very weird.  our easing property is applied as if it applies retroactively to the segment ENDING with the keyframe's offset
@@ -93,7 +81,7 @@ const precomputeAnimations =  (animations, layer) => {
 }
 */
 
-const precomputeAnimations =  (animations, layer) => {
+const precomputeAnimations =  (layer) => {
     
     if (!layer.transitions)
         return {};
@@ -127,6 +115,5 @@ const precomputeAnimations =  (animations, layer) => {
 }
 
 export {
-    precomputeLayerStyle,
     precomputeAnimations
 };

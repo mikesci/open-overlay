@@ -1,50 +1,12 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import Elements from "./elements/_All.jsx";
-import { precomputeAnimations, precomputeLayerStyle } from "./shared/usePrecomputed.js";
+import React, { useEffect, useState, useMemo, useRef } from "react";
+import BuiltinElements from "./elements/_All.jsx";
+import { precomputeAnimations } from "./shared/usePrecomputed.js";
 import { effects } from "./components/Effects.jsx";
 import AnimationPhase from "./shared/AnimationPhase.js";
 import AnimationState from "./shared/AnimationState.js";
 import useScriptingContext from "./shared/useScriptingContext.js";
 import FontLoader from "./shared/FontLoader.js";
 import "./OverlayRenderer.css";
-
-const useAutomaticAnimation = (hidden, phaseDurations) => {
-    const [animation, setAnimation] = useState({
-        phase: AnimationPhase.HIDDEN,
-        state: AnimationState.PLAYING,
-        offset: 0
-    });
-
-    useEffect(() => {
-        // change immediately to ENTERING if we're not hidden
-        if (!hidden) {
-            setAnimation(prev => ({...prev, phase: AnimationPhase.ENTRY }));
-            return;
-        }
-
-        // we are hidden
-        
-        // if we don't have an exit duration, immediately flip to HIDDEN
-        const exitDuration = phaseDurations[AnimationPhase.EXIT.key];
-        if (!exitDuration)
-        {
-            setAnimation(prev => ({...prev, phase: AnimationPhase.HIDDEN }));
-            return;
-        }
-
-        // if we DO, set a timeout to flip to hidden when it's over
-        const stateChangeTimeout = setTimeout(() => {
-            setAnimation(prev => ({...prev, phase: AnimationPhase.HIDDEN }));
-        }, exitDuration);
-
-        // and set the state to exiting
-        setAnimation(prev => ({...prev, phase: AnimationPhase.EXIT }));
-
-        return () => { clearTimeout(stateChangeTimeout) }; 
-    }, [ hidden, phaseDurations ]);
-
-    return animation;
-}
 
 const extractPreloadPromise = (element, layer) => {
     let preloads = [];
@@ -64,146 +26,70 @@ const extractPreloadPromise = (element, layer) => {
     return Promise.all(preloads);
 }
 
-const useDefaultElementRenderer = (additionalElements) => {
-    return useMemo(() => {
-        // merge elements
-        const mergedElements = (additionalElements ? { ...Elements, ...additionalElements } : Elements);
-
-        const DefaultElementRenderer = ({ layer, index, assets, wrapperRef }) => {
-            let style = precomputeLayerStyle(layer, index);
-            let [preloading, setPreloading] = useState();
-
-            // render nothing if the element is unknown
-            const element = mergedElements[layer.elementName];
-            if (!element) { return null; }
-
-            // extract preloads
-            const preloadPromise = useMemo(() => extractPreloadPromise(element, layer), [element, layer]);
-
-            // if we have preloads
-            // set preloading to true
-            // and set to false once the preloading is done
-            if (preloadPromise && preloading == null) {
-                setPreloading(true);
-                preloadPromise.finally(r => setPreloading(false));
-                return null;
-            }
-
-            let styleEffects = [];
-            let wrapperEffects = [];
-            if (layer.effects) {
-                for(const [effectName, effectConfig] of Object.entries(layer.effects)) {
-                    const effect = effects[effectName];
-
-                    if (!effect) {
-                        console.log("Unknown effect", effectName);
-                        continue;
-                    }
-
-                    // skip hidden effects
-                    if (effectConfig.hidden) { continue; }
-
-                    if (effect.type == "style")
-                        styleEffects.push({ effect, effectConfig });
-                    else if (effect.type == "wrapper")
-                        wrapperEffects.push({ effect, effectConfig });
-                }
-            }
-
-            // if there are any STYLE effects, apply them now
-            for(const styleEffect of styleEffects)
-                style = styleEffect.effect.apply(layer, style, styleEffect.effectConfig);
-            
-            let component = (
-                <div data-id={layer.id} className="layer-wrapper" style={style} ref={wrapperRef}>
-                    <element.component {...layer.config} layer={layer} assets={assets} ElementRenderer={DefaultElementRenderer} />
-                </div>
-            );
-
-            // if there are any WRAPPER effects, apply them now
-            for(const wrapperEffect of wrapperEffects) {
-                component = <wrapperEffect.effect.component {...wrapperEffect.effectConfig} layer={layer}>{component}</wrapperEffect.effect.component>
-            }
-
-            return component;
-        };
-
-        return DefaultElementRenderer;
-    }, [additionalElements]);
-}
-
-const OverlayRenderer = ({
-    overlay,                        // the overlay to render
-    elements,                       // an additional elements object to add to the built-in elements
-    zIndex = 10000,                 // stacking order of this overlay
-    hidden = false,                 // controls if the entire overlay is visible or hidden.  changing affects automatic animation state changes and script execution.
-    animationContext,               // animation properties.  leave blank to handle automatically.
-    ElementRenderer,                // the component that renders elements.  can be overridden for "wireframe mode". leave undefined to render normally.
-    executeScripts,                 // whether to execute scripts or not.  leave undefined to execute scripts automatically when shown.
-    onOverlayDomReady,              // occurs when the overlay's DOM element has been rendered and is ready
-    onScriptStateChanged            // occurs when a script executes and/or it's state changes
-    }) => {
-
-    // use default renderer if not supplied
-    if (ElementRenderer === undefined)
-        ElementRenderer = useDefaultElementRenderer(elements);
+const defaultElementRenderer = ({ element, layer, style, assets, wrapperRef }) => {
+    const [preloading, setPreloading] = useState();
     
-    // automatically execute scripts when unhidden
-    if (executeScripts === undefined)
-        executeScripts = !hidden;
+    // extract preloads
+    const preloadPromise = useMemo(() => extractPreloadPromise(element, layer), [element, layer]);
 
-    const overlayId = overlay.id || "default";
-    const overlayDomRef = useRef();
-    const scriptState = useScriptingContext(overlay, overlayDomRef, onScriptStateChanged, executeScripts);
+    // if we have preloads
+    // set preloading to true
+    // and set to false once the preloading is done
+    if (preloadPromise && preloading == null) {
+        setPreloading(true);
+        preloadPromise.finally(r => setPreloading(false));
+        return null;
+    }
 
-    useEffect(() => {
-        if (onOverlayDomReady) { onOverlayDomReady(overlayDomRef.current); }
-    }, []);
+    let styleEffects = [];
+    let wrapperEffects = [];
+    if (layer.effects) {
+        for(const [effectName, effectConfig] of Object.entries(layer.effects)) {
+            const effect = effects[effectName];
 
-    // if we have a scriptState, then we're executing a script
-    // and we should use the overlay in that instead of the props overlay
-    const sourceLayers = (scriptState ? scriptState.layers : overlay.layers) || [];
+            if (!effect) {
+                console.log("Unknown effect", effectName);
+                continue;
+            }
 
-    const layers = sourceLayers.map((layer, index) => (
-        <LayerWrapper
-            key={layer.id}
-            overlayId={overlayId}
-            overlay={overlay}
-            layer={layer}
-            index={index}
-            animationContext={animationContext}
-            ElementRenderer={ElementRenderer}
-        />
-    ));
-    return (
-        <div className="overlay" ref={overlayDomRef} data-overlayid={overlayId} style={{ zIndex }}>
-            {layers}
+            // skip hidden effects
+            if (effectConfig.hidden) { continue; }
+
+            if (effect.type == "style")
+                styleEffects.push({ effect, effectConfig });
+            else if (effect.type == "wrapper")
+                wrapperEffects.push({ effect, effectConfig });
+        }
+    }
+
+    // if there are any STYLE effects, apply them now
+    for(const styleEffect of styleEffects)
+        style = styleEffect.effect.apply(layer, style, styleEffect.effectConfig);
+    
+    let component = (
+        <div data-id={layer.id} className="layer-wrapper" style={style} ref={wrapperRef}>
+            <element.component {...layer.config} layer={layer} assets={assets} ElementRenderer={defaultElementRenderer} />
         </div>
     );
+
+    // if there are any WRAPPER effects, apply them now
+    for(const wrapperEffect of wrapperEffects) {
+        component = <wrapperEffect.effect.component {...wrapperEffect.effectConfig} layer={layer}>{component}</wrapperEffect.effect.component>
+    }
+
+    return component;
 }
 
-const LayerWrapper = ({ overlay, layer, index, animationContext, ElementRenderer }) => {
-    const wrapperRef = useRef();
-    const layerHidden = layer.hidden || overlay.hidden;
+const useAnimations = (layer, targetRef, animationContext) => {
+    // memoize animations
+    const animations = useMemo(() => {
+        return precomputeAnimations(layer);
+    }, [layer]);
 
-    if (!animationContext)
-        animationContext = useAutomaticAnimation(layerHidden, overlay.phases);
-
-    // handle style application & animations
     useEffect(() => {
-        const animations = precomputeAnimations(overlay.animations, layer);
+        const target = targetRef.current;
 
-        let target = wrapperRef.current;
-
-        // handle hidden/visible
-        target.style.display = (layerHidden ? "none" : "block");
-
-        // if there are any non-transition animations on the element, cancel them
-        for(const existingAnimation of target.getAnimations()) {
-            if (!existingAnimation.transitionProperty) {
-                existingAnimation.cancel();
-            }
-        }
+        let animationsCreated = [];
 
         // apply animations if we have them for this phase
         const phaseAnimations = animations[animationContext.phase.key];
@@ -222,16 +108,106 @@ const LayerWrapper = ({ overlay, layer, index, animationContext, ElementRenderer
                     anim.pause();
                 else
                     anim.play();
+
+                    animationsCreated.push(anim);
             }
         }
 
-    }, [ layerHidden, overlay.animations, layer, index, animationContext ]);
+        return () => {
+            // if there are any non-transition animations on the element, cancel them
+            // these are css transitions, not our "transitions" which are really just animations
+            if (animationsCreated.length > 0) {
+                for(const existingAnimation of animationsCreated) {
+                    if (!existingAnimation.transitionProperty) {
+                        existingAnimation.cancel();
+                    }
+                }
+            }
+        };
+    }, [targetRef, animations, animationContext]);
+};
+
+const OverlayRenderer = ({
+    overlay,                                    // the overlay to render
+    elements,                                   // an additional elements object to add to the built-in elements
+    zIndex = 10000,                             // stacking order of this overlay
+    animationContext = {
+        phase: AnimationPhase.STATIC,
+        state: AnimationState.PAUSED,
+        offset: 0
+    },                                          // the animation context, for controlling animations externally
+    ElementRenderer = defaultElementRenderer,   // the component that renders elements.  can be overridden for "wireframe mode". leave undefined to render normally.
+    executeScripts = true,                      // whether to execute scripts or not.  leave undefined to execute scripts automatically when shown.
+    onOverlayDomReady,                          // occurs when the overlay's DOM element has been rendered and is ready
+    onScriptStateChanged                        // occurs when a script executes and/or it's state changes
+    }) => {
+
+    // combine external elements and BuiltinElements and memoize for speed
+    const combinedElements = useMemo(() => {
+        if (elements)
+            return {...BuiltinElements, ...elements};
+        else    
+            return BuiltinElements;
+    }, [elements]);
+
+    const overlayId = overlay.id || "default";
+    const overlayDomRef = useRef();
+    const scriptState = useScriptingContext(overlay, overlayDomRef, onScriptStateChanged, executeScripts);
+
+    useEffect(() => {
+        if (onOverlayDomReady) { onOverlayDomReady(overlayDomRef.current); }
+    }, []);
+
+    // if we have a scriptState, then we're executing a script
+    // and we should use the overlay in that instead of the props overlay
+    const sourceLayers = (scriptState ? scriptState.layers : overlay.layers) || [];
+
+    const layers = sourceLayers.map((layer, index) => {
+        const element = combinedElements[layer.elementName];
+
+        // render nothing if the element is unknown
+        if (!element)
+            return null;
+
+        return (
+            <LayerWrapper
+                key={layer.id}
+                element={element}
+                overlay={overlay}
+                layer={layer}
+                index={index}
+                animationContext={animationContext}
+                ElementRenderer={ElementRenderer} />
+        );
+    });
+
+    return (
+        <div className="overlay" ref={overlayDomRef} data-overlayid={overlayId} style={{ zIndex }}>
+            {layers}
+        </div>
+    );
+}
+
+const LayerWrapper = ({ element, overlay, layer, index, animationContext, ElementRenderer }) => {
+
+    // memoize style
+    const layerHidden = (animationContext.phase == AnimationPhase.HIDDEN || overlay.hidden || layer.hidden);
+    const style = useMemo(() => ({
+        ...layer.style,
+        zIndex: 1000 - index,
+        display: (layerHidden ? "none" : "block")
+    }), [layer.style, index, layerHidden]);
+
+    // use animations (incl. transitions)
+    const wrapperRef = useRef();
+    useAnimations(layer, wrapperRef, animationContext);
 
     return (
         <ElementRenderer
             key={layer.id}
+            element={element}
             layer={layer}
-            index={index}
+            style={style}
             assets={overlay.assets} // always use the assets from the main overlay - they're immutable
             wrapperRef={wrapperRef} />
     );   
