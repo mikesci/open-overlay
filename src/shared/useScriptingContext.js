@@ -184,33 +184,23 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                         commitWorkingState();
                         return stateObj;
                     },
-                    show: (animate = true) => {
+                    show: () => {
                         for(const index of indexes) {
                             const layer = workingScriptState.layers[index];
                             workingScriptState.layers[index] = {
                                 ...layer,
-                                hidden: false,
-                                // switch to the entry phase for layers that aren't already showing
-                                animationContext: {
-                                    phase: (layer.hidden && animate ? AnimationPhase.ENTRY : AnimationPhase.STATIC),
-                                    playing: true
-                                }
+                                hidden: false
                             };
                         }
                         commitWorkingState();
                         return stateObj;
                     },
-                    hide: (animate = true) => {
+                    hide: () => {
                         for(const index of indexes) {
                             const layer = workingScriptState.layers[index];
                             workingScriptState.layers[index] = {
                                 ...layer,
-                                hidden: true,
-                                // switch to the exit phase for layers that aren't already hidden
-                                animationContext: {
-                                    phase: (!layer.hidden && animate ? AnimationPhase.EXIT : AnimationPhase.HIDDEN),
-                                    playing: true
-                                }
+                                hidden: true
                             };
                         }
                         commitWorkingState();
