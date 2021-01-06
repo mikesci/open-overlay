@@ -85,8 +85,6 @@ const defaultElementRenderer = ({ element, layer, style, assets, wrapperRef }) =
 
 const applyTransitions = (phaseTransitions, targetDOM, animationContext) => {
 
-    console.log(" applied transitions ", phaseTransitions, targetDOM, animationContext);
-
     // if we don't have an animation context, throw an error
     // (this should never really happen)
     if (!animationContext) {
