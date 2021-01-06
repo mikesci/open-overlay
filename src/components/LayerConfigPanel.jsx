@@ -8,8 +8,7 @@ import styleEditors from "../shared/styleEditors.js";
 import { effects } from "./Effects.jsx";
 import "./LayerConfigPanel.css";
 import AnimationPhase from "../shared/AnimationPhase.js";
-import Transitions from "../shared/Transitions.js";
-import AnimationState from "../shared/AnimationState.js";
+import { Transitions } from "../shared/Transitions.js";
 
 const TRANSITION_PARAMETERS = [
     { type: "group", items: [
@@ -214,7 +213,7 @@ const TransitionPhasePanel = ({ phase, transitionConfigs, transitionBeingEdited,
         onTogglePlaying(phase);
     }, [phase]);
 
-    const isPlaying = (animationContext.state == AnimationState.PLAYING && animationContext.phase == phase);
+    const isPlaying = (animationContext.playing && animationContext.phase == phase);
 
     // find all transitions that match the phase, and combine with the transition configs we have
     const items = Object.entries(Transitions).reduce((items, [transitionName, transition]) => {

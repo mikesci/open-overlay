@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import BuiltinElements from "./elements/_All.jsx";
-import { precomputeAnimations } from "./shared/usePrecomputed.js";
+import { useTransitions } from "./shared/Transitions.js";
 import { effects } from "./components/Effects.jsx";
 import AnimationPhase from "./shared/AnimationPhase.js";
-import AnimationState from "./shared/AnimationState.js";
 import useScriptingContext from "./shared/useScriptingContext.js";
 import FontLoader from "./shared/FontLoader.js";
 import "./OverlayRenderer.css";
@@ -17,7 +16,7 @@ const extractPreloadPromise = (element, layer) => {
     }
 
     // additionally, we'll preload fonts if the style includes a fontFamily definition
-    if (layer.style.fontFamily)
+    if (layer.style && layer.style.fontFamily)
         preloads.push(FontLoader.LoadFont(layer.style.fontFamily));
 
     if (preloads.length == 0)
@@ -40,6 +39,10 @@ const defaultElementRenderer = ({ element, layer, style, assets, wrapperRef }) =
         preloadPromise.finally(r => setPreloading(false));
         return null;
     }
+
+    // if preloading, don't show anything
+    if (preloading)
+        style = {...style, visibility: "hidden"};
 
     let styleEffects = [];
     let wrapperEffects = [];
@@ -80,62 +83,55 @@ const defaultElementRenderer = ({ element, layer, style, assets, wrapperRef }) =
     return component;
 }
 
-const useAnimations = (layer, targetRef, animationContext) => {
-    // memoize animations
-    const animations = useMemo(() => {
-        return precomputeAnimations(layer);
-    }, [layer]);
+const applyTransitions = (phaseTransitions, targetDOM, animationContext) => {
 
-    useEffect(() => {
-        const target = targetRef.current;
+    console.log(" applied transitions ", phaseTransitions, targetDOM, animationContext);
 
-        let animationsCreated = [];
+    // if we don't have an animation context, throw an error
+    // (this should never really happen)
+    if (!animationContext) {
+        console.log("Could not apply transitions - animationContext is not set.");
+        return;
+    }
 
-        // apply animations if we have them for this phase
-        const phaseAnimations = animations[animationContext.phase.key];
-        if (phaseAnimations) {
-            const globalDelay = (animationContext.state == AnimationState.PAUSED ? animationContext.offset : 0);
+    const globalDelay = (animationContext.playing ? 0 : animationContext.offset || 0);
 
-            for(const animation of phaseAnimations) {
-                const anim = target.animate(animation.keyframes, {
-                    delay: animation.delay - globalDelay,
-                    duration: animation.duration,
-                    easing: animation.easing,
-                    fill: "both"
-                });
+    // if we're transitioning, we know the layer needs to be visible
+    targetDOM.style.display = "block";
 
-                if (animationContext.state == AnimationState.PAUSED)
-                    anim.pause();
-                else
-                    anim.play();
+    const animationHandles = phaseTransitions.map(animation => {
+        const animationHandle = targetDOM.animate(animation.keyframes, {
+            delay: animation.delay - globalDelay,
+            duration: animation.duration,
+            easing: animation.easing,
+            fill: "both"
+        });
 
-                    animationsCreated.push(anim);
-            }
-        }
+        // pause if necessary
+        if (!animationContext.playing)
+            animationHandle.pause();
 
-        return () => {
-            // if there are any non-transition animations on the element, cancel them
-            // these are css transitions, not our "transitions" which are really just animations
-            if (animationsCreated.length > 0) {
-                for(const existingAnimation of animationsCreated) {
-                    if (!existingAnimation.transitionProperty) {
-                        existingAnimation.cancel();
-                    }
+        return animationHandle;
+    });
+
+    return () => {
+        // if there are any non-css-transition animations on the element, cancel them
+        if (animationHandles && animationHandles.length > 0) {
+            for(const animationHandle of animationHandles) {
+                if (!animationHandle.transitionProperty) {
+                    animationHandle.cancel();
                 }
             }
-        };
-    }, [targetRef, animations, animationContext]);
+        }
+    };
 };
 
 const OverlayRenderer = ({
     overlay,                                    // the overlay to render
     elements,                                   // an additional elements object to add to the built-in elements
     zIndex = 10000,                             // stacking order of this overlay
-    animationContext = {
-        phase: AnimationPhase.STATIC,
-        state: AnimationState.PAUSED,
-        offset: 0
-    },                                          // the animation context, for controlling animations externally
+    hidden = false,                             // forces all layers to be hidden if they're not already
+    animationContext = null,                    // the animation context, for controlling animations externally - { phase (AnimationPhase), playing (bool), offset (int, milliseconds) }
     ElementRenderer = defaultElementRenderer,   // the component that renders elements.  can be overridden for "wireframe mode". leave undefined to render normally.
     executeScripts = true,                      // whether to execute scripts or not.  leave undefined to execute scripts automatically when shown.
     onOverlayDomReady,                          // occurs when the overlay's DOM element has been rendered and is ready
@@ -176,6 +172,7 @@ const OverlayRenderer = ({
                 overlay={overlay}
                 layer={layer}
                 index={index}
+                hidden={hidden || layer.hidden}
                 animationContext={animationContext}
                 ElementRenderer={ElementRenderer} />
         );
@@ -188,20 +185,54 @@ const OverlayRenderer = ({
     );
 }
 
-const LayerWrapper = ({ element, overlay, layer, index, animationContext, ElementRenderer }) => {
+const LayerWrapper = ({ element, overlay, layer, index, hidden, animationContext, ElementRenderer }) => {
+    // a forward ref for the wrapper element
+    const wrapperRef = useRef();
 
     // memoize style
-    const layerHidden = (animationContext.phase == AnimationPhase.HIDDEN || overlay.hidden || layer.hidden);
-    const style = useMemo(() => ({
-        ...layer.style,
-        zIndex: 1000 - index,
-        display: (layerHidden ? "none" : "block")
-    }), [layer.style, index, layerHidden]);
+    const style = useMemo(() => {
+        let style = {
+            ...layer.style,
+            zIndex: 1000 - index
+        };
 
-    // use animations (incl. transitions)
-    const wrapperRef = useRef();
-    useAnimations(layer, wrapperRef, animationContext);
+        // additionally, if this the first time we're running (wrapperRef.current is null)
+        // then hide by default.  this will get changed with the useEffect below.
+        // the net effect is that there's no "first frame" of entry animations in the wrong place.
+        if (!wrapperRef.current)
+            style.display = "none";
 
+        return style;
+    }, [layer.style, index, wrapperRef.current]);
+
+    // get memoized transitions
+    const transitions = useTransitions(layer);
+
+    // and we'll apply the animation context here
+    useEffect(() => {
+        let localAnimationContext = animationContext;
+
+        // if we have no overriding animationContext,
+        // determine it automatically based on if this layer is hidden or not
+        if (!animationContext) {
+            if (!hidden)
+                localAnimationContext = { phase: AnimationPhase.ENTRY, playing: true };
+            else
+                localAnimationContext = { phase: AnimationPhase.EXIT, playing: true };
+        }
+
+        // now we know for sure that we have an animation context.  the next step is to see if we can play it
+        // (we can't if there's no transitions for this phase)
+        const phaseTransitions = (transitions ? transitions[localAnimationContext.phase.key] : null);
+
+        // now we can finally apply styles and animations
+        if (localAnimationContext.phase == AnimationPhase.STATIC || phaseTransitions == null || phaseTransitions.length == 0)
+            wrapperRef.current.style.display = (hidden ? "none" : "block");
+        else
+            return applyTransitions(phaseTransitions, wrapperRef.current, localAnimationContext);
+
+    }, [transitions, hidden, wrapperRef, animationContext]);
+    
     return (
         <ElementRenderer
             key={layer.id}

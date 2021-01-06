@@ -132,7 +132,7 @@ const StageManager = (props) => {
                     overlay={overlay}
                     disableBuiltinElements={true}
                     elements={elements}
-                    animationContext={animationContext}
+                    animationContext={(isExecutingScript ? null : animationContext)}
                     executeScripts={isExecutingScript}
                     onOverlayDomReady={onOverlayDomReady}
                     onScriptStateChanged={onScriptStateChanged} />

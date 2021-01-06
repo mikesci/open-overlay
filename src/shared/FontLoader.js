@@ -986,7 +986,9 @@ const FONT_SOURCES = [
                     let link = document.createElement("link");
                     link.rel = "stylesheet";
                     link.href = "https://fonts.googleapis.com/css?family=" + encodeURIComponent(fontName);
-                    link.addEventListener("load", resolve);
+                    link.addEventListener("load", () => {
+                        requestAnimationFrame(resolve);
+                    });
                     link.addEventListener("abort", reject);
                     link.addEventListener("error", reject);
                     document.head.appendChild(link);

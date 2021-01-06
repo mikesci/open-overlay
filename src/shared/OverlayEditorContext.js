@@ -4,11 +4,10 @@ import { createStore } from "./reduxLite.js";
 import { effects } from "../components/Effects.jsx";
 import { maxValue, copyToClipboard, parsePropsOrFn } from "./utilities.js";
 import AnimationPhase from "./AnimationPhase.js";
-import AnimationState from "./AnimationState.js";
 import Elements from "../elements/_All.jsx";
 import { stageTools } from "../components/StageTools.jsx";
 import Editors from "../panels/Editors.js";
-import Transitions from "./Transitions.js";
+import { Transitions } from "./Transitions.js";
 import initialScriptContent from "./initialScriptContent.js";
 
 const OverlayEditorContext = React.createContext();
@@ -127,20 +126,6 @@ function getContentTypeHandler(contentType, data) {
     return ContentTypeHandlers.find(handler => handler.match(contentType, data));
 }
 
-function onUploadInlineAsset(file, onProgress) {
-    // string lengths max out in most browsers at ~128MB, so we'll error if the file is larger
-    if (file.size > 134217728)
-        return Promise.reject("File sizes greater than 128MB are not supported.");
-
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.addEventListener("load", () => resolve(reader.result));
-        reader.addEventListener("progress", (evt) => onProgress(file, evt.loaded));
-        reader.addEventListener("error", reject);
-        reader.readAsDataURL(file);
-    });
-}
-
 const Reducers = {
     SetOptions: (ps, { width, height, onOverlayChanged, onUpload, elements }) => {
         return {
@@ -158,9 +143,6 @@ const Reducers = {
     },
     SetOverlayDomElement: (ps, overlayDomElement) => {
         return { overlayDomElement };
-    },
-    SetStageTool: (ps, stageTool) => {
-        return { stageTool, animationContext: { phase: AnimationPhase.STATIC, offset: 0, state: AnimationState.PAUSED } };
     },
     SetStageAutoFitZoom: (ps, autoFitZoom) => {
         return {
@@ -196,14 +178,12 @@ const Reducers = {
     SetStageTransform: (ps, stageTransform) => {
         return { stageTransform };
     },
-    SetAnimationContext: (ps, { phase, offset, duration, state, timeout }) => {
+    SetAnimationContext: (ps, { phase, playing, offset, timeout }) => {
         let newState = {
             animationContext: {
-                ...ps.animationContext,
                 phase: (phase === undefined ? ps.animationContext.phase : phase),
+                playing: (playing === undefined ? ps.animationContext.playing : playing),
                 offset: (offset === undefined ? ps.animationContext.offset : offset),
-                duration: (duration === undefined ? ps.animationContext.duration : duration),
-                state: (state === undefined ? ps.animationContext.state : state),
                 timeout: (timeout === undefined ? ps.animationContext.timeout : timeout)
             }
         };
@@ -220,11 +200,11 @@ const Reducers = {
 
         return (dispatch) => {
             // if we're playing, then cancel the timeout and revert to the static phase
-            if (ps.animationContext.state == AnimationState.PLAYING) {
+            if (ps.animationContext.playing) {
                 if (ps.animationContext.timeout)
                     clearTimeout(ps.animationContext.timeout);
 
-                dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, state: AnimationState.PAUSED, timeout: null });
+                dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, playing: false, timeout: null });
             } else {
 
                 // if duration is not specified, derive it from transitions
@@ -245,10 +225,10 @@ const Reducers = {
                 // if changing the state to playing, set a timeout to flip back to paused after the phase ends
                 //const timeoutLength = duration - initialAnimationOffset;
                 let timeout = setTimeout(() => {
-                    dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, state: AnimationState.PAUSED, timeout: null });
+                    dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, playing: false, timeout: null });
                 }, duration);
     
-                dispatch("SetAnimationContext", { phase, offset: 0, state: AnimationState.PLAYING, timeout });
+                dispatch("SetAnimationContext", { phase, playing: true, offset: 0, timeout });
             }
         };
     },
@@ -1230,46 +1210,20 @@ const Reducers = {
             // get a function that does the upload for each file
             // and returns an asset object in the form of { name, src, inline }
             const upload = (file, onProgress) => {
-                if (ps.onUpload) // upload as a url
-                    return ps.onUpload(file, onProgress).then(src => ({ name: file.name, src }));
-                else // upload as an inline asset
-                    return onUploadInlineAsset(file, onProgress).then(src => ({ name: file.name, src, inline: true }));
+                // if onUpload is not provided, throw an error
+                if (!ps.onUpload)
+                    return Promise.reject("Uploading disabled: onUpload has not been provided.");
+
+                // otherwise, call it
+                return ps.onUpload(file, onProgress).then(src => {
+                    // if src is null, then the upload succeeded, but was handled externally.  we should do nothing.
+                    if (!src)
+                        return null;
+
+                    return { name: file.name, src };
+                });
+                
             };
-
-            /*
-            const createLayer = async (contentTypeHandler, layerName, assetKey, asset) => {
-
-                // if the contentTypeHandler doesn't support creating layers, bail out
-                if (!contentTypeHandler.getLayer)
-                    return;
-
-                // get the layer from the content type handler based on the url, which is just the assetKey
-                let layer = contentTypeHandler.getLayer(assetKey);
-
-                // it's possible that the built-in element we need won't be supported by the consuming
-                // application.  check here.
-                const element = ps.elements[layer.elementName];
-                if (!element) {
-                    console.log("Tried to create layer for unknown element:" + layer.elementName);
-                    return;
-                }
-
-                // set the layer's name to be the filename
-                layer.name = layerName;
-
-                // if the element has natural dimensions, get those to store with the layer
-                let dimensions;
-                if (element.manifest.getNaturalDimensions)
-                    dimensions = await element.manifest.getNaturalDimensions(layer.config, { [assetKey]: asset });
-                else if (element.manifest.width && element.manifest.height)
-                    dimensions = { width: element.manifest.width, height: element.manifest.height };
-
-                if (dimensions)
-                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
-
-                dispatch("CreateLayers", [ layer ]);
-            };
-            */
 
             // if we don't have an onComplete function
             // then we want to create layers
@@ -1288,11 +1242,13 @@ const Reducers = {
 
                 // upload asynchronously
                 const assetPromise = upload(file, onUploadProgress).then(asset => {
-                    if (!asset || !asset.src) {
-                        onError(file, "Upload failed: asset or asset.src is null.");
-                        return;
-                    }
                     onUploadFinished(file);
+                    // if asset is null, the upload was handled externally.  take no action.
+                    if (!asset) { return null; }
+                    if (!asset.src) {
+                        onError(file, "Upload failed: asset.src is null.");
+                        return null;
+                    }
                     asset.type = contentTypeHandler.assetType;
                     return new Promise((resolve) => {
                         dispatch("CreateAsset", { asset, onCreated: resolve }, false);
@@ -1306,6 +1262,7 @@ const Reducers = {
 
             Promise.all(assetPromises).then(assetKeys => {
                 for(const assetKey of assetKeys) {
+                    if (!assetKey) { continue; }
                     // if we're creating layers, do it
                     if (autoCreateLayers)
                         dispatch("CreateLayerFromAsset", assetKey);
@@ -1425,7 +1382,7 @@ const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged
         storeRef.current.dispatch("SetOptions", { width, height, onOverlayChanged, onUpload, elements });
     }, [ width, height, onOverlayChanged, onUpload, elements ]);
 
-    useMemo(() => {
+    useEffect(() => {
         storeRef.current.dispatch("SetOverlay", overlay);
     }, [ overlay ]);
 

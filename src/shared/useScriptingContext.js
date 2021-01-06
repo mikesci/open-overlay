@@ -1,5 +1,6 @@
 import { cloneDeep } from "lodash";
 import { useEffect, useState } from "react";
+import AnimationPhase from "./AnimationPhase";
 import { findLayerIndexes } from "./utilities";
 
 const MAX_LOG_ENTRIES = 200;
@@ -183,28 +184,36 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                         commitWorkingState();
                         return stateObj;
                     },
-                    show: () => {
-                        if (indexes.length > 0) {
-                            for(const index of indexes) {
-                                workingScriptState.layers[index] = {
-                                    ...workingScriptState.layers[index],
-                                    hidden: false
-                                };
-                            }
-                            commitWorkingState();
+                    show: (animate = true) => {
+                        for(const index of indexes) {
+                            const layer = workingScriptState.layers[index];
+                            workingScriptState.layers[index] = {
+                                ...layer,
+                                hidden: false,
+                                // switch to the entry phase for layers that aren't already showing
+                                animationContext: {
+                                    phase: (layer.hidden && animate ? AnimationPhase.ENTRY : AnimationPhase.STATIC),
+                                    playing: true
+                                }
+                            };
                         }
+                        commitWorkingState();
                         return stateObj;
                     },
-                    hide: () => {
-                        if (indexes.length > 0) {
-                            for(const index of indexes) {
-                                workingScriptState.layers[index] = {
-                                    ...workingScriptState.layers[index],
-                                    hidden: true
-                                };
-                            }
-                            commitWorkingState();
+                    hide: (animate = true) => {
+                        for(const index of indexes) {
+                            const layer = workingScriptState.layers[index];
+                            workingScriptState.layers[index] = {
+                                ...layer,
+                                hidden: true,
+                                // switch to the exit phase for layers that aren't already hidden
+                                animationContext: {
+                                    phase: (!layer.hidden && animate ? AnimationPhase.EXIT : AnimationPhase.HIDDEN),
+                                    playing: true
+                                }
+                            };
                         }
+                        commitWorkingState();
                         return stateObj;
                     },
                     moveUp: (toTop) => {

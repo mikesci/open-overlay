@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { Button, Icon, ControlGroup, Tag, ButtonGroup, Popover, Tooltip, Menu, MenuItem } from "@blueprintjs/core";
+import { Button, Icon, Tag, ButtonGroup, Popover, Tooltip, Menu, MenuItem } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
-import AnimationState from "../shared/AnimationState.js";
 import AnimationPhase from "../shared/AnimationPhase.js";
 import AnimationCreators from "../shared/AnimationCreators.js";
-import "./AnimationPanel.css";
 import AnimationPresets from "../shared/AnimationPresets";
 import { HotkeySets, useHotkeys } from "../shared/useHotkeys";
+import "./AnimationPanel.css";
 
 const KEYFRAME_START = { isStartEnd: true, offset: 0 };
 const KEYFRAME_END = { isStartEnd: true, offset: 1 };
@@ -73,8 +72,6 @@ const Scrubber = ({ animationContext, timelineDuration, onChangeOffset, onGetCli
         if (animationContext.phase == AnimationPhase.STATIC)
             return;
             
-        const animationIsPlaying = (animationContext.state == AnimationState.PLAYING);
-
         // handle animation changes
         for(const animation of caretRef.current.getAnimations())
             animation.cancel();
@@ -83,11 +80,11 @@ const Scrubber = ({ animationContext, timelineDuration, onChangeOffset, onGetCli
             { offset: 0, left: 0 },
             { offset: 1, left: "100%" }
         ], {
-            delay: (animationIsPlaying ? 0 : 1 - animationContext.offset), // we have to set the animation to be off by 1ms to keep it from finishing and being cleaned up
+            delay: (animationContext.playing ? 0 : 1 - animationContext.offset), // we have to set the animation to be off by 1ms to keep it from finishing and being cleaned up
             duration: timelineDuration
         });
 
-        if (animationIsPlaying) {
+        if (animationContext.playing) {
             animation.play();
         } else {
             animation.pause();
@@ -399,7 +396,7 @@ const AnimationPanel = () => {
                         <Button key="exit" text={AnimationPhase.EXIT.displayName} active={currentPhase == AnimationPhase.EXIT} onClick={() => setCurrentPhase(AnimationPhase.EXIT)} />
                     </ButtonGroup>
                     <div className="timing">
-                        <Button minimal={true} tabIndex={-1} icon={animationContext.state == AnimationState.PLAYING ? "pause" : "play"} onClick={onPlayPauseClick} onKeyDown={onPlayPauseKeyDown} />
+                        <Button minimal={true} tabIndex={-1} icon={animationContext.playing ? "pause" : "play"} onClick={onPlayPauseClick} onKeyDown={onPlayPauseKeyDown} />
                     </div>
                     <Tooltip content={showAllLayers ? "Showing selected & unselected layers" : "Showing selected layers only"}>
                         <Button icon="eye-open" active={showAllLayers} onClick={evt => setShowAllLayers(!showAllLayers)} />
@@ -408,7 +405,7 @@ const AnimationPanel = () => {
                 <div className="scrubber-row">
                     <div className="label-width"></div>
                     <Scrubber
-                        showCaret={animationContext.state == AnimationState.PLAYING}
+                        showCaret={animationContext.playing}
                         timelineDuration={timelineDuration}
                         animationContext={animationContext}
                         onChangeOffset={onChangeScrubberOffset}

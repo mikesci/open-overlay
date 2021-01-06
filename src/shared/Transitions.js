@@ -1,12 +1,12 @@
-import { parseFloatOrDefault } from "./utilities";
+import { useMemo } from "react";
 
 const RAD = (Math.PI / 180);
 
-const getInferredKeyframe = (offset, layer, ...styleProperties) => {
+const getInferredKeyframe = (offset, style, ...styleProperties) => {
     let inferredKeyframe = { offset };
-    if (layer.style) {
+    if (style) {
         for(const styleProperty of styleProperties) {
-            inferredKeyframe[styleProperty] = layer.style[styleProperty] || "initial";
+            inferredKeyframe[styleProperty] = style[styleProperty] || "initial";
         }
     }
     return inferredKeyframe;
@@ -20,9 +20,9 @@ const Transitions = {
             { name: "fromOpacity", type: "number", displayName: "From", tag: "%", min: 0, max: 100, immediate: false }
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", fromOpacity: 0 },
-        keyframes: ({ fromOpacity = 0 }, layer) => ([
+        keyframes: ({ fromOpacity = 0 }, layerStyle) => ([
             { offset: 0, opacity: (fromOpacity/100) },
-            getInferredKeyframe(1, layer, "opacity")
+            getInferredKeyframe(1, layerStyle, "opacity")
         ])
     },
     "slide-in": {
@@ -35,14 +35,14 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "ease-out", angle: 90, distance: 2000 },
-        keyframes: ({ angle = 0, distance = 2000 }, layer) => {
-            const layerTop = (layer.style && layer.style.top ? parseFloat(layer.style.top) : 0);
-            const layerLeft = (layer.style && layer.style.left ? parseFloat(layer.style.left) : 0);
+        keyframes: ({ angle = 0, distance = 2000 }, layerStyle) => {
+            const layerTop = (layerStyle && layerStyle.top ? parseFloat(layerStyle.top) : 0);
+            const layerLeft = (layerStyle && layerStyle.left ? parseFloat(layerStyle.left) : 0);
             const top = layerTop - (Math.cos(angle * RAD) * distance);
             const left = layerLeft + (Math.sin(angle * RAD) * distance);
             return [
                 { offset: 0, top: top + "px", left: left + "px" },
-                getInferredKeyframe(1, layer, "top", "left")
+                getInferredKeyframe(1, layerStyle, "top", "left")
             ];
         }
     },
@@ -56,8 +56,8 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", fromRotation: 0, fromScale: 100 },
-        keyframes: ({ fromRotation = 0, fromScale = 100 }, layer) => {
-            const layerTransform = (layer.style ? layer.style.transform : null) || "";
+        keyframes: ({ fromRotation = 0, fromScale = 100 }, layerStyle) => {
+            const layerTransform = (layerStyle ? layerStyle.transform : null) || "";
             return [
                 { offset: 0, transform: `${layerTransform} rotate(${fromRotation}deg) scale(${fromScale/100})` },
                 { offset: 1, transform: `${layerTransform} rotate(0) scale(1)` }
@@ -69,10 +69,10 @@ const Transitions = {
         phase: "entry",
         isCustom: true,
         initialConfig: { delay: 0, duration: 500, easing: "linear" },
-        keyframes: ({ delay, duration, easing, ...style}, layer) => {
+        keyframes: ({ delay, duration, easing, ...style}, layerStyle) => {
             return [
                 { offset: 0, ...style },
-                getInferredKeyframe(1, layer, ...Object.keys(style))
+                getInferredKeyframe(1, layerStyle, ...Object.keys(style))
             ];
         }
     },
@@ -83,8 +83,8 @@ const Transitions = {
             { name: "toOpacity", type: "number", displayName: "To", tag: "%", min: 0, max: 100, immediate: false }
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", toOpacity: 0 },
-        keyframes: ({ toOpacity = 0 }, layer) => ([
-            getInferredKeyframe(0, layer, "opacity"),
+        keyframes: ({ toOpacity = 0 }, layerStyle) => ([
+            getInferredKeyframe(0, layerStyle, "opacity"),
             { offset: 1, opacity: (toOpacity/100) }
         ])
     },
@@ -98,13 +98,13 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "ease-in", angle: 90, distance: 2000 },
-        keyframes: ({ angle = 0, distance = 2000 }, layer) => {
-            const layerTop = (layer.style && layer.style.top ? parseFloat(layer.style.top) : 0);
-            const layerLeft = (layer.style && layer.style.left ? parseFloat(layer.style.left) : 0);
+        keyframes: ({ angle = 0, distance = 2000 }, layerStyle) => {
+            const layerTop = (layerStyle && layerStyle.top ? parseFloat(layerStyle.top) : 0);
+            const layerLeft = (layerStyle && layerStyle.left ? parseFloat(layerStyle.left) : 0);
             const top = layerTop - (Math.cos(angle * RAD) * distance);
             const left = layerLeft + (Math.sin(angle * RAD) * distance);
             return [
-                getInferredKeyframe(0, layer, "top", "left"),
+                getInferredKeyframe(0, layerStyle, "top", "left"),
                 { offset: 1, top: top + "px", left: left + "px" }
             ];
         }
@@ -119,8 +119,8 @@ const Transitions = {
             ]}
         ],
         initialConfig: { delay: 0, duration: 500, easing: "linear", toRotation: 0, toScale: 100 },
-        keyframes: ({ toRotation = 0, toScale = 100 }, layer) => {
-            const layerTransform = (layer.style ? layer.style.transform : null) || "";
+        keyframes: ({ toRotation = 0, toScale = 100 }, layerStyle) => {
+            const layerTransform = (layerStyle ? layerStyle.transform : null) || "";
             return [
                 { offset: 0, transform: `${layerTransform} rotate(0) scale(1)` },
                 { offset: 1, transform: `${layerTransform} rotate(${toRotation}deg) scale(${toScale/100})` }
@@ -132,13 +132,50 @@ const Transitions = {
         phase: "exit",
         isCustom: true,
         initialConfig: { delay: 0, duration: 500, easing: "linear" },
-        keyframes: ({ delay, duration, easing, ...style }, layer) => {
+        keyframes: ({ delay, duration, easing, ...style }, layerStyle) => {
             return [
-                getInferredKeyframe(0, layer, ...Object.keys(style)),
+                getInferredKeyframe(0, layerStyle, ...Object.keys(style)),
                 { offset: 1, ...style }
             ];
         }
     }
 };
 
-export default Transitions;
+const useTransitions = (layer) => {
+    return useMemo(() => {
+        if (!layer.transitions)
+            return {};
+
+        return Object.entries(layer.transitions).reduce((computedAnimations, [transitionKey, transitionConfig]) => {
+
+            const transition = Transitions[transitionKey];
+    
+            if (!transition) {
+                console.log("Unknown transition.", transitionKey);
+                return computedAnimations;
+            }
+    
+            let phaseAnimations = computedAnimations[transition.phase];
+            if (!phaseAnimations)
+                phaseAnimations = computedAnimations[transition.phase] = [];
+    
+            // get keyframes
+            const keyframes = transition.keyframes(transitionConfig, layer.style);
+    
+            // store the animation
+            phaseAnimations.push({
+                delay: transitionConfig.delay,
+                duration: transitionConfig.duration,
+                easing: transitionConfig.easing,
+                keyframes: keyframes
+            });
+    
+            return computedAnimations;
+        }, {});
+    }, [layer.transitions, layer.style]);
+}
+
+export {
+    Transitions,
+    useTransitions
+};

@@ -16,7 +16,7 @@
           "height": 150.18335684062052,
           "fontFamily": "Graduate",
           "fontSize": 109,
-          "color": "rgba(255,255,255,1)",
+          "color": "rgba(255,0,0,1)",
           "whiteSpace": "pre",
           "letterSpacing": "0px",
           "justifyContent": "flex-end",
@@ -29,6 +29,13 @@
             "duration": 1860,
             "easing": "ease-out",
             "transform": "perspective(1000px) translate3d(0px, 0px, 1000px) rotate3d(1, 0, 0, -77deg) rotate3d(0, 1, 0, -84deg) rotate(0deg) scale(1, 1)"
+          },
+          "slide-out": {
+            "delay": 210,
+            "duration": 1200,
+            "easing": "ease-in",
+            "angle": 90,
+            "distance": 2000
           }
         }
       },
@@ -178,7 +185,7 @@
       }
     ],
     "scripts": {
-      "main.js": "console.log({ settings });",
+      "main.js": "console.log(\"executed script\");\nlayer(\"Text\").hide();",
       "settings.json": "{\n  \"info\": \"This is the scripts's info/instructions, configurable in Scripts -> settings.json.\",\n  \"initial\": { \"amount\": 25 },\n  \"parameters\": [\n    { \"name\": \"amount\", \"type\": \"slider\", \"displayName\": \"Amount\", \"inline\": true }\n  ]\n}",
       "example.js": "class Example {\n  test() {\n    console.log(\"TEST\");\n  }\n};\n\nexport default Example;"
     },
