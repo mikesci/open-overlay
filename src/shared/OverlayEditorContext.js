@@ -82,17 +82,6 @@ function moveLayer(layers, id, newIndex) {
     layers.splice(newIndex, 0, layer);
 }
 
-/*
-function getInterpolatedStyle(styleName, layer, animationContext, layerDomElement) {
-
-    // if not animating, we'll just return the base style
-    if (animationContext.phase == AnimationPhase.STATIC || !layerDomElement)
-        return layer.styles[styleName];
-
-    return styles[styleName].extract(getComputedStyle(layerDomElement.domElement));
-}
-*/
-
 async function fetchContentType(url) {
     if (!url.startsWith("http"))
         return "text/plain";
@@ -133,7 +122,7 @@ const Reducers = {
             height: height || 1080,
             onOverlayChanged: onOverlayChanged,
             onUpload: onUpload,
-            elements: elements || Elements
+            elements: (elements ? {...Elements, ...elements} : Elements)
         };
     },
     SetOverlay: (ps, overlay) => {
@@ -1334,7 +1323,7 @@ const INITIAL_STATE = {
     toasts: []
 };
 
-const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged, onUpload, elements, children, ...props }) => {
+const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged, onUpload, elements, children }) => {
     const storeRef = useRef();
 
     if (!storeRef.current) {

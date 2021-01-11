@@ -26,6 +26,14 @@ const extractPreloadPromise = (element, layer) => {
 }
 
 const defaultElementRenderer = ({ element, layer, style, assets, wrapperRef }) => {
+
+    if (!element || !element.component) {
+        element = {
+            manifest: { },
+            component: () => ("Unknown component")
+        };
+    }
+
     const [preloading, setPreloading] = useState();
     
     // extract preloads

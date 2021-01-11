@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const useDynamicOptions = (options) => {
     const optionsAreDynamic = (typeof options === "function");
     const [dynamicOptions, setDynamicOptions] = useState(() => optionsAreDynamic ? [] : null);
-    if (optionsAreDynamic)
+
+    useEffect(() => {
+        if (!optionsAreDynamic)
+            return;
         Promise.resolve(options()).then(setDynamicOptions);
-    return (dynamicOptions || options);
+    }, []);
+
+    return (dynamicOptions || options || []);
 };
 
 export default useDynamicOptions;

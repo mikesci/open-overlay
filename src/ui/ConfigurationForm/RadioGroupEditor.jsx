@@ -1,20 +1,15 @@
 import { Radio, RadioGroup } from "@blueprintjs/core";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useConfigurationFormContext } from "./ConfigurationFormContext.jsx";
+import useDynamicOptions from "./useDynamicOptions.js";
 
 const RadioGroupEditor = ({ parameter }) => {
     const [value, onValueChanged] = useConfigurationFormContext(parameter);
-    const optionsAreDynamic = (typeof parameter.options === "function");
-    const [dynamicOptions, setDynamicOptions] = useState(() => optionsAreDynamic ? [] : null);
-
-    if (optionsAreDynamic)
-        Promise.resolve(parameter.options()).then(setDynamicOptions);
+    const options = useDynamicOptions(parameter.options);
 
     const onChange = useCallback((evt) => {
         onValueChanged(parameter, evt.target.value, true);
     }, []);
-
-    const options = dynamicOptions || parameter.options || [];
     
     return (
         <RadioGroup selectedValue={value} onChange={onChange}>

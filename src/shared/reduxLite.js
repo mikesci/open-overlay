@@ -1,5 +1,3 @@
-import { UNRESOLVE } from "@blueprintjs/icons/lib/esm/generated/iconContents";
-
 const UNDO_HISTORY_SIZE = 40;
 
 const storeActions = {

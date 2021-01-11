@@ -11,7 +11,9 @@ module.exports = {
         path: path.resolve(__dirname, './dist'),
         filename: "[name].js",
         library: "[name]",
-        libraryTarget: "umd"
+        libraryTarget: "umd",
+        libraryExport: "default",
+        globalObject: "this"
     },
     optimization: { minimize: true },
     module: {
