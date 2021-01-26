@@ -3,6 +3,48 @@ import {CSSProperties} from "react";
 declare global {
     interface ElementConfig { }
 
+    interface TransitionConfig {
+        delay: number;
+        duration: number;
+        easing: string;
+    }
+
+    interface FadeInTransitionConfig extends TransitionConfig {
+        fromOpacity: number;
+    }
+
+    interface FadeOutTransitionConfig extends TransitionConfig {
+        toOpacity: number;
+    }
+
+
+    interface SlideTransitionConfig extends TransitionConfig {
+        angle: number;
+        distance: number;
+    }
+
+    interface TransformInTransitionConfig extends TransitionConfig {
+        fromRotation: number;
+        fromScale: number;
+    }
+
+    interface TransformOutTransitionConfig extends TransitionConfig {
+        toRotation: number;
+        toScale: number;
+    }
+
+    interface CustomTransitionConfig extends TransitionConfig, CSSProperties { }
+
+    interface TransitionList<T extends TransitionConfig> {
+        /**
+         * see `Transitions.js`
+         *
+         * Acceptable keys are `fade-in`, `slide-in`, `transform-in`, `custom-in`,
+         * `fade-out`, `slide-out`, `transform-out`, and `custom-out`.
+         */
+        [key: string]: T;
+    }
+
     interface Layer {
         id: number;
         elementName: string;
@@ -10,6 +52,7 @@ declare global {
         config: ElementConfig;
         style: CSSProperties;
         hidden: boolean;
+        transitions: TransitionList<any>;
     }
 
     interface LayerSelection {
@@ -23,7 +66,7 @@ declare global {
         moveDown(toBottom: boolean): LayerSelection;
         remove(): void;
         clone(): Layer[] | Layer;
-        dom(): Object;
+        dom(): HTMLDivElement;
         collect(): Layer[];
     }
 

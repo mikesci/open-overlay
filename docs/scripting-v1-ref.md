@@ -15,16 +15,19 @@ The `settings` property is also a top-level object, documented [here](/scripting
 
 #### `Layer`
 ```javascript
-export interface Layer {
+interface Layer {
     id: number; // internal layer id
     elementName: string; // text representation of the element type
     label: string; // human-readable name of the layer
     config: ElementConfig; // configuration object
     style: CSSProperties; // layer style object
     hidden: boolean; // if the layer's visibility is disabled in the user interface.
+    transitions: TransitionList<any>; // list of transitions present on this layer. Subject to change.
 }
 ```
 For more information about the `config` property, see the [layer documentation](/scripting-v1-layers).
+For more information about the `transitions` property, see the [source code](https://github.com/mikesci/open-overlay/blob/master/src/shared/Transitions.js).
+For a more detailed type hierarchy, see the [type documentation](/scripting-v1-types).
 
 #### `LayerSelection`
 
@@ -40,7 +43,7 @@ These methods are present for the object returned by [`layer(...filters: Object)
 * [`moveDown(toBottom: boolean): LayerSelection`](#movedowntobottom-boolean-layerselection)
 * [`remove(): void`](#remove-void)
 * [`clone(): Layer | Layer[]`](#clone-layer-layer)
-* [`dom(): Object`](#dom-object)
+* [`dom(): HTMLDivElement`](#dom-htmldivelement)
 * [`collect(): Layer[]`](#collect-layer)
 
 <h2>Details</h2>
@@ -144,10 +147,11 @@ array of layers which must be inserted into the overlay individually:
 let layers = layer({ hidden: true }).clone().forEach(l => addLayer(l));
 ```
 
-# `dom(): Object`
+# `dom(): HTMLDivElement`
 Returns the DOM object for the layer. This is a dangerous function to use and should be avoided if possible. If there
 is a feature you need that can currently only be accomplished by modifying the DOM, please consider opening an
 [issue](https://github.com/mikesci/open-overlay/issues) on GitHub or making a [pull request](https://github.com/mikesci/open-overlay/pulls).
+If multiple layers are selected, returns the DOM wrapper for the first one.
 
 # `collect(): Layer[]`
 Returns the underlying selected layer objects. 

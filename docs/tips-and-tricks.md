@@ -23,3 +23,32 @@ and the circle will appear inside it:
 
 `IFrame` elements are by default 1280x720 pixels, but this can be changed manually to fit the SVG
 drawing you include. The HTML file you created will appear in the Assets tab. 
+
+### Twitch Chat Integration
+Connection to Twitch chat is handled with [tmi.js](https://tmijs.com/). To use chat functionality in your
+overlay, you can copy the latest version from [here](https://github.com/tmijs/cdn/tree/master/latest) as a new script
+in your overlay. It can then be used according to its documentation. For example, to display chat messages
+on-screen:
+
+![](tipsandtricks-tmi1.png)
+
+The `main.js` script for the above overlay is copied here. It is very similar to the tmi.js example chat monitor.
+```javascript
+import "./tmi.min.js";
+
+const client = new tmi.Client({
+  connection: {
+    secure: true,
+    reconnect: true
+  },
+  channels: [ 'mikesci' ]
+});
+
+client.connect();
+layer("Messages").config({ text: "" });
+client.on('message', (chan, tags, msg, self) => {
+  var lastText = layer("Messages").config().text;
+  layer("Messages").config({ text: lastText + "\n" + (((tags["user-type"] === "mod") || (tags["user-id"] === tags["room-id"])) ? "@" : "") + tags["display-name"] + ": " + msg});
+  
+});
+```
