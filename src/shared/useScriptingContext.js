@@ -1,10 +1,9 @@
 import { cloneDeep } from "lodash";
 import { useEffect, useState } from "react";
-import AnimationPhase from "./AnimationPhase";
 import { findLayerIndexes } from "./utilities";
 
 const MAX_LOG_ENTRIES = 200;
-const IMPORT_REGEX = /(import (.+ from )?["'])(\.\/)?(.+)(["'])/g;
+const IMPORT_REGEX = /(import (.+ from )?["'])(\.\/)(.+)(["'])/g;
 
 const compileScript = (scriptingContextId, scriptName, scripts, assets, scriptUrls) => {
 
@@ -14,6 +13,7 @@ const compileScript = (scriptingContextId, scriptName, scripts, assets, scriptUr
         const asset = assets[scriptName];
         if (asset) {
             scriptText = atob(asset.src.substring(28));
+            console.log({ asset, scriptText });
             requiresCompile = false;
         }
     } else {
@@ -35,7 +35,7 @@ const compileScript = (scriptingContextId, scriptName, scripts, assets, scriptUr
             const dependencyUrl = scriptUrls[importedScriptName] || compileScript(scriptingContextId, importedScriptName, scripts, assets, scriptUrls);
             return pre + dependencyUrl + post;
         });
-        blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\nconst { console, settings, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
+        blob = new Blob([`//# sourceURL=${scriptingContextId}/openoverlay/${scriptName}\nconst { console, settings, asset, on, off, addLayer, layer, bulkUpdate, setTimeout, setInterval } = window._scriptingContexts[${scriptingContextId}];\n${compiledScript}`], { type: "text/javascript"});
     }
 
     // now that we have a fully compiled script, create the blob and return a url
@@ -99,6 +99,14 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                 onScriptStateChanged(workingScriptState);
         };
 
+        const triggerEvent = (eventName, eventArgs) => {
+            const callbacks = workingScriptState.eventHandlers[eventName];
+            if (!callbacks) { return; }
+            for(const callback of callbacks) {
+                callback(eventArgs);
+            }
+        };
+
         let settings;
         try
         {
@@ -113,7 +121,7 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
             settings = {};
 
         if (overlay.settings)
-            Object.apply(settings, overlay.settings);
+            Object.assign(settings, overlay.settings);
 
         const scriptingContext = {
             settings,
@@ -136,6 +144,9 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                 if (index == -1) { return; }
                 callbackList.splice(index, 1);
                 commitWorkingState();
+            },
+            asset: (assetKey) => {
+                return overlay.assets[assetKey];
             },
             addLayer: (layerObjOrElementName, config, style) => {
                 // if the user provides an object, take it as a complete layer
@@ -327,6 +338,8 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
 
         // reset the script state when changing
         return () => {
+            // emit a destroy message to let the scripts clean themselves up
+            triggerEvent("destroy");
             // clear timeouts/intervals
             for(const timeout of workingScriptState.timeouts)
                 clearTimeout(timeout);

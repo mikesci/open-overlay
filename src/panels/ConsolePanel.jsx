@@ -3,6 +3,12 @@ import { Button } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext";
 import "./ConsolePanel.css";
 
+const renderLogItem = (logItem, index) => {
+    if (!logItem)
+        return <span key={index}>null</span>;
+    return <span key={index}>{logItem.toString ? logItem.toString() : "[" + typeof logItem + "]"}</span>;
+}
+
 const ConsolePanel = () => {
     const [[isExecutingScript, scriptState], dispatch] = useOverlayEditorContext(
         state => state.isExecutingScript,
@@ -18,11 +24,9 @@ const ConsolePanel = () => {
                 <Button icon={isExecutingScript ? "pause" : "play"} intent={isExecutingScript ? "warning": "success"} title="Execute (Ctrl+e)" minimal={true} onClick={() => dispatch("ExecuteScript")} />
             </div>
             <div className="console-window">
-                {logs.map((logItem, index) => (
+                {logs.map((logItems, index) => (
                     <div key={index} className="log-row">
-                        {logItem.map(entry => (
-                            entry.toString()
-                        ))}
+                        {logItems.map(renderLogItem)}
                     </div>
                 ))}
             </div>

@@ -551,56 +551,6 @@ const Reducers = {
 
         return newState;
     },
-    CreateLayerFromAsset: (ps, assetKey) => {
-        return (dispatch) => {
-            // get the content type handler for this asset
-            const asset = ps.overlay.assets[assetKey];
-            if (!asset) {
-                console.log("Could not find asset.", assetKey);
-                return;
-            }
-
-            const contentTypeHandler = getContentTypeHandler(asset.type, null);
-
-            if (!contentTypeHandler) {
-                console.log("Could not get contentTypeHandler for type:", asset.type);
-                return;
-            }
-
-            // if the contentTypeHandler doesn't support creating layers, bail out
-            if (!contentTypeHandler.getLayer)
-                return;
-
-            // get the layer from the content type handler based on the assetKey
-            let layer = contentTypeHandler.getLayer(assetKey);
-
-            // it's possible that the built-in element we need won't be supported by the consuming
-            // application.  check here.
-            const element = ps.elements[layer.elementName];
-            if (!element) {
-                console.log("Tried to create layer for unknown element:" + layer.elementName);
-                return;
-            }
-
-            // set the layer's name to be the asset's name
-            layer.name = asset.name;
-
-            // if the element has natural dimensions, get those to store with the layer
-            let dimensionsPromise;
-            if (element.manifest.getNaturalDimensions)
-                dimensionsPromise = element.manifest.getNaturalDimensions(layer.config, { [assetKey]: asset });
-            else if (element.manifest.width && element.manifest.height)
-                dimensionsPromise = Promise.resolve({ width: element.manifest.width, height: element.manifest.height });
-            else
-                dimensionsPromise = Promise.resolve();
-            
-            dimensionsPromise.then(dimensions => {
-                if (dimensions)
-                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
-                dispatch("CreateLayers", [ layer ]);
-            });
-        };
-    },
     SelectLayer: (ps, { id, append, selectBetween }) => {
         // optimization for deselecting when nothing is selected
         if (id == null && ps.selectedLayerIds.length == 0) { return; }
@@ -1151,7 +1101,8 @@ const Reducers = {
                     }
 
                     if (contentTypeHandler.getLayer) {
-                        let layer = contentTypeHandler.getLayer(data);
+                        let { type, obj } = contentTypeHandler.getLayer(data);
+                        
                         const element = ps.elements[layer.elementName];
                         if (element) {
                             if (element.manifest.getDimensions) {
@@ -1240,7 +1191,10 @@ const Reducers = {
                     }
                     asset.type = contentTypeHandler.assetType;
                     return new Promise((resolve) => {
-                        dispatch("CreateAsset", { asset, onCreated: resolve }, false);
+                        dispatch("CreateAsset", {
+                            asset,
+                            onCreated: resolve
+                        }, false);
                     })
                 }).catch(error => {
                     onError(file, error);
@@ -1252,13 +1206,58 @@ const Reducers = {
             Promise.all(assetPromises).then(assetKeys => {
                 for(const assetKey of assetKeys) {
                     if (!assetKey) { continue; }
-                    // if we're creating layers, do it
+
+                    // if we're audo creating objects, do it
                     if (autoCreateLayers)
                         dispatch("CreateLayerFromAsset", assetKey);
+
                     // if we have an onComplete callback, call it
                     if (onComplete)
                         onComplete(assetKey);
                 }
+            });
+        };
+    },
+    CreateLayerFromAsset: (ps, assetKey) => {
+        return (dispatch) => {
+            // get the content type handler for this asset
+            const asset = ps.overlay.assets[assetKey];
+            if (!asset) {
+                console.log("Could not find asset.", assetKey);
+                return;
+            }
+
+            // everything else should create a layer
+            const contentTypeHandler = getContentTypeHandler(asset.type, null);
+
+            if (!contentTypeHandler) {
+                console.log("Could not get contentTypeHandler for type:", asset.type);
+                return;
+            }
+
+            // if the contentTypeHandler doesn't support creating layers, bail out
+            if (!contentTypeHandler.getLayer)
+                return;
+
+            // get the layer from the content type handler based on the assetKey
+            let layer = contentTypeHandler.getLayer(assetKey);
+
+            // set the layer's name to be the asset's name
+            layer.name = asset.name;
+
+            // if the element has natural dimensions, get those to store with the layer
+            let dimensionsPromise;
+            if (element.manifest.getNaturalDimensions)
+                dimensionsPromise = element.manifest.getNaturalDimensions(layer.config, { [assetKey]: asset });
+            else if (element.manifest.width && element.manifest.height)
+                dimensionsPromise = Promise.resolve({ width: element.manifest.width, height: element.manifest.height });
+            else
+                dimensionsPromise = Promise.resolve();
+            
+            dimensionsPromise.then(dimensions => {
+                if (dimensions)
+                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
+                dispatch("CreateLayers", [ layer ]);
             });
         };
     },

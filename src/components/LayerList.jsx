@@ -87,10 +87,6 @@ const Layer = ({ layer, element, isSelected, dispatch }) => {
 const LayerList = () => {
     const [[elements, layers, selectedLayerIds, editors], dispatch] = useOverlayEditorContext(state => state.elements, state => state.overlay.layers, state => state.selectedLayerIds, state => state.editors);
 
-    const onCreateLayer = useCallback(elementName => {
-        dispatch("CreateLayers", [{ elementName }]);
-    }, []);
-
     const onReorderItem = useCallback((key, newIndex) => {
         dispatch("ReorderLayer", { id: parseInt(key), newIndex });
     }, []);

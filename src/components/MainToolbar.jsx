@@ -17,7 +17,7 @@ const MainToolbar = ({ }) => {
 
     return (
         <div className="main-toolbar">
-            <ButtonGroup>
+            <ButtonGroup minimal={true}>
                 <Tooltip content="Reset Zoom"><Button icon="search" onClick={onClickResetZoom} /></Tooltip>
                 <div className="bp3-button" style={{ padding: 0 }}>
                     <ZoomSelector minimal={true} large={false} zoomSelection={stageZoomSelection} onZoomSelectionChanged={onZoomSelectionChanged} />

@@ -57,36 +57,31 @@ const ScriptListItem = ({ scriptKey, dispatch }) => {
 
 const ScriptList = () => {
     const [[scripts], dispatch] = useOverlayEditorContext(state => state.overlay.scripts);
-    const [newPopoverOpen, setNewPopoverOpen] = useState(false);
-
+    
     const onReorderItem = useCallback((scriptKey, newIndex) => {
         dispatch("ReorderScript", { scriptKey, newIndex });
     }, []);
 
-    let newPopoverItems;
-    if (newPopoverOpen) {
-        newPopoverItems = [];
-        let renderedConvenienceItems = false;
-        if (!scripts || scripts["main.js"] == null) {
-            newPopoverItems.push(<MenuItem key="main.js" icon="document-share" text="main.js" intent="success" onClick={() => dispatch("CreateScript", "main.js")} />);
-            renderedConvenienceItems = true;
+    const onDragOver = useCallback((evt) => {
+        if (DragAndDropTypes.EventHasType(evt, "Files")) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            evt.dataTransfer.dropEffect = "copy";
         }
+    }, []);
 
-        if (!scripts || scripts["settings.json"] == null) {
-            newPopoverItems.push(<MenuItem key="settings.json" icon="cog" text="settings.json" intent="success" onClick={() => dispatch("CreateScript", "settings.json")} />);
-            renderedConvenienceItems = true;
+    const onDrop = useCallback((evt) => {
+        if (DragAndDropTypes.EventHasType(evt, "Files")) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            dispatch("HandleFileUpload", { files: evt.dataTransfer.files, autoCreateLayers: true });
         }
-
-        if (renderedConvenienceItems)
-            newPopoverItems.push(<MenuDivider key="sep" />);
-
-        newPopoverItems.push(<MenuItem key="new" icon="document" text="New Script" onClick={() => dispatch("CreateScript")} />);
-    }
+    }, []);
 
     const scriptsEntries = (scripts ? Object.keys(scripts) : []);
 
     return (
-        <div className="main-list script-list">
+        <div className="main-list script-list" onDragOver={onDragOver} onDrop={onDrop}>
             <div className="list-items">
                 <ReorderableList itemType={DragAndDropTypes.SCRIPT} onReorderItem={onReorderItem}>
                     {scriptsEntries.map(scriptKey => (

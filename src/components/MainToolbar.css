@@ -1,4 +1,5 @@
-.main-toolbar { display: flex; }
-.main-toolbar .bp3-button-group { border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; background: #000; margin-right: 10px; }
+.main-toolbar { display: flex; background: #cccccc40;  }
+.main-toolbar .bp3-button-group { border-bottom-left-radius: 3px; border-bottom-right-radius: 3px; margin-right: 10px; }
 .main-toolbar .bp3-button-group:last-child { margin-right: 0; }
 .main-toolbar .bp3-button { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
+.main-toolbar select { text-shadow: 0 0 2px #000; }
