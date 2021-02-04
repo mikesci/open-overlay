@@ -1,4 +1,4 @@
-<img src="https://openoverlay.org/releases/2.0/logo.svg" width="100" height="100">
+<img src="https://openoverlay.org/releases/2.0/logo.svg" width="100" height="100" bgcolor="#222222">
 # Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
