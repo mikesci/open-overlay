@@ -1,4 +1,4 @@
-![](https://openoverlay.org/apple-touch-icon.png)
+![](https://openoverlay.org/android-chrome-192x192.png)
 # Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
