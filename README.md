@@ -1,5 +1,4 @@
-<img src="https://openoverlay.org/android-chrome-192x192.png" align="left" height="48" width="48" >
-# Open Overlay
+# <img src="https://openoverlay.org/android-chrome-192x192.png" align="left" height="32" width="32" /> Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
 The public implementation of this package is available at https://openoverlay.org.
