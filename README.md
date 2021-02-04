@@ -1,4 +1,4 @@
-![](https://openoverlay.org/android-chrome-192x192.png)
+<img src="https://openoverlay.org/android-chrome-192x192.png" align="left" height="48" width="48" >
 # Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
