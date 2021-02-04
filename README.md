@@ -1,4 +1,4 @@
-[openoverlay]:(<https://openoverlay.org/releases/2.0/logo.svg>)
+<img src="https://openoverlay.org/releases/2.0/logo.svg" width="100" height="100">
 # Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
