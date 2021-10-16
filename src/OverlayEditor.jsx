@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { OverlayEditorContextProvider } from "./shared/OverlayEditorContext.js";
 import { LayerSelectionContextProvider } from "./shared/LayerSelectionContext.js";
-import { AnimationSelectionContextProvider } from "./shared/AnimationSelectionContext.js";
 import LayoutChanger from "./components/LayoutChanger.jsx";
 import "./OverlayEditor.css";
 
@@ -16,9 +15,7 @@ const OverlayEditor = (props) => {
     return (
         <OverlayEditorContextProvider {...props}>
             <LayerSelectionContextProvider>
-                <AnimationSelectionContextProvider>
-                    <LayoutChanger />
-                </AnimationSelectionContextProvider>
+                <LayoutChanger />
             </LayerSelectionContextProvider>
         </OverlayEditorContextProvider>
     );

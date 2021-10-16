@@ -95,7 +95,7 @@ const ReorderableList = ({ itemType, onReorderItem, children }) => {
         // clear the positioner
         setDraggedItemIndex(null);
         setDraggedItemKey(null);
-    }, [ draggedItemIndex ]);
+    }, [ onReorderItem, draggedItemIndex ]);
 
     let draggedItem = null;
     if (draggedItemKey != null) {

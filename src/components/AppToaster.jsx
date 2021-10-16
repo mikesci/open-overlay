@@ -2,7 +2,7 @@ import React from "react";
 import { Toaster, Toast, Position, ProgressBar } from "@blueprintjs/core";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 
-const AppToaster = ({ props }) => {
+const AppToaster = () => {
     const [[toasts], dispatch] = useOverlayEditorContext(s => s.toasts);
 
     return (

@@ -1,7 +1,9 @@
 import OverlayEditor from "./src/OverlayEditor.jsx";
-import OverlayRenderer from "./src/OverlayRenderer.jsx";
+import BrowserRenderer from "./src/browser-renderer/BrowserRenderer.js";
+import DOMElementBase from "./src/browser-renderer/elements/DOMElementBase.js";
 
 export {
     OverlayEditor,
-    OverlayRenderer
+    BrowserRenderer,
+    DOMElementBase
 };

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useMemo, useCallback } from "react";
-import OverlayRenderer from "../OverlayRenderer.jsx";
 import { DragAndDropTypes } from "../shared/DragAndDropTypes.js";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import "./StageManager.css";
@@ -20,16 +19,17 @@ const getAutoFitZoom = (stageDOM, height, width) => {
 }
 
 const StageManager = (props) => {
-    const [[elements, overlay, animationContext, isExecutingScript, stageTool, stageTransform, preferences], dispatch] = useOverlayEditorContext(
-        state => state.elements,
+    const [[renderer, overlay, isExecutingScript, stageTool, stageTransform, preferences], dispatch] = useOverlayEditorContext(
+        state => state.renderer,
         state => state.overlay,
-        state => state.animationContext,
         state => state.isExecutingScript,
         state => state.stageTool,
         state => state.stageTransform,
         state => state.preferences);
 
     const stageContainerRef = useRef();
+    //const overlayRendererRef = useRef();
+    const stageRef = useRef();
 
     // handle auto-fit monitoring
     // re-run this if preferences change, as that can change around the UI
@@ -41,6 +41,12 @@ const StageManager = (props) => {
         window.addEventListener("resize", onWindowResized);
         return () => { window.removeEventListener("resize", onWindowResized); };
     }, [preferences]);
+
+    // set overlays on the renderer every time it changes
+    useEffect(() => {
+        console.log("re-rendering, overlay: ", overlay);
+        renderer.render(stageRef.current, [overlay]);
+    }, [overlay]);
 
     const handleMouseDown = useCallback((evt, stageTransform) => {
         // right mouse only
@@ -109,11 +115,6 @@ const StageManager = (props) => {
             dispatch("StepZoom", (-evt.deltaY / 100));
     }, []);
 
-    const onOverlayDomReady = useCallback((overlayDomElement) => {
-        dispatch("SetOverlayDomElement", overlayDomElement);
-        //dispatch("SetLayerDomElement", { id: layer.id, domElement });
-    }, []);
-
     const onScriptStateChanged = useCallback((scriptState) => {
         dispatch("SetScriptState", scriptState);
     }, []);
@@ -127,16 +128,7 @@ const StageManager = (props) => {
 
     return (
         <div className="stage-container" onWheel={onWheel} onDragOver={onDragOver} onDrop={onDrop} onMouseDown={onMouseDown} onContextMenu={onContextMenu} ref={stageContainerRef}>
-            <div className="stage" style={stageStyle}>
-                <OverlayRenderer
-                    overlay={overlay}
-                    disableBuiltinElements={true}
-                    elements={elements}
-                    animationContext={(isExecutingScript ? null : animationContext)}
-                    executeScripts={isExecutingScript}
-                    onOverlayDomReady={onOverlayDomReady}
-                    onScriptStateChanged={onScriptStateChanged} />
-            </div>
+            <div className="stage" style={stageStyle} ref={stageRef}></div>
             {stageTool ? <stageTool.component /> : null}
         </div>
     );

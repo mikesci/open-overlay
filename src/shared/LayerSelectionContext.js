@@ -3,75 +3,63 @@ import { useOverlayEditorContext } from "./OverlayEditorContext.js";
 
 const LayerSelectionContext = React.createContext();
 
-const EMPTY = {};
+// merges the props from offer into target if and only if they match
+// non-matching or missing props from either object will be set to nonMatchingPropValue
+function mergeProps(target, offer, nonMatchingPropValue) {
+    // check props, first from target to offer
+    for(const propKey of Object.keys(target)) {
+        if (target[propKey] != offer[propKey]) {
+            if (nonMatchingPropValue === undefined)
+                delete target[propKey];
+            else
+                target[propKey] = nonMatchingPropValue;
+        }
+    }
+
+    // then from offer to target
+    for(const propKey of Object.keys(offer)) {
+        if (target[propKey] != offer[propKey]) {
+            if (nonMatchingPropValue === undefined)
+                delete target[propKey];
+            else
+                target[propKey] = nonMatchingPropValue;
+        }
+    }
+}
 
 function recalculate() {
-    const [[layers, selectedLayerIds, elements], dispatch] = useOverlayEditorContext(
+    const [[layers, renderer, selectedLayerIds], dispatch] = useOverlayEditorContext(
         state => state.overlay.layers,
-        state => state.selectedLayerIds,
-        state => state.elements);
+        state => state.renderer,
+        state => state.selectedLayerIds);
 
     if (!layers)
-        return {};
+        return null;
 
-    return layers.reduce((mergedLayer, layer) => {
+    const mergedContext = layers.reduce((mergedContext, layer) => {
         if (selectedLayerIds.includes(layer.id)) {
-            const element = elements[layer.elementName];
+            const elementDef = renderer.elements[layer.elementName];
 
-            if (!mergedLayer) {
-                return {
-                    mergedElement: { element, elementName: layer.elementName, config: layer.config },
-                    mergedEffects: (layer.effects ? {...layer.effects} : EMPTY),
-                    allowedStyles: (element.manifest.allowedStyles ? [...element.manifest.allowedStyles] : []),
-                    mergedStyle: (layer.style ? {...layer.style} : EMPTY ),
-                    mergedTransitions: (layer.transitions ? {...layer.transitions} : EMPTY )
+            if (!elementDef) {
+                console.error("Could not find elementName: " + layer.elementName);
+                return mergedContext;
+            }
+
+            if (!mergedContext) {
+                mergedContext = {
+                    selectedLayerIds,
+                    layer: {...layer}
                 };
             }
-
-            // element
-            if (mergedLayer.mergedElement && mergedLayer.mergedElement.elementName != layer.elementName) {
-                mergedLayer.mergedElement = null;
-            }
-
-            // effects
-            if (mergedLayer.mergedEffects != EMPTY) {
-                if (!layer.effects || layer.effects.length == 0)
-                    mergedLayer.mergedEffects = EMPTY;
-                else {
-                    for (const effectName of Object.keys(mergedLayer.mergedEffects)) {
-                        if (!layer.effects[effectName])
-                            delete mergedLayer.mergedEffects[effectName];
-                    }
-                }
-            }
-
-            // allowed styles
-            if (mergedLayer.allowedStyles.length > 0) {
-                const allowedStyles = element.manifest.allowedStyles;
-                if (!allowedStyles || allowedStyles.length == 0)
-                    mergedLayer.allowedStyles = [];
-                else
-                    mergedLayer.allowedStyles = mergedLayer.allowedStyles.filter(styleName => allowedStyles.includes(styleName));
-            }
-
-            // merge style
-            if (mergedLayer.mergedStyle && layer.style) {
-                for (const [styleName, styleValue] of Object.entries(layer.style)) {
-                    if (mergedLayer.mergedStyle[styleName] != styleValue)
-                        delete mergedLayer.mergedStyle[styleName];
-                }
-            }
-
-            // merge transitions
-            if (mergedLayer.mergedTransitions && layer.transitions) {
-                for (const [name, value] of Object.entries(mergedLayer.mergedTransitions)) {
-                    if (!layer.transitions[name])
-                        delete mergedLayer.mergedTransitions[name];
-                }
+            else {
+                // merge in the layer props
+                mergeProps(mergedContext.layer, layer);
             }
         }
-        return mergedLayer;
+        return mergedContext;
     }, null);
+
+    return mergedContext;
 }
 
 const LayerSelectionContextProvider = function(props) {

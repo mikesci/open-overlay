@@ -41,9 +41,6 @@ const HotkeySets = {
         { key: "ArrowDown", shift: true, action: (dispatch, context) => dispatch("NudgeSelectedLayers", { ...context.current, direction: "down", toEdge: false, precise: true }) },
         { key: "ArrowDown", action: (dispatch, context) => dispatch("NudgeSelectedLayers", { ...context.current, direction: "down", toEdge: false, precise: false }) }
     ],
-    ANIMATION: [
-        { key: " ", action: (dispatch) => dispatch("ToggleAnimationPlaying") },
-    ],
     SCRIPT: [
         { key: "e", ctrl: true, action: (dispatch) => dispatch("ExecuteScript") }
     ]

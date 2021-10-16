@@ -1,5 +1,0 @@
-.overlay { animation-delay: 0; animation-play-state: running; }
-.overlay * { animation-delay: inherit; animation-play-state: inherit; }
-.layer-positioner { position: absolute; transform-style: preserve-3d; }
-.layer-wrapper { position: absolute; transform-style: preserve-3d; }
-.layer-style { width: 100%; height: 100%; box-sizing: content-box; display: flex; white-space: pre; box-sizing: border-box; }

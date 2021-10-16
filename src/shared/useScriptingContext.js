@@ -9,7 +9,7 @@ const compileScript = (scriptingContextId, scriptName, scripts, assets, scriptUr
 
     let scriptText;
     let requiresCompile;
-    if (scriptName.startsWith("asset:")) {
+    if (scriptName.startsWith("#")) {
         const asset = assets[scriptName];
         if (asset) {
             scriptText = atob(asset.src.substring(28));
@@ -168,119 +168,151 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                 return layer.id;
             },
             layer: (...layerFilters) => {
+                let contextLayers = findLayers(workingScriptState.layers, layerFilters);
                 let indexes = findLayerIndexes(workingScriptState.layers, layerFilters);
+
+                // we create this function here to include contextLayers in the closure
+                const modifyWorkingLayers = (modifyFn) => {
+                    workingScriptState.layers = workingScriptState.layers.reduce((layers, layer) => {
+                        const contextLayerIndex = contextLayers.indexOf(layer);
+                        if (contextLayerIndex > 0) {
+                            // modify the layer
+                            layer = modifyFn(layer);
+                            // replace the layer in the context list
+                            contextLayers[contextLayerIndex] = layer;
+                        }
+                        layers.push(layer);
+                        return layers;
+                    }, []);
+                };
+
                 const stateObj = {
                     length: indexes.length,
                     config: (config) => {
+                        // return the first layer's config
                         if (!config)
-                            return (indexes.length == 0 ? null : workingScriptState.layers[indexes[0]].config);
+                            return (contextLayers.length == 0 ? null : contextLayers[0].config);
 
-                        for(const index of indexes) {
-                            let layer = { ...workingScriptState.layers[index] };
-                            layer.config = {...layer.config, ...config};
-                            workingScriptState.layers[index] = layer;
-                        }
+                        modifyWorkingLayers(layer => ({
+                            ...layer,
+                            config: { ...layer.config, ...config }
+                        }));
+
                         commitWorkingState();
                         return stateObj;
                     },
                     style: (style) => {
+                        // return the first layer's config
                         if (!style)
-                            return (indexes.length == 0 ? null : workingScriptState.layers[indexes[0]].style);
+                            return (contextLayers.length == 0 ? null : contextLayers[0].style);
 
-                        for(const index of indexes) {
-                            let layer = { ...workingScriptState.layers[index] };
-                            layer.style = {...layer.style, ...style};
-                            workingScriptState.layers[index] = layer;
-                        }
+                        modifyWorkingLayers(layer => ({
+                            ...layer,
+                            style: { ...layer.style, ...style }
+                        }));
+
                         commitWorkingState();
                         return stateObj;
                     },
-                    show: () => {
-                        for(const index of indexes) {
-                            const layer = workingScriptState.layers[index];
-                            workingScriptState.layers[index] = {
-                                ...layer,
-                                hidden: false
-                            };
-                        }
+                    show: (...transitions) => {
+                        modifyWorkingLayers(layer => ({
+                            ...layer,
+                            transitions,
+                            hidden: false
+                        }));
                         commitWorkingState();
                         return stateObj;
                     },
-                    hide: () => {
-                        for(const index of indexes) {
-                            const layer = workingScriptState.layers[index];
-                            workingScriptState.layers[index] = {
-                                ...layer,
-                                hidden: true
-                            };
-                        }
+                    hide: (...transitions) => {
+                        modifyWorkingLayers(layer => ({
+                            ...layer,
+                            transitions,
+                            hidden: true
+                        }));
                         commitWorkingState();
                         return stateObj;
                     },
                     moveUp: (toTop) => {
-                        if (indexes.length == 0) { return stateObj; }
-                        // do nothing if the highest selected layer is at the top already
-                        console.log({ indexes, layers: workingScriptState.layers });
-                        if (indexes[0] == 0) { return stateObj; }
-                        const targetIndex = (toTop ? 0 : indexes[0] - 1);
+                        // do nothing if we have no contextLayers
+                        if (contextLayers.length == 0)
+                            return stateObj;
+                            
+                        // find the index we're moving to -
+                        // the top layer's index minus one.  
+                        const targetIndex = (toTop ? 0 : workingState.layers.indexOf(contextLayers[0]) - 1);
 
-                        // pluck the selected layers out
-                        let pluckedLayers = [];
+                        // if our target index is < 0, bail out
+                        if (targetIndex < 0)
+                            return stateObj;
+
                         workingScriptState.layers = workingScriptState.layers.reduce((layers, layer, index) => {
-                            if (indexes.includes(index))
-                                pluckedLayers.push(layer);
-                            else
+                            // 1) add our context layers at the target index
+                            // 2) skip any layer in the context since we added them at the targetIndex
+                            // 3) everything else gets passed through
+                            if (index == targetIndex)
+                                layers.push(...contextLayers);
+                            else if (!contextLayers.includes(layer))
                                 layers.push(layer);
+                            // anything else is in contextLayers and gets removed
                             return layers;
                         }, []);
 
-                        // then re-add at the target index
-                        workingScriptState.layers.splice(targetIndex, null, ...pluckedLayers);
-
                         commitWorkingState();
-
-                        // since our indexes probably changed, we should re-run the find
-                        indexes = findLayerIndexes(workingScriptState.layers, layerFilters);
-
                         return stateObj;
                     },
                     moveDown: (toBottom) => {
-                        if (indexes.length == 0) { return stateObj; }
-                        // do nothing if the lowest selected layer is at the bottom already
-                        if (indexes[indexes.length - 1] == (workingScriptState.layers.length - 1)) { return stateObj; }
-                        const targetIndex = (toBottom ? workingScriptState.layers.length - 1 : indexes[0] + 1);
+                        // do nothing if we have no contextLayers
+                        if (contextLayers.length == 0)
+                            return stateObj;
+                            
+                        // find the index we're moving to -
+                        // the top layer's index plus one.  
+                        const targetIndex = (toBottom ? 0 : workingState.layers.indexOf(contextLayers[0]) + 1);
 
-                        // pluck the selected layers out
-                        let pluckedLayers = [];
+                        // if our target index is past the end of the layers array, bail out
+                        if (targetIndex >= workingScriptState.layers.length)
+                            return stateObj;
+
                         workingScriptState.layers = workingScriptState.layers.reduce((layers, layer, index) => {
-                            if (indexes.includes(index))
-                                pluckedLayers.push(layer);
-                            else
+                            // 1) add our context layers at the target index
+                            // 2) skip any layer in the context since we added them at the targetIndex
+                            // 3) everything else gets passed through
+                            if (index == targetIndex)
+                                layers.push(...contextLayers);
+                            else if (!contextLayers.includes(layer))
                                 layers.push(layer);
+                            // anything else is in contextLayers and gets removed
                             return layers;
                         }, []);
 
-                        // then re-add at the target index
-                        workingScriptState.layers.splice(targetIndex, null, ...pluckedLayers);
-
                         commitWorkingState();
-
-                        // since our indexes probably changed, we should re-run the find
-                        indexes = findLayerIndexes(workingScriptState.layers, layerFilters);
-
                         return stateObj;
                     },
                     remove: () => {
-                        workingScriptState.layers = workingScriptState.layers.filter((layer, index) => !indexes.includes(index));
+                        if (contextLayers.length == 0)
+                            return stateObj;
+                        
+                        workingScriptState.layers = workingScriptState.layers.reduce((layers, layer, index) => {
+                            if (!contextLayers.includes(layer))
+                                layers.push(layer);
+                            return layers;
+                        }, []);
                         commitWorkingState();
+                        // clear out our contextLayers
+                        contextLayers = [];
+                        // non-chainable method. return nothing.
+                        return null;
                     },
                     clone: () => {
-                        if (indexes.length == 1)
-                            return cloneDeep(workingScriptState.layers[indexes[0]]);
-                        
-                        return indexes.map(index => cloneDeep(workingScriptState.layers[index]));
+                        // optimize for single layers
+                        if (contextLayers.length == 1)
+                            return cloneDeep(contextLayers[0]);
+                        // non-chainable method.  return duplicated layers.
+                        return contextLayers.map(cloneDeep);
                     },
                     dom: () => {
+                        // TODO: unfinished pending web component rewrite
+                        throw "UNFINISHED!";
                         if (!overlayDomRef.current)
                             return null;
                         
@@ -291,6 +323,8 @@ const useScriptingContext = (overlay, overlayDomRef, onScriptStateChanged, execu
                         return overlayDomRef.current.querySelector(`[data-id='${id}']`);
                     },
                     collect: () => {
+                        // TODO: unfinished pending web component rewrite
+                        throw "UNFINISHED!";
                         return workingScriptState.layers.filter((layer, index) => indexes.includes(index));
                     }
                 };

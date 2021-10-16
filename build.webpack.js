@@ -1,41 +1,38 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
     mode: "development",
     entry: {
-        "OverlayEditor": "./src/OverlayEditor.jsx",
-        "OverlayRenderer": "./src/OverlayRenderer.jsx"
+        OverlayEditor: "./src/OverlayEditor.jsx",
+        BrowserRenderer: "./src/browser-renderer/BrowserRenderer.js"
     },
     performance: { hints: false },
     output: {
         path: path.resolve(__dirname, './test'),
         filename: "[name].js",
-        library: "[name]",
-        libraryTarget: "umd",
-        libraryExport: "default",
-        globalObject: "this"
+        chunkFilename: "[name].bundle.js",
+        library: "OverlayEditor",
+        libraryTarget: "umd"
     },
-    optimization: { minimize: false },
+    optimization: {
+        minimize: false
+    },
     externals: {
-        "react": "React",
-        "react-dom": "ReactDOM"
+        "react": "React"
     },
+    plugins: [
+        new webpack.DefinePlugin({
+            "process.env": "{}"
+        })
+    ],
     module: {
         rules: [
             {
                 test: /\.jsx?$/,
                 exclude: /(node_modules)/,
                 use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets: [ "@babel/preset-env" ],
-                        plugins: [
-                            "@babel/plugin-transform-react-jsx",
-                            "@babel/plugin-proposal-class-properties",
-                            "@babel/plugin-proposal-object-rest-spread",
-                            ["@babel/plugin-transform-runtime", { "regenerator": true }]
-                        ]
-                    }
+                    loader: 'babel-loader'
                 }
             },
             {

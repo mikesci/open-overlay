@@ -33,11 +33,6 @@
 | `Ctrl + →` | Snap the layer to the right edge of the overlay. |
 | `Shift + →` | Translate the layer to the right (fine). |
 
-### Animation Pane
-| Hotkey | Function |
-| ---    | ---      |
-| `Space` | Play/Pause animation |
-
 ### Script Pane
 | Hotkey | Function |
 | ---    | ---      |

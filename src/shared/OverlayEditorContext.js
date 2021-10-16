@@ -1,14 +1,12 @@
 import React, { useEffect, useRef, useContext, useState, useMemo } from "react";
-import ContentTypeHandlers from "../shared/ContentTypeHandlers.js";
+import { getContentTypeHandler } from "../contentTypeHandlers";
 import { createStore } from "./reduxLite.js";
-import { effects } from "../components/Effects.jsx";
-import { maxValue, copyToClipboard, parsePropsOrFn } from "./utilities.js";
-import AnimationPhase from "./AnimationPhase.js";
-import Elements from "../elements/_All.jsx";
-import { stageTools } from "../components/StageTools.jsx";
-import Editors from "../panels/Editors.js";
+import { maxValue, copyToClipboard } from "./utilities.js";
+import stageTools from "../stageTools";
+import Panels from "../panels";
 import { Transitions } from "./Transitions.js";
 import initialScriptContent from "./initialScriptContent.js";
+import BrowserRenderer from "../browser-renderer/BrowserRenderer.js";
 
 const OverlayEditorContext = React.createContext();
 
@@ -52,29 +50,6 @@ function updateLayers(state, ids, getNewPropsFn) {
     });
 }
 
-function updateSelectionStyle(ps, propsOrFn) {
-    const getNewProps = parsePropsOrFn(propsOrFn);
-
-    return updateLayers(ps, ps.selectedLayerIds, (layer) => {
-        const newProps = getNewProps(layer);
-
-        if (!newProps)
-            return null;
-
-        let style = {...layer.style};
-
-        // allow "undefined" values to delete style props
-        for(const [styleName, styleValue] of Object.entries(newProps)) {
-            if (styleValue === "DELETE")
-                delete style[styleName];
-            else if (styleValue)
-                style[styleName] = styleValue;
-        }
-
-        return { style };
-    });
-}
-
 function moveLayer(layers, id, newIndex) {
     let sourceIndex = layers.findIndex(r => r.id == id);
     let layer = layers.splice(sourceIndex, 1)[0];
@@ -111,18 +86,17 @@ async function fetchContentType(url) {
     }
 }
 
-function getContentTypeHandler(contentType, data) {
-    return ContentTypeHandlers.find(handler => handler.match(contentType, data));
-}
+const defaultRenderer = new BrowserRenderer({ executeScriptsOnLoad: false });
 
 const Reducers = {
-    SetOptions: (ps, { width, height, onOverlayChanged, onUpload, elements }) => {
+    SetOptions: (ps, { width, height, onOverlayChanged, onUpload, renderer, elementEditors }) => {
         return {
             width: width || 1920,
             height: height || 1080,
+            renderer: renderer || defaultRenderer,
             onOverlayChanged: onOverlayChanged,
             onUpload: onUpload,
-            elements: (elements ? {...Elements, ...elements} : Elements)
+            elementEditors: elementEditors
         };
     },
     SetOverlay: (ps, overlay) => {
@@ -167,71 +141,12 @@ const Reducers = {
     SetStageTransform: (ps, stageTransform) => {
         return { stageTransform };
     },
-    SetAnimationContext: (ps, { phase, playing, offset, timeout }) => {
-        let newState = {
-            animationContext: {
-                phase: (phase === undefined ? ps.animationContext.phase : phase),
-                playing: (playing === undefined ? ps.animationContext.playing : playing),
-                offset: (offset === undefined ? ps.animationContext.offset : offset),
-                timeout: (timeout === undefined ? ps.animationContext.timeout : timeout)
-            }
-        };
-
-        // if we're playing, cancel the pause timeout
-        if (ps.animationContext.timeout) {
-            newState.animationContext.timeout = null;
-            clearTimeout(ps.animationContext.timeout);
-        }
-
-        return newState;
-    },
-    ToggleAnimationPlaying: (ps, { phase, duration }) => {
-
-        return (dispatch) => {
-            // if we're playing, then cancel the timeout and revert to the static phase
-            if (ps.animationContext.playing) {
-                if (ps.animationContext.timeout)
-                    clearTimeout(ps.animationContext.timeout);
-
-                dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, playing: false, timeout: null });
-            } else {
-
-                // if duration is not specified, derive it from transitions
-                if (!duration) {
-                    // find the maximum delay+duration for all transitions in this phase
-                    // minimum duration is 500
-                    duration = 500;
-                    for(const layer of ps.overlay.layers) {
-                        if (!layer.transitions) { continue; }
-                        for(const [transitionName, transitionConfig] of Object.entries(layer.transitions)) {
-                            if (Transitions[transitionName].phase == phase.key) {
-                                duration = Math.max(duration, transitionConfig.delay + transitionConfig.duration);
-                            }
-                        }
-                    }
-                }
-
-                // if changing the state to playing, set a timeout to flip back to paused after the phase ends
-                //const timeoutLength = duration - initialAnimationOffset;
-                let timeout = setTimeout(() => {
-                    dispatch("SetAnimationContext", { phase: AnimationPhase.STATIC, playing: false, timeout: null });
-                }, duration);
-    
-                dispatch("SetAnimationContext", { phase, playing: true, offset: 0, timeout });
-            }
-        };
-    },
-    UpdateAnimationContextDuration: (ps, deltaMs) => {
-        if (!ps.animationContext.duration) { return; }
-        const duration = Math.max(500, ps.animationContext.duration + deltaMs);
-        return { animationContext: { ...ps.animationContext, duration }};
-    },
     SavePreferences: (ps, preferences) => {
         return { preferences: { ...ps.preferences, ...preferences } };
     },
     ToggleEditor: (ps, { type, params }) => {
         let newState = {};
-        const editorType = Editors[type];
+        const editorType = Panels[type];
         const key = editorType.key(params);
 
         const index = ps.editors.findIndex(r => r.key == key);
@@ -257,7 +172,7 @@ const Reducers = {
     },
     OpenEditor: (ps, { type, params }) => {
         let newState = {};
-        const editorType = Editors[type];
+        const editorType = Panels[type];
         const key = editorType.key(params);
         // don't open if already open
         const index = ps.editors.findIndex(r => r.key == key);
@@ -307,11 +222,11 @@ const Reducers = {
         // asset = { name, src, inline }
         return updateOverlay(ps, overlay => {
             // generate an asset key from the name
-            let assetKey = "asset:" + asset.name;
+            let assetKey = asset.name;
             // ensure the key is unique
             if (overlay.assets)
                 for(let i = 1; overlay.assets[assetKey] != null; i++)
-                    assetKey = "asset:" + asset.name + "-" + i++;
+                    assetKey = asset.name + "-" + i++;
 
             // call onCreated to inform the caller what the new asset will be called
             onCreated(assetKey);
@@ -487,6 +402,9 @@ const Reducers = {
             return { settings };
         });
     },
+    SendRendererCommand: (ps, { command, commandArg, layerid }) => {
+        ps.renderer.sendCommand(command, commandArg, ps.overlay.id, layerid);
+    },
 
     // layers
     CreateLayers: (ps, requestedLayers) => {
@@ -497,43 +415,39 @@ const Reducers = {
             let maxLayerId = layers.map(r => r.id).reduce(maxValue, 1);
     
             for(const requestedLayer of requestedLayers) {
-                // get the element for the layer.  if we can't find it, skip
-                let element = ps.elements[requestedLayer.elementName];
-                if (!element) { continue; }
-    
-                // assemble a config object
-                let requestedConfig = requestedLayer.config || {};
-                let config = { ...requestedConfig }; // start with the requested config
-    
-                // get default config values from the manifest parameters
-                for (const parameter of element.manifest.parameters) {
-                    if (config[parameter.name] !== undefined) { continue; }
-                    if (parameter.defaultValue === undefined) { continue; }
-                    config[parameter.name] = parameter.defaultValue;
+                // get the element def for the layer.  if we can't find it, skip
+                let elementDef = ps.renderer.elements[requestedLayer.elementName];
+
+                if (!elementDef) { 
+                    console.log("Skipping layer - could not find elementDef for " + requestedLayer.elementName);
+                    continue;
                 }
-    
-                // create the layer with the props requested
+
+                // merge together a bunch of stuff to create the new layer:
+                // id from ++maxLayerId
+                // the elementDef's default config
+                // the requested config from requestedLayer
                 const layer = {
-                    id: ++maxLayerId,
-                    elementName: requestedLayer.elementName,
-                    label: requestedLayer.label || element.manifest.name,
-                    config: config,
-                    effects: requestedLayer.effects || (element.manifest.defaultEffects ? { ...element.manifest.defaultEffects } : null),
-                    style: { ...element.manifest.defaultStyle, ...requestedLayer.style }
+                    ...elementDef.defaults, // the elementDef's default config properties
+                    ...requestedLayer, // will contain elementName, but can also override anything
+                    id: ++maxLayerId // set the layer's id
                 };
-    
-                if (requestedLayer.animations)
-                    layer.animations = requestedLayer.animations;
     
                 // ensure a unique label
                 // chop off the "#NUMBER" if it's there
-                let baseLabel = layer.label;
+                let baseLabel = (requestedLayer.label || elementDef.name);
+
+                // if the baseLabel has any numbers on the end, chop them off
                 if (baseLabel.match(/\#\d+$/)) { baseLabel = baseLabel.substr(0, baseLabel.lastIndexOf("#") - 1); }
-                for (let i = 2; layers.findIndex(r => r.label == layer.label) > -1; i++)
-                    layer.label = baseLabel + " #" + i;
+
+                // iterate to create a unique label
+                let uniqueLabel = baseLabel;
+                for (let i = 2; layers.findIndex(r => r.label == uniqueLabel) > -1; i++)
+                    uniqueLabel = baseLabel + " #" + i;
+                layer.label = uniqueLabel;
     
                 // add the layer with the new id
-                layers.unshift(layer);
+                layers.push(layer);
     
                 // append the new id to selected ids
                 selectedLayerIds.push(layer.id);
@@ -658,14 +572,14 @@ const Reducers = {
         const diffX = (ps.width / 2) - (boundingBox.left + (boundingBox.width / 2));
         const diffY = (ps.height / 2) - (boundingBox.top + (boundingBox.height / 2));
 
-        return updateSelectionStyle(ps, (layer) => {
+        return updateLayers(ps, rects.map(r => r.layerid), (layer) => {
             const selectedRect = rects.find(r => r.layerid == layer.id);
             if (!selectedRect) { return; }
             return {
-                top: selectedRect.top + diffY + "px",
-                left: selectedRect.left + diffX + "px",
-                height: selectedRect.height + "px",
-                width: selectedRect.width + "px"
+                top: selectedRect.top + diffY,
+                left: selectedRect.left + diffX,
+                height: selectedRect.height,
+                width: selectedRect.width
             };
         }, true, true);
     },
@@ -679,42 +593,43 @@ const Reducers = {
         const scaleX = ps.width / boundingBox.width;
         const scaleY = ps.height / boundingBox.height;
 
-        return updateSelectionStyle(ps, (layer) => {
+        return updateLayers(ps, rects.map(r => r.layerid), (layer) => {
             const selectedRect = rects.find(r => r.layerid == layer.id);
             if (!selectedRect) { return; }
             return {
-                top: ((selectedRect.top + diffY) * scaleY) + "px",
-                left: ((selectedRect.left + diffX) * scaleX) + "px",
-                width: (selectedRect.width * scaleX) + "px",
-                height: (selectedRect.height * scaleY) + "px"
+                top: ((selectedRect.top + diffY) * scaleY),
+                left: ((selectedRect.left + diffX) * scaleX),
+                width: (selectedRect.width * scaleX),
+                height: (selectedRect.height * scaleY)
             };
-        }, true, true);
+        });
     },
     ResetSelectedLayers: (ps) => {
         if (ps.selectedLayerIds.length == 0) { return; }
-
+        
         return async (dispatch) => {
             const dimensionData = await Promise.all(ps.selectedLayerIds.map(layerId => {
                 const layer = ps.overlay.layers.find(r => r.id == layerId);
-                const element = ps.elements[layer.elementName];
-                // elements that don't have a getDimensions method cannot be reset
-                if (!element.manifest.getNaturalDimensions)
+                const elementDef = ps.renderer.elements[layer.elementName];
+
+                // elementDefs that don't have a getDimensions method cannot be reset
+                if (!elementDef.getNaturalDimensions)
                     return Promise.resolve({});
 
-                return element.manifest.getNaturalDimensions(layer.config, ps.overlay.assets).then(dimensions => ({ id: layer.id, ...dimensions }));                    
+                return elementDef.getNaturalDimensions(layer.config, ps.overlay.assets).then(dimensions => ({ id: layer.id, ...dimensions }));                    
             }));
             dispatch("ResetSelectedLayers_Complete", dimensionData);
         };
     },
     ResetSelectedLayers_Complete: (ps, layerDimensions) => {
-        return updateSelectionStyle(ps, (style, layer) => {
+        return updateLayers(ps, layerDimensions.map(r => r.id), (layer) => {
             const layerDimension = layerDimensions.find(r => r.id == layer.id);
             if (!layerDimension) { return; }
             return {
                 top: 0,
                 left: 0,
-                width: layerDimension.width + "px",
-                height: layerDimension.height + "px"
+                width: layerDimension.width,
+                height: layerDimension.height
             };
         }, true, true);
     },
@@ -784,16 +699,16 @@ const Reducers = {
         if (direction == "down")
             magnitude = 1 / magnitude;
 
-        return updateSelectionStyle(ps, (layer) => {
+        return updateLayers(ps, rects.map(r => r.layerid), (layer) => {
             const selectedRect = rects.find(r => r.layerid == layer.id);
             if (!selectedRect) { return; }
             const topDelta = (selectedRect.top - boundingBox.top);
             const leftDelta = (selectedRect.left - boundingBox.left);
             return {
-                top: (selectedRect.top + (topDelta * (magnitude - 1))) + "px",
-                left: (selectedRect.left + (leftDelta * (magnitude - 1))) + "px",
-                width: (selectedRect.width * magnitude) + "px",
-                height: (selectedRect.height * magnitude) + "px"
+                top: (selectedRect.top + (topDelta * (magnitude - 1))),
+                left: (selectedRect.left + (leftDelta * (magnitude - 1))),
+                width: (selectedRect.width * magnitude),
+                height: (selectedRect.height * magnitude)
             };
         }, true, true);
     },
@@ -801,18 +716,18 @@ const Reducers = {
         if (rects.length == 0) { return; }
 
         const magnitude = (precise ? 1 : 5);
-        return updateSelectionStyle(ps, (layer) => {
+        return updateLayers(ps, rects.map(r => r.layerid), (layer) => {
             const selectedRect = rects.find(r => r.layerid == layer.id);
             if (!selectedRect) { return; }
             switch (direction) {
                 case "left":
-                    return { left: (toEdge ? selectedRect.left - boundingBox.left : selectedRect.left - magnitude) + "px" };
+                    return { left: (toEdge ? selectedRect.left - boundingBox.left : selectedRect.left - magnitude) };
                 case "right":
-                    return { left: (toEdge ? selectedRect.left + (ps.width - boundingBox.right) : selectedRect.left + magnitude) + "px" };
+                    return { left: (toEdge ? selectedRect.left + (ps.width - boundingBox.right) : selectedRect.left + magnitude) };
                 case "up":
-                    return { top: (toEdge ? selectedRect.top - boundingBox.top : selectedRect.top - magnitude) + "px" };
+                    return { top: (toEdge ? selectedRect.top - boundingBox.top : selectedRect.top - magnitude) };
                 case "down":
-                    return { top: (toEdge ? selectedRect.top + (ps.height - boundingBox.bottom) : selectedRect.top + magnitude) + "px" };
+                    return { top: (toEdge ? selectedRect.top + (ps.height - boundingBox.bottom) : selectedRect.top + magnitude) };
                 default:
                     break;
             }
@@ -823,44 +738,9 @@ const Reducers = {
             return { config: {...layer.config, ...config }};
         });
     },
-    CreateLayerEffect: (ps, { id, effectName }) => {
-        // ensure the effect is valid
-        let effect = effects[effectName];
-        if (!effect) { return; }
-
-        // create the effect definition, loading in defaults
-        let effectConfig = {};
-        for (let parameter of effect.parameters) {
-            if (parameter.defaultValue == null) { continue; }
-            effectConfig[parameter.name] = parameter.defaultValue;
-        }
-
-        return updateLayer(ps, id, (layer) => {
-            if (layer.effects && layer.effects[effectName]) { return; } // disallow re-adding an effect.  the UI should prevent this, but lets be safe.
-            return { effects: { ...layer.effects, [effectName]: effectConfig } };
-        }, true);
-    },
-    UpdateLayerEffect: (ps, { id, effectName, config }) => {
-        return updateLayer(ps, id, (layer) => {
-            if (!layer.effects) { return; }
-            if (!layer.effects[effectName]) { return; }
-            let effect = { ...layer.effects[effectName], ...config };
-            let effects = { ...layer.effects, [effectName]: effect };
-            return { effects };
-        });
-    },
-    DeleteLayerEffect: (ps, { id, effectName }) => {
-        return updateLayer(ps, id, (layer) => {
-            let effects = { ...layer.effects };
-            delete effects[effectName];
-            return { effects };
-        }, true);
-    },
-    UpdateSelectedLayersConfig: (ps, { config }) => {
+    UpdateSelectedLayersProps: (ps, getPropsFn) => {
         if (ps.selectedLayerIds.length == 0) { return; }
-        return updateLayers(ps, ps.selectedLayerIds, (layer) => {
-            return { config: {...layer.config, ...config }};
-        });
+        return updateLayers(ps, ps.selectedLayerIds, getPropsFn);
     },
     UpdateSelectedLayersEffect: (ps, { effectName, config }) => {
         if (ps.selectedLayerIds.length == 0) { return; }
@@ -894,104 +774,6 @@ const Reducers = {
     SelectAllLayers: (ps) => {
         const selectedLayerIds = ps.overlay.layers.map(r => r.id);
         return { selectedLayerIds };
-    },
-    UpdateSelectionStyle: (ps, propsOrFn) => {
-        return updateSelectionStyle(ps, propsOrFn);
-    },
-    CreateAnimation: (ps, { layerid, animation }) => {
-        // find the max animation id
-        let maxAnimationId;
-        if (!ps.overlay.animations) {
-            maxAnimationId = 0;
-        }
-        else {
-            maxAnimationId = ps.overlay.animations.reduce((maxAnimationId, item) => {
-                if (item.id > maxAnimationId) { maxAnimationId = item.id; }
-                return maxAnimationId;
-            }, 1);
-        }
-
-        // fill out the default fields (id, delay, duration)
-        animation = {
-            id: maxAnimationId + 1,
-            delay: 0,
-            duration: 500,
-            ...animation
-        };
-
-        const newState = updateOverlay(ps, (overlay) => {
-            // add to the overlay's animation array
-            let animations = (overlay.animations ? [...overlay.animations] : []);
-            animations.push(animation);
-
-            // add to the target layer
-            let layers = overlay.layers.map(layer => {
-                if (layer.id == layerid) {
-                    layer = {...layer};
-                    layer.animations = (layer.animations ? [...layer.animations] : []);
-                    layer.animations.push(animation.id);
-                }
-                return layer;
-            });
-            return { animations, layers };
-        }, true);
-
-        newState.selectedAnimations = [ animation.id ];
-        newState.selectedPropertyTab = "animation";
-
-        return newState;
-    },
-    UpdateAnimation: (ps, updatedAnimation) => {
-        return updateOverlay(ps, (overlay) => {
-            return {
-                animations: overlay.animations.map(animation => (animation.id == updatedAnimation.id ? updatedAnimation : animation))
-            };
-        }, true);
-    },
-    DeleteAnimation: (ps, id) => {
-        return updateOverlay(ps, (overlay) => {
-            // delete from the overlay's animations array
-            let animations = overlay.animations.filter(r => r.id != id);
-
-            // delete from any layers that reference it
-            let layers = overlay.layers.map(layer => {
-                let animationIndex = (layer.animations ? layer.animations.findIndex(r => r.id == id) : -1);
-                if (animationIndex > 0) {
-                    layer = {...layer};
-                    layer.animations = [...layer.animations];
-                    layer.animations.splice(animationIndex, 1);
-                }
-                return layer;
-            });
-            return { animations, layers };
-        });
-    },
-    SelectAnimation: (ps, { id, additive }) => {
-        let selectedAnimations;
-        if (!additive) {
-            selectedAnimations = [ id ];
-        } else {
-            selectedAnimations = [...ps.selectedAnimations];
-            const existingIndex = selectedAnimations.findIndex(r => r == id);
-            if (existingIndex > -1) // remove if already selected
-                selectedAnimations.splice(existingIndex, 1);
-            else // otherwise add
-                selectedAnimations.push(id);
-        }
-        return {
-            selectedAnimations,
-            selectedPropertyTab: "animation"
-        };
-    },
-    UpdateSelectedAnimations: (ps, newProps) => {
-        return updateOverlay(ps, (overlay) => {
-            const animations = overlay.animations.map(animation => {
-                if (ps.selectedAnimations.includes(animation.id))
-                    animation = { ...animation, ...newProps };
-                return animation;
-            });
-            return { animations };
-        }, true);
     },
 
     /* transitions */
@@ -1103,17 +885,25 @@ const Reducers = {
                     if (contentTypeHandler.getLayer) {
                         let { type, obj } = contentTypeHandler.getLayer(data);
                         
-                        const element = ps.elements[layer.elementName];
-                        if (element) {
-                            if (element.manifest.getDimensions) {
-                                const dimensions = await element.manifest.getDimensions(layer.config, {});
-                                layer.width = dimensions.width;
-                                layer.height = dimensions.height;    
-                            } else {
-                                layer.width = element.manifest.width;
-                                layer.height = element.manifest.height;
-                            }
+                        const elementDef = ps.renderer.elements[layer.elementName];
+
+                        if (!elementDef) {
+                            console.error("Could not paste - unknown elementName:" + layer.elementName);
+                            continue;
                         }
+
+                        console.error("TODO: removed getNaturalDimensions from the elementDef - need to query DOM element directly to get size.");
+
+                        /*
+                        if (elementDef.getNaturalDimensions) {
+                            const dimensions = await elementDef.getNaturalDimensions(layer, {});
+                            layer.width = dimensions.width;
+                            layer.height = dimensions.height;    
+                        } else {
+                            layer.width = elementDef.width;
+                            layer.height = elementDef.height;
+                        }
+                        */
 
                         // file was loaded successfully
                         onComplete([layer]);
@@ -1213,7 +1003,7 @@ const Reducers = {
 
                     // if we have an onComplete callback, call it
                     if (onComplete)
-                        onComplete(assetKey);
+                        onComplete("#" + assetKey);
                 }
             });
         };
@@ -1240,25 +1030,30 @@ const Reducers = {
                 return;
 
             // get the layer from the content type handler based on the assetKey
-            let layer = contentTypeHandler.getLayer(assetKey);
+            let layer = contentTypeHandler.getLayer("#" + assetKey);
 
             // set the layer's name to be the asset's name
             layer.name = asset.name;
 
-            // if the element has natural dimensions, get those to store with the layer
-            let dimensionsPromise;
-            if (element.manifest.getNaturalDimensions)
-                dimensionsPromise = element.manifest.getNaturalDimensions(layer.config, { [assetKey]: asset });
-            else if (element.manifest.width && element.manifest.height)
-                dimensionsPromise = Promise.resolve({ width: element.manifest.width, height: element.manifest.height });
-            else
-                dimensionsPromise = Promise.resolve();
-            
-            dimensionsPromise.then(dimensions => {
-                if (dimensions)
-                    layer.style = { ...layer.style, top: "0px", left: "0px", width: dimensions.width + "px", height: dimensions.height + "px"};
+            // pull the element def for the created layer
+            const elementDef = ps.renderer.elements[layer.elementName];
+
+            if (!elementDef)
+            {
+                console.log("Unknown elementName in layer.", layer);
+                return;
+            }
+
+            // if the contentTypeHandler has a getDimensions method, use it - it's asynchronous
+            if (contentTypeHandler.getDimensions) {
+                contentTypeHandler.getDimensions(asset.src).then(dimensions => {
+                    layer.height = dimensions.height;
+                    layer.width = dimensions.width;
+                    dispatch("CreateLayers", [ layer ]);
+                });
+            } else {
                 dispatch("CreateLayers", [ layer ]);
-            });
+            }
         };
     },
 
@@ -1289,21 +1084,20 @@ const INITIAL_STATE = {
     height: 1080,
     onOverlayChanged: null,
     onUpload: null,
-    elements: Elements,
     overlay: {
+        id: "default",
         layers: [],
         assets: [],
         scripts: []
     },
+    elementEditors: {},
 
     // modes/selections/contexts
     stageTool: stageTools.moveAndResize,
     stageZoomSelection: { zoom: 1, autoFitZoom: 1, isAuto: true },
     stageTransform: { zoom: 1, panning: [0,0], width: 1920, height: 1080 },
-    animationContext: { phase: AnimationPhase.STATIC },
     isExecutingScript: false,
     selectedLayerIds: [],
-    selectedAnimations: [],
     overlayDomElement: null,
     scriptState: null,
 
@@ -1319,15 +1113,17 @@ const INITIAL_STATE = {
     selectedListTab: "layers",
     selectedPropertyTab: null,
     selectedEditorTab: null,
-    toasts: []
+    toasts: [],
+
+    renderer: defaultRenderer
 };
 
-const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged, onUpload, elements, children }) => {
+const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged, onUpload, elementEditors, renderer, children }) => {
     const storeRef = useRef();
 
     if (!storeRef.current) {
         const extractUndoEntry = (prevState, newPartialState) => {
-            // the only things we track for undo are LAYERS, ASSETS, and ANIMATIONS
+            // the only things we track for undo are LAYERS and ASSETS
 
             // if overlay was not specified in the new state
             // or if the overlay was specified but didn't change, do nothing
@@ -1347,11 +1143,6 @@ const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged
                 shouldSave = true;
             }
 
-            if (newPartialState.overlay.animations && prevState.overlay.animations != newPartialState.overlay.animations) {
-                entry.animations = newPartialState.overlay.animations;
-                shouldSave = true;
-            }
-
             if (!shouldSave)
                 return null;
 
@@ -1367,8 +1158,8 @@ const OverlayEditorContextProvider = ({ overlay, width, height, onOverlayChanged
 
     // if one of the options changes (except overlay), directly update the store's state
     useMemo(() => {
-        storeRef.current.dispatch("SetOptions", { width, height, onOverlayChanged, onUpload, elements });
-    }, [ width, height, onOverlayChanged, onUpload, elements ]);
+        storeRef.current.dispatch("SetOptions", { width, height, onOverlayChanged, onUpload, elementEditors, renderer });
+    }, [ width, height, onOverlayChanged, onUpload, elementEditors, renderer ]);
 
     useEffect(() => {
         storeRef.current.dispatch("SetOverlay", overlay);

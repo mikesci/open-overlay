@@ -1,48 +1,29 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>New Overlay</title>
+    <title></title>
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        html,
-        body {
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-        }
+    <style type="text/css">
+    html, body { overflow: hidden; height: 100%; width: 100%; padding: 0; margin: 0; overflow: hidden; }
+    body { background: #000000; }
+    openoverlay-stage { width: 95vw; height: 95vh; margin: 2.5vh 0 0 2.5vw; overflow: hidden; background: #111 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAWCAYAAAArdgcFAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAIBJREFUeNq01EsKwCAMBFBNV73/YUsLJU2ggkj90MwMzE4eEoxZVdObbN2tW1rLZT1HB4QFF5wCF5wCuyks2C8tLNjHLSy4fi1weIaH4BEehns4BP7CYXCLQ+Eah8MFp8AWzdWXC4Wth7Bg6y0seGX9f8MzPASP8DDcwyGw5xFgACKHOSst2JgZAAAAAElFTkSuQmCC'); }
+    openoverlay-stage openoverlay-renderer { background: #00000080; }
     </style>
-</head>
 
-<body class="bp3-dark">
-    <div id="root"></div>
-    <script src="https://unpkg.com/react@16.13.1/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16.13.1/umd/react-dom.development.js" crossorigin></script>
-    <script src="OverlayRenderer.js" crossorigin></script>
-    <script type="text/json" id="overlay-definition" src="overlay.json"></script>
+    <script src="BrowserRenderer.js"></script>
+</head>
+<body>
+    <openoverlay-stage>
+        <openoverlay-renderer></openoverlay-renderer>
+    </openoverlay-stage>
+        
     <script>
-        window.addEventListener("load", function () {
-            const sourcePromise = new Promise((resolve, reject) => {
-                const overlayDefinitionElement = document.querySelector("#overlay-definition");
-                const src = overlayDefinitionElement.getAttribute("src");
-                if (src) {
-                    fetch(src).then(r => r.json()).then(resolve);
-                } else {
-                    resolve(JSON.parse(overlayDefinitionElement.innerHTML));
-                }
-            });
-            
-            sourcePromise.then(overlay => {
-                ReactDOM.render(
-                    React.createElement(OverlayRenderer, { overlay }),
-                    document.querySelector("#root")
-                );
-            });
+        const renderer = document.querySelector("openoverlay-renderer");
+        fetch("overlaysimple.json").then(r => r.json()).then(overlayJson => {
+            renderer.overlays = [overlayJson];
         });
     </script>
-</body>
 
+</body>
 </html>

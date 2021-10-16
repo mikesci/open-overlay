@@ -1,7 +1,14 @@
 .no-content { height: 100%; width: 100%; background: #ffffff20; display: flex; align-items: center; justify-content: center; font-size: 20px; text-align: center; }
 .create-keyframe { height: 100%; width: 100%; background: #00000020; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-.element-config-editor { margin-top: 5px; }
+.layer-config-panel { overflow-y: auto; height: 100%; }
+
+.size-and-position { margin: 0; }
+.size-and-position .bp3-form-group { flex: 1 1 100%; margin-bottom: 10px; margin: 3px 14px 4px 10px !important; }
+.size-and-position .bp3-form-group .bp3-label { flex: 0 0 45%; font-size: 0.9em; text-align: right; }
+.size-and-position .bp3-form-group .bp3-form-content { flex: 0 0 55%; }
+
+.element-config-editor { }
 .transitions-panel { height: 100%; display: flex; flex-direction: column; }
 .transitions-panel .phases-wrapper { flex: 1 1 auto; display: flex; overflow: hidden auto; }
 .transitions-panel .phases-wrapper .phase { width: 50%; height: 100%; }
@@ -16,3 +23,15 @@
 .transition-editor > .custom-transition-form { max-height: 300px; overflow-y: auto; border: 1px solid #ffffff20; }
 .transition-editor > .transition-config-form { border-bottom: 1px solid #ffffff20; padding-bottom: 5px; }
 .transition-editor > .timing-form { padding-top: 5px; }
+
+.font-editor { }
+.font-editor .bp3-collapse-body { margin: 3px 14px 4px 10px; }
+.font-editor .button-row-2 > * { flex-basis: 16.66666666666667 !important; margin: 1px 0; }
+.font-editor .font-family { width: 50%; }
+.font-editor .font-size { width: 33.3333333%; }
+.font-editor .font-color { width: 16.6666666%; }
+.font-editor .text-wrap { flex: 0 0 50% !important; margin: 8px 1px 3px 0; }
+.font-editor .border-input { display: flex; flex-direction: row; justify-content: flex-start; align-items: stretch; height: 100%; }
+.font-editor .border-input input[type='color'] { width: 2em !important; height: 2em; margin-right: 0.1em; }
+.font-editor .border-input select { width: 10em !important; margin-right: 0.1em; }
+.font-editor .border-input input[type='text'] { width: 5em !important; margin-right: 0.1em; }

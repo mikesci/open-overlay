@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 const usePasteHandler = (dispatch) => {
     useEffect(() => {
         function onPaste(evt) {
-            // pass through input elements
+            // pass through input DOMelements
             if (evt.target.tagName == "INPUT" || evt.target.tagName == "SELECT" || evt.target.tagName == "TEXTAREA") { return; }
             evt.preventDefault();
 

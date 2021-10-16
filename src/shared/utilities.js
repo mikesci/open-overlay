@@ -38,6 +38,26 @@ const extractUnique = (array, extractFn) => {
     }, []);
 }
 
+const findLayers = (layers, layerFilters) => {
+    // optimize for the common case, a single filter
+    if (layerFilters.length == 1) {
+        const matchFn = layerFilterToFunction(layerFilters[0]);
+        return [layers.find(matchFn)];
+    } else {
+        // otherwise, add the filters together
+        const matchFns = layerFilters.map(layerFilterToFunction);
+        return layers.reduce((layers, layer) => {
+            for(const matchFn of matchFns) {
+                if (matchFn(layer)) {
+                    layers.push(layer);
+                    break;
+                }
+            }
+            return layers;
+        }, []);
+    }
+}
+
 const findLayerIndexes = (layers, layerFilters) => {
     // optimize for the common case, a single filter
     if (layerFilters.length == 1) {
@@ -243,6 +263,7 @@ export {
     getSimpleReducer,
     maxValue,
     extractUnique,
+    findLayers,
     findLayerIndexes,
     layerFilterToFunction,
     propsOrCallbackToFunction,

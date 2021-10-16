@@ -3,17 +3,16 @@ const path = require('path');
 module.exports = {
     mode: "production",
     entry: {
-        "OverlayEditor": [ "./src/OverlayEditor.jsx" ],
-        "OverlayRenderer": [ "./src/OverlayRenderer.jsx" ]
+        OverlayEditor: "./src/OverlayEditor.jsx",
+        BrowserRenderer: "./src/browser-renderer/BrowserRenderer.js"
     },
     performance: { hints: false },
     output: {
         path: path.resolve(__dirname, './dist'),
         filename: "[name].js",
-        library: "[name]",
-        libraryTarget: "umd",
-        libraryExport: "default",
-        globalObject: "this"
+        chunkFilename: "[name].bundle.js",
+        library: "OverlayEditor",
+        libraryTarget: "umd"
     },
     optimization: { minimize: true },
     module: {

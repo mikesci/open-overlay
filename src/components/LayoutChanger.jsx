@@ -8,17 +8,18 @@ import StageManager from "./StageManager.jsx";
 import { useOverlayEditorContext } from "../shared/OverlayEditorContext.js";
 import usePasteHandler from "../shared/usePasteHandler.js";
 import { HotkeySets, useHotkeys } from "../shared/useHotkeys.js";
-import { ButtonGroup, Button, Tabs, Tab, Icon, Popover, Menu, MenuItem, Tooltip, MenuDivider } from "@blueprintjs/core";
+import { ButtonGroup, Button, Tabs, Tab, Icon, Menu, MenuItem, MenuDivider } from "@blueprintjs/core";
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import AssetList from "./AssetList.jsx";
 import ScriptList from "./ScriptList.jsx";
 import ScriptSettingsPanel from "./ScriptSettingsPanel.jsx";
-import Editors from "../panels/Editors.js";
+import Panels from "../panels";
 import ConsolePanel from "../panels/ConsolePanel.jsx";
 import { showUploadDialogAsync } from "../shared/utilities.js";
 import "./LayoutChanger.css";
 
 const LayoutChanger = ({  }) => {
-    const [[elements, settingsJson, preferences, editors, selectedListTab, selectedEditorTab], dispatch] = useOverlayEditorContext(state => state.elements, state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedListTab, state => state.selectedEditorTab);
+    const [[renderer, settingsJson, preferences, editors, selectedListTab, selectedEditorTab], dispatch] = useOverlayEditorContext(state => state.renderer, state => (state.overlay.scripts ? state.overlay.scripts["settings.json"] : null), state => state.preferences, state => state.editors, state => state.selectedListTab, state => state.selectedEditorTab);
 
     // handle paste events the same, regardless of task
     usePasteHandler(dispatch);
@@ -60,7 +61,7 @@ const LayoutChanger = ({  }) => {
             <Tabs id="editor-tabs" onChange={key => dispatch("SelectEditor", key)} selectedTabId={selectedEditorTab} animate={false} className="editor-tabs normal-tabs">
                 <Button className="btn-minimize-bottom" icon={preferences.bottomPanelMinimized ? "double-chevron-up" : "double-chevron-down"} minimal={true} onClick={() => onSavePreference({ bottomPanelMinimized: !preferences.bottomPanelMinimized })} />
                 {editors.map(editor => {
-                    const editorType = Editors[editor.type];
+                    const editorType = Panels[editor.type];
                     const key = editorType.key(editor.params);
 
                     if (selectedEditorTab == key && editor.type == "script")
@@ -89,11 +90,26 @@ const LayoutChanger = ({  }) => {
     let settingsTab;
     if (settingsJson) {
         settingsTab = (
-            <Tooltip content="Settings">
+            <Tooltip2 content="Settings">
                 <Button className="list-button" active={selectedListTab == "settings"} text={"Settings"} alignText="left" icon="settings" onClick={() => onSelectListTab("settings")} />
-            </Tooltip>
+            </Tooltip2>
         );
     }
+
+    const newItemMenu = (
+        <Menu className="no-outline">
+            <MenuDivider title="Layers" />
+            {Object.values(renderer.elements).map(elementDef => (
+                <MenuItem key={elementDef.elementName} icon={elementDef.icon} text={elementDef.name} onClick={() => onCreateLayer(elementDef.elementName)} />
+            ))}
+            <MenuDivider title="Scripts" />
+            <MenuItem key="main.js" icon="document-share" text="main.js" intent="success" onClick={() => onCreateScript("main.js")} />
+            <MenuItem key="settings.json" icon="cog" text="settings.json" intent="success" onClick={() => onCreateScript("settings.json")} />
+            <MenuItem key="new" icon="document" text="Script File" onClick={() => onCreateScript()} />
+            <MenuDivider />
+            <MenuItem key="asset-upload" icon="cloud-upload" text="Upload asset..." onClick={onUploadAssetClick} />
+        </Menu>
+    );
 
     return (
         <div className="layout-changer">
@@ -102,32 +118,20 @@ const LayoutChanger = ({  }) => {
                 <Resizable edge="bottom" defaultSize={preferences.layerListSize || 300} minimum={100} maximum={800} onSizeChanged={size => onSavePreference({ layerListSize: size })} className="lists-wrapper">
                     <ButtonGroup fill={true} className="toolbar">
                         {settingsTab}
-                        <Tooltip content="Layers">
+                        <Tooltip2 content="Layers">
                             <Button className="list-button" active={selectedListTab == "layers"} text={"Layers"} alignText="left" icon="layers" onClick={() => onSelectListTab("layers")} />
-                        </Tooltip>
-                        <Tooltip content="Scripts">
+                        </Tooltip2>
+                        <Tooltip2 content="Scripts">
                             <Button className="list-button" active={selectedListTab == "scripts"} text={"Scripts"} alignText="left" icon="manually-entered-data" onClick={() => onSelectListTab("scripts")} />
-                        </Tooltip>
-                        <Tooltip content="Assets">
+                        </Tooltip2>
+                        <Tooltip2 content="Assets">
                             <Button className="list-button" active={selectedListTab == "assets"} text={"Assets"} alignText="left" icon="archive" onClick={() => onSelectListTab("assets")} />
-                        </Tooltip>
-                        <Popover position="right" boundary="window" className="new-object">
-                            <Tooltip content="New">
+                        </Tooltip2>
+                        <Popover2 position="right" boundary="window" className="new-object" content={newItemMenu}>
+                            <Tooltip2 content="New">
                                 <Button icon="plus" intent="primary" />
-                            </Tooltip>
-                            <Menu className="no-outline">
-                                <MenuDivider title="Layers" />
-                                {Object.entries(elements).map(([elementName, element]) => (
-                                    <MenuItem key={elementName} icon={element.manifest.icon} text={element.manifest.name} onClick={() => onCreateLayer(elementName)} />
-                                ))}
-                                <MenuDivider title="Scripts" />
-                                <MenuItem key="main.js" icon="document-share" text="main.js" intent="success" onClick={() => onCreateScript("main.js")} />
-                                <MenuItem key="settings.json" icon="cog" text="settings.json" intent="success" onClick={() => onCreateScript("settings.json")} />
-                                <MenuItem key="new" icon="document" text="Script File" onClick={() => onCreateScript()} />
-                                <MenuDivider />
-                                <MenuItem key="asset-upload" icon="cloud-upload" text="Upload asset..." onClick={onUploadAssetClick} />
-                            </Menu>
-                        </Popover>
+                            </Tooltip2>
+                        </Popover2>
                     </ButtonGroup>
                     <div className="lists-panel">
                         {selectedListTab == "settings" ? <ScriptSettingsPanel settingsJson={settingsJson} /> : null}

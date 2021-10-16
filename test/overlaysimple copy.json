@@ -1,0 +1,95 @@
+{
+    "id": "simple-overlay",
+    "name": "Simple Overlay",
+    "assets": {
+        "hex-white-svg": {"name":"hex-white.svg","type":"image","src":"data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgd2lkdGg9IjE0Ni40MiIgaGVpZ2h0PSIxNjkuMDciIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDE0Ni40MiAxNjkuMDciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQogPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQ4LjEyMiwtOS4xMTgpIiBmaWxsPSIjZmZmIj4NCiAgPHBhdGggZD0ibTE5NC41NCAxMzUuOTItNzMuMjA5IDQyLjI2Ny03My4yMDktNDIuMjY3di04NC41MzVsNzMuMjA5LTQyLjI2NyA3My4yMDkgNDIuMjY3eiIgZmlsbD0iI2ZmZiIvPg0KIDwvZz4NCjwvc3ZnPg0K"}
+    },
+    "settings": {
+        "dagron": "trogdor the burninator"
+    },
+    "layers": [
+        {
+            "id": 1,
+            "elementName": "rectangle",
+            "label": "red",
+            "top": 800,
+            "left": 1500,
+            "width": 419,
+            "height": 339,
+            "backgroundColor": "#0000FF",
+            "border": "2px solid white",
+            "opacity": 1,
+            "boxShadow": "0 0 50px #00ff00",
+            "filter": "blur(10px)"
+        },
+        {
+            "id": 2,
+            "elementName": "text",
+            "label": "Text",
+            "top": 400,
+            "left": 1188,
+            "width": 399,
+            "height": 150,
+            "transform": "perspective(300px) rotateY(15deg)",
+            "text": "example text",
+            "font": "Quicksand",
+            "fontSrc": "https://fonts.googleapis.com/css?family=Quicksand",
+            "fontSize": 109,
+            "fontColor": "rgba(255,0,0,1)",
+            "wrap": false,
+            "vAlign": "center",
+            "hAlign": "center",
+            "letterSpacing": 30.5,
+            "lineHeight": 25.5,
+            "textShadow": "0 0 10px #0000FF"
+        },
+        {
+            "id": 3,
+            "elementName": "image",
+            "label": "Image Test",
+            "top": 0,
+            "left": 0,
+            "width": 500,
+            "height": 500,
+            "src": "#hex-white-svg",
+            "objectFit": "fill",
+            "objectPosition": "center center"
+        },
+        {
+            "id": 4,
+            "elementName": "iframe",
+            "label": "Iframe Test",
+            "top": 0,
+            "left": 1000,
+            "width": 640,
+            "height": 480,
+            "src": "https://www.twitch.tv/embed/mikesci/chat?parent=localhost"
+        },
+        {
+            "id": 5,
+            "elementName": "video",
+            "label": "Video Test",
+            "top": 490,
+            "left": 1000,
+            "width": 640,
+            "height": 480,
+            "src": "small.webm",
+            "autoplay": false
+        },
+        {
+            "id": 6,
+            "elementName": "video",
+            "label": "Youtube Video Test",
+            "top": 490,
+            "left": 0,
+            "width": 640,
+            "height": 480,
+            "src": "https://www.youtube.com/watch?v=KF32DRg9opA",
+            "autoplay": false
+        }
+    ],
+    "scripts": {
+        "main.js": "import class1 from './class1.js';\n(new class1()).go(); let l = context.renderLayer({ elementName: 'text', text: 'doot', top: 100, left: 100, fontSize: 200, fontColor: 'red', bold: true, font: 'Train One', fontSrc: 'https://fonts.googleapis.com/css2?family=Train+One&display=swap' }); context.overlay.append(l);",
+        "class1.js": "export default class class1 { go() { console.log('settings', context.settings); } }"
+    }
+}
