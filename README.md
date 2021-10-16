@@ -1,4 +1,4 @@
-# Open Overlay
+# <img src="https://openoverlay.org/apple-touch-icon.png" align="left" height="48" width="48" /> Open Overlay
 An open source, React-based overlay builder for livestreaming.
 
 The public implementation of this package is available at https://openoverlay.org.
