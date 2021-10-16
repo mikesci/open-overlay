@@ -1,4 +1,4 @@
-# Open Overlay
+# Open Overlay 2.x.x
 An open source, React-based overlay builder for livestreaming.
 
 The public implementation of this package is available at https://openoverlay.org.
